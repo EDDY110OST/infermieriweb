@@ -32,8 +32,8 @@ export default function Structures() {
     <Layout>
       <section className="structures-page">
         <div className="structures-header">
-          <h1>Le strutture con cui collaboro</h1>
-          <p>Clicca su una struttura per visualizzare la mappa e i dettagli</p>
+          <h1>Gli ambulatori con cui collaboro</h1>
+          <p>Clicca su un ambulatorio per visualizzare la mappa e i dettagli</p>
         </div>
 
         <div className="structures-list">

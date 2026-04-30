@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import foto from "../assets/foto.png";
 
 export default function Home() {
-  const services = [
+  const [showAllServices, setShowAllServices] = useState(false);
+  const [recensioni, setRecensioni] = useState([]);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const allServices = [
     {
       id: "ecg",
       icon: "❤️",
@@ -30,12 +34,91 @@ export default function Home() {
       description: "Somministrazioni su prescrizione.",
     },
     {
+      id: "holter-pressori",
+      icon: "🩺",
+      title: "Holter pressori",
+      description: "Monitoraggio pressorio continuo a domicilio.",
+    },
+    {
+      id: "holter-cardiaci",
+      icon: "❤️",
+      title: "Holter cardiaci",
+      description: "Registrazione ECG prolungata per lo studio cardiaco.",
+    },
+    {
       id: "flebo",
       icon: "💧",
       title: "Flebo",
       description: "Terapie infusionali secondo indicazione medica.",
     },
+    {
+      id: "desutura",
+      icon: "🧵",
+      title: "Desutura",
+      description: "Rimozione punti di sutura direttamente a domicilio.",
+    },
+    {
+      id: "cateteri-vescicali",
+      icon: "💧",
+      title: "Cateteri vescicali",
+      description: "Gestione e cambio di cateteri vescicali a domicilio.",
+    },
+    {
+      id: "sondini-naso-gastrici",
+      icon: "🍽️",
+      title: "Sondini naso gastrici",
+      description: "Posizionamento e gestione di sondini naso gastrici.",
+    },
+    {
+      id: "gestione-peg",
+      icon: "🍽️",
+      title: "Gestione PEG",
+      description: "Assistenza per nutrizione con gastrostomia endoscopica.",
+    },
+    {
+      id: "terapia-orale",
+      icon: "💊",
+      title: "Terapia orale",
+      description: "Somministrazione di terapie orali e farmaci a domicilio.",
+    },
+    {
+      id: "parametri-vitali",
+      icon: "📈",
+      title: "Parametri vitali",
+      description: "Rilevamento dei parametri vitali in sede domiciliare.",
+    },
+    {
+      id: "clisteri-evacuativi",
+      icon: "🚽",
+      title: "Clisteri evacuativi",
+      description: "Somministrazione di clisteri e supporto evacuativo.",
+    },
+    {
+      id: "gestione-stomie",
+      icon: "🗂️",
+      title: "Gestione stomie",
+      description: "Cura e assistenza per stomie e sistemi di raccolta.",
+    },
+    {
+      id: "educazione-terapeutica",
+      icon: "👥",
+      title: "Educazione terapeutica",
+      description: "Formazione paziente/caregiver per la gestione della cura.",
+    },
   ];
+
+  const featuredServices = allServices.slice(0, 6); // Mostra i primi 6 servizi
+  const servicesToShow = showAllServices ? allServices : featuredServices;
+
+  useEffect(() => {
+    // Carica recensioni dal localStorage
+    const recensioniSalvate = localStorage.getItem("recensioni");
+    if (recensioniSalvate) {
+      const recensioniParsed = JSON.parse(recensioniSalvate);
+      // Mostra solo le ultime 6 recensioni nella home
+      setRecensioni(recensioniParsed.slice(0, 6));
+    }
+  }, []);
 
   return (
     <Layout>
@@ -65,7 +148,12 @@ export default function Home() {
         </div>
 
         <div className="hero-photo-card">
-          <img src={foto} className="hero-photo" alt="Dott. Eduard G.D." />
+          <img 
+            src={foto} 
+            className="hero-photo lazy-image" 
+            alt="Dott. Eduard G.D. - Infermiere professionale"
+            loading="lazy"
+          />
 
           <div className="caption">
             <strong>Dott. Eduard G.D.</strong>
@@ -110,7 +198,7 @@ export default function Home() {
         <h2>Servizi infermieristici a domicilio</h2>
 
         <div className="cards-grid">
-          {services.map((service) => (
+          {servicesToShow.map((service) => (
             <Link key={service.id} to={`/servizio/${service.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="service-card">
                 <div className="icon">{service.icon}</div>
@@ -120,6 +208,18 @@ export default function Home() {
             </Link>
           ))}
         </div>
+
+        {!showAllServices && (
+          <div style={{ textAlign: 'center', marginTop: '30px' }}>
+            <button
+              onClick={() => setShowAllServices(true)}
+              className="btn-secondary"
+              style={{ padding: '12px 30px', fontSize: '16px' }}
+            >
+              Scopri tutti i servizi
+            </button>
+          </div>
+        )}
       </section>
 
       <section id="domicilio" className="section white split-section">
@@ -141,7 +241,7 @@ export default function Home() {
 
       <section id="strutture" className="section blue">
         <span className="section-label light">Dove lavoro</span>
-        <h2>Prestazioni anche in struttura</h2>
+        <h2>Prestazioni anche in ambulatori</h2>
 
         <div className="structure-grid">
           <Link to="/struttura/eurofins" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -160,21 +260,56 @@ export default function Home() {
         <span className="section-label">Recensioni</span>
         <h2>La fiducia delle famiglie è la priorità</h2>
 
-        <div className="review-grid">
-          <div className="review-card">
-            <div>★★★★★</div>
-            <p>Servizio rapido, professionale e molto umano.</p>
+        {recensioni.length === 0 ? (
+          <div className="review-grid">
+            <div className="review-card">
+              <div>★★★★★</div>
+              <p>Servizio rapido, professionale e molto umano.</p>
+            </div>
+            <div className="review-card">
+              <div>★★★★★</div>
+              <p>Disponibile, competente e attento alle esigenze della persona.</p>
+            </div>
+            <div className="review-card">
+              <div>★★★★★</div>
+              <p>Ottima assistenza a domicilio. Puntuale e preciso.</p>
+            </div>
           </div>
+        ) : (
+          <div
+            className="review-carousel"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            <div className={`review-track ${isPaused ? 'paused' : ''}`}>
+              {/* Prima serie di recensioni */}
+              {recensioni.map((recensione) => (
+                <div key={`first-${recensione.id}`} className="review-item">
+                  <div className="review-card">
+                    <div>{"★★★★★".slice(0, recensione.stelle) + "☆☆☆☆☆".slice(recensione.stelle)}</div>
+                    <p>{recensione.testo.length > 80 ? recensione.testo.substring(0, 80) + "..." : recensione.testo}</p>
+                    <small style={{ color: "#666", fontSize: "12px" }}>- {recensione.nome}</small>
+                  </div>
+                </div>
+              ))}
+              {/* Seconda serie per scorrimento continuo */}
+              {recensioni.map((recensione) => (
+                <div key={`second-${recensione.id}`} className="review-item">
+                  <div className="review-card">
+                    <div>{"★★★★★".slice(0, recensione.stelle) + "☆☆☆☆☆".slice(recensione.stelle)}</div>
+                    <p>{recensione.testo.length > 80 ? recensione.testo.substring(0, 80) + "..." : recensione.testo}</p>
+                    <small style={{ color: "#666", fontSize: "12px" }}>- {recensione.nome}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-          <div className="review-card">
-            <div>★★★★★</div>
-            <p>Disponibile, competente e attento alle esigenze della persona.</p>
-          </div>
-
-          <div className="review-card">
-            <div>★★★★★</div>
-            <p>Ottima assistenza a domicilio. Puntuale e preciso.</p>
-          </div>
+        <div style={{ textAlign: 'center', marginTop: '30px' }}>
+          <Link to="/recensioni" className="btn-primary" style={{ padding: '12px 30px' }}>
+            Lascia una recensione
+          </Link>
         </div>
       </section>
 

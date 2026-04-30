@@ -124,7 +124,7 @@ export default function ChiSiamo() {
               </div>
               <div style={{ backgroundColor: "#e8f4f8", padding: "25px", borderRadius: "12px" }}>
                 <h3 style={{ fontSize: "20px", color: "#073763", marginBottom: "10px" }}>Comodità</h3>
-                <p style={{ fontSize: "16px", color: "#333", margin: "0" }}>Servizio direttamente a domicilio, senza la necessità di spostarsi o attendere presso strutture.</p>
+                <p style={{ fontSize: "16px", color: "#333", margin: "0" }}>Servizio direttamente a domicilio, senza la necessità di spostarsi o attendere presso ambulatori.</p>
               </div>
               <div style={{ backgroundColor: "#e8f4f8", padding: "25px", borderRadius: "12px" }}>
                 <h3 style={{ fontSize: "20px", color: "#073763", marginBottom: "10px" }}>Personalizzazione</h3>

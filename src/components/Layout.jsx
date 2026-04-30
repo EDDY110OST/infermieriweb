@@ -10,7 +10,18 @@ export default function Layout({ children }) {
     { id: "medicazioni", title: "Medicazioni" },
     { id: "prelievi", title: "Prelievi" },
     { id: "iniezioni", title: "Iniezioni" },
+    { id: "holter-pressori", title: "Holter pressori" },
+    { id: "holter-cardiaci", title: "Holter cardiaci" },
     { id: "flebo", title: "Flebo" },
+    { id: "desutura", title: "Desutura" },
+    { id: "cateteri-vescicali", title: "Cateteri vescicali" },
+    { id: "sondini-naso-gastrici", title: "Sondini naso gastrici" },
+    { id: "gestione-peg", title: "Gestione PEG" },
+    { id: "terapia-orale", title: "Terapia orale" },
+    { id: "parametri-vitali", title: "Parametri vitali" },
+    { id: "clisteri-evacuativi", title: "Clisteri evacuativi" },
+    { id: "gestione-stomie", title: "Gestione stomie" },
+    { id: "educazione-terapeutica", title: "Educazione terapeutica" },
   ];
 
   return (
@@ -37,8 +48,8 @@ export default function Layout({ children }) {
         <nav className="menu">
           <Link to="/">Home</Link>
           <Link to="/chi-siamo">Chi Siamo</Link>
-          <Link to="/#domicilio">Domicilio</Link>
-          <Link to="/strutture">Strutture</Link>
+          <Link to="/domicilio">Domiciliari</Link>
+          <Link to="/strutture">Ambulatori</Link>
           <div className="menu-dropdown">
             <button 
               className="menu-dropdown-button"
@@ -61,7 +72,7 @@ export default function Layout({ children }) {
               </div>
             )}
           </div>
-          <Link to="/#recensioni">Recensioni</Link>
+          <Link to="/recensioni">Recensioni</Link>
           <a href="tel:3881125233" className="btn-menu">Chiama ora</a>
         </nav>
       </header>

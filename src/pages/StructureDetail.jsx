@@ -59,7 +59,7 @@ export default function StructureDetail() {
     return (
       <Layout>
         <section className="not-found">
-          <h2>Struttura non trovata</h2>
+          <h2>Ambulatorio non trovato</h2>
           <Link to="/" className="btn-primary">Torna alla home</Link>
         </section>
       </Layout>
@@ -70,7 +70,7 @@ export default function StructureDetail() {
     <Layout>
       <section className="structure-detail">
         <div className="structure-header">
-          <Link to="/strutture" className="back-link">← Torna alle strutture</Link>
+          <Link to="/strutture" className="back-link">← Torna agli ambulatori</Link>
           <h1>{structure.name}</h1>
         </div>
 
