@@ -1,0 +1,137 @@
+.structures-page {
+  min-height: 80vh;
+  padding: 60px 20px;
+  background: white;
+}
+
+.structures-header {
+  max-width: 1200px;
+  margin: 0 auto 50px;
+  text-align: center;
+}
+
+.structures-header h1 {
+  font-size: 2.5rem;
+  color: #1a1a1a;
+  margin: 0 0 15px 0;
+}
+
+.structures-header p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.structures-list {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.structure-item-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.structure-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 25px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.structure-item:hover {
+  background: #f0f7ff;
+  border-color: #0066cc;
+  transform: translateX(8px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+}
+
+.structure-icon {
+  font-size: 3rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.structure-details {
+  flex: 1;
+}
+
+.structure-details h2 {
+  font-size: 1.4rem;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+.structure-details p {
+  margin: 8px 0;
+  color: #555;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.address {
+  font-weight: 500;
+}
+
+.phone a {
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.phone a:hover {
+  color: #004499;
+  text-decoration: underline;
+}
+
+.structure-arrow {
+  font-size: 1.5rem;
+  color: #0066cc;
+  transition: transform 0.3s ease;
+}
+
+.structure-item:hover .structure-arrow {
+  transform: translateX(5px);
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+  .structures-page {
+    padding: 30px 20px;
+  }
+
+  .structures-header h1 {
+    font-size: 2rem;
+  }
+
+  .structures-header p {
+    font-size: 1rem;
+  }
+
+  .structure-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .structure-details h2 {
+    font-size: 1.2rem;
+  }
+
+  .structure-arrow {
+    display: none;
+  }
+
+  .structure-item:hover {
+    transform: translateY(-4px);
+  }
+}

@@ -38,7 +38,7 @@ export default function Layout({ children }) {
           <Link to="/">Home</Link>
           <Link to="/chi-siamo">Chi Siamo</Link>
           <Link to="/#domicilio">Domicilio</Link>
-          <Link to="/#strutture">Strutture</Link>
+          <Link to="/strutture">Strutture</Link>
           <div className="menu-dropdown">
             <button 
               className="menu-dropdown-button"

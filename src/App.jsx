@@ -4,6 +4,8 @@ import "./App.css";
 import Home from "./pages/Home";
 import ServiceDetail from "./pages/ServiceDetail";
 import ChiSiamo from "./pages/ChiSiamo";
+import StructureDetail from "./pages/StructureDetail";
+import Structures from "./pages/Structures";
 
 export default function App() {
   return (
@@ -11,6 +13,8 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/servizio/:serviceId" element={<ServiceDetail />} />
       <Route path="/chi-siamo" element={<ChiSiamo />} />
+      <Route path="/strutture" element={<Structures />} />
+      <Route path="/struttura/:structureId" element={<StructureDetail />} />
     </Routes>
   );
 }

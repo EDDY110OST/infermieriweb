@@ -144,9 +144,15 @@ export default function Home() {
         <h2>Prestazioni anche in struttura</h2>
 
         <div className="structure-grid">
-          <div className="structure-card">Eurofins Lamm</div>
-          <div className="structure-card">Centro Medico D33</div>
-          <div className="structure-card">Farmacia Comunale 24h Lucca</div>
+          <Link to="/struttura/eurofins" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="structure-card">Eurofins Lamm</div>
+          </Link>
+          <Link to="/struttura/centro_medico_d33" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="structure-card">Centro Medico D33</div>
+          </Link>
+          <Link to="/struttura/farmacia_comunale" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="structure-card">Farmacia Comunale 24h Lucca</div>
+          </Link>
         </div>
       </section>
 
