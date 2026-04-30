@@ -846,30 +846,6 @@ body {
 
 /* DARK MODE SUPPORT */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --bg-light: #0f172a;
-    --bg-card: #1e293b;
-    --shadow: rgba(0, 0, 0, 0.3);
-    --shadow-hover: rgba(0, 0, 0, 0.5);
-    --border: rgba(255, 255, 255, 0.1);
-  }
-
-  .hero {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  }
-
-  .step-card,
-  .service-card,
-  .review-card,
-  .info-box {
-    background: rgba(30, 41, 59, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-}
-
 /* WHATSAPP */
 
 .floating-whatsapp {
@@ -900,15 +876,8 @@ body {
 /* LAZY LOADING */
 
 .lazy-image {
-  transition: opacity 0.3s ease;
-}
-
-.lazy-image[loading] {
-  opacity: 0;
-}
-
-.lazy-image[loaded] {
   opacity: 1;
+  transition: opacity 0.3s ease;
 }
 
 /* MOBILE */
