@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 
 export default function Recensioni() {
+  const { t } = useAppSettings();
   const [recensioni, setRecensioni] = useState([]);
   const [nuovaRecensione, setNuovaRecensione] = useState({
     nome: "",
@@ -51,7 +53,7 @@ export default function Recensioni() {
     });
 
     setIsSubmitting(false);
-    setSuccessMessage("Grazie! La tua recensione è stata pubblicata con successo.");
+    setSuccessMessage(t("review.successMessage"));
     window.setTimeout(() => {
       setSuccessMessage("");
     }, 5000);
@@ -72,16 +74,13 @@ export default function Recensioni() {
   return (
     <Layout>
       <section className="section white">
-        <span className="section-label">Recensioni</span>
-        <h1>Le opinioni dei nostri pazienti</h1>
-        <p>
-          Leggi le recensioni lasciate dai nostri pazienti e lascia anche tu la tua opinione
-          sui nostri servizi di assistenza infermieristica a domicilio.
-        </p>
+        <span className="section-label">{t("review.title")}</span>
+        <h1>{t("review.title")}</h1>
+        <p>{t("review.description")}</p>
 
         {/* Form per lasciare recensione */}
         <div style={{ maxWidth: "600px", margin: "40px auto 60px", padding: "30px", borderRadius: "12px", backgroundColor: "#f8fafc" }}>
-          <h2 style={{ marginBottom: "20px", textAlign: "center" }}>Lascia una recensione</h2>
+          <h2 style={{ marginBottom: "20px", textAlign: "center" }}>{t("review.formTitle")}</h2>
 
           {successMessage && (
             <div style={{
@@ -101,7 +100,7 @@ export default function Recensioni() {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-                Nome *
+                {t("review.name")}
               </label>
               <input
                 type="text"
@@ -115,14 +114,14 @@ export default function Recensioni() {
                   borderRadius: "5px",
                   fontSize: "16px"
                 }}
-                placeholder="Il tuo nome"
+                placeholder={t("review.placeholderName")}
                 required
               />
             </div>
 
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-                Valutazione
+                {t("review.rating")}
               </label>
               <select
                 name="stelle"
@@ -146,7 +145,7 @@ export default function Recensioni() {
 
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-                Recensione *
+                {t("review.review")}
               </label>
               <textarea
                 name="testo"
@@ -161,7 +160,7 @@ export default function Recensioni() {
                   minHeight: "100px",
                   resize: "vertical"
                 }}
-                placeholder="Scrivi la tua recensione..."
+                placeholder={t("review.placeholderReview")}
                 required
               />
             </div>
@@ -181,7 +180,7 @@ export default function Recensioni() {
                 cursor: isSubmitting ? "not-allowed" : "pointer"
               }}
             >
-              {isSubmitting ? "Pubblicando..." : "Pubblica recensione"}
+              {isSubmitting ? t("review.publishing") : t("review.submit")}
             </button>
           </form>
         </div>
@@ -189,12 +188,12 @@ export default function Recensioni() {
         {/* Lista recensioni esistenti */}
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <h2 style={{ textAlign: "center", marginBottom: "30px" }}>
-            Recensioni pubblicate ({recensioni.length})
+            {t("review.published")} ({recensioni.length})
           </h2>
 
           {recensioni.length === 0 ? (
             <p style={{ textAlign: "center", color: "#666", fontStyle: "italic" }}>
-              Non ci sono ancora recensioni. Sii il primo a lasciare la tua opinione!
+              {t("review.noReviews")}
             </p>
           ) : (
             <div style={{ display: "grid", gap: "20px" }}>

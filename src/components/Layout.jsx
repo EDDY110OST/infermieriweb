@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 import logo from "../assets/logo.jpeg";
 
 export default function Layout({ children }) {
+  const { t, language, theme, switchLanguage, toggleTheme } = useAppSettings();
   const [showServizi, setShowServizi] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -55,14 +57,39 @@ export default function Layout({ children }) {
 
       <header className="navbar">
         <Link to="/">
-          <img src={logo} className="logo" alt="InfermieriWeb.it" />
+          <img src={logo} className="logo" alt="InfermieriWeb.it" loading="lazy" decoding="async" />
         </Link>
+
+        <div className="navbar-controls">
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={t("aria.themeToggle")}
+          >
+            {theme === "dark" ? "🌙" : "☀️"}
+          </button>
+
+          <label className="language-switcher-label" htmlFor="language-select">
+            <span className="sr-only">{t("aria.languageSwitcher")}</span>
+            <select
+              id="language-select"
+              value={language}
+              onChange={(e) => switchLanguage(e.target.value)}
+              className="language-switcher"
+              aria-label={t("aria.languageSwitcher")}
+            >
+              <option value="it">{t("languages.it")}</option>
+              <option value="en">{t("languages.en")}</option>
+            </select>
+          </label>
+        </div>
 
         <button
           type="button"
           className="mobile-menu-button"
           onClick={toggleMobileNav}
-          aria-label={mobileNavOpen ? "Chiudi menu" : "Apri menu"}
+          aria-label={t("aria.menuToggle")}
           aria-expanded={mobileNavOpen}
         >
           <span />
@@ -71,10 +98,10 @@ export default function Layout({ children }) {
         </button>
 
         <nav className={`menu${mobileNavOpen ? " open" : ""}`}>
-          <Link to="/" onClick={closeMobileNav}>Home</Link>
-          <Link to="/chi-siamo" onClick={closeMobileNav}>Chi Siamo</Link>
-          <Link to="/domicilio" onClick={closeMobileNav}>Domiciliari</Link>
-          <Link to="/strutture" onClick={closeMobileNav}>Ambulatori</Link>
+          <Link to="/" onClick={closeMobileNav}>{t("nav.home")}</Link>
+          <Link to="/chi-siamo" onClick={closeMobileNav}>{t("nav.about")}</Link>
+          <Link to="/domicilio" onClick={closeMobileNav}>{t("nav.domicile") ?? t("nav.domicile")}</Link>
+          <Link to="/strutture" onClick={closeMobileNav}>{t("nav.structures")}</Link>
           <div className="menu-dropdown">
             <button 
               className="menu-dropdown-button"
@@ -83,7 +110,7 @@ export default function Layout({ children }) {
                 setMobileNavOpen(true);
               }}
             >
-              Servizi ▼
+              {t("nav.services")} ▼
             </button>
             {showServizi && (
               <div className="menu-dropdown-content">
@@ -103,12 +130,12 @@ export default function Layout({ children }) {
               </div>
             )}
           </div>
-          <Link to="/recensioni" onClick={closeMobileNav}>Recensioni</Link>
-          <a href="tel:3881125233" className="btn-menu">Chiama ora</a>
+          <Link to="/recensioni" onClick={closeMobileNav}>{t("nav.reviews")}</Link>
+          <a href="tel:3881125233" className="btn-menu">{t("cta.callNow")}</a>
         </nav>
       </header>
 
-      {children}
+      <main id="main-content">{children}</main>
 
       <footer id="contatti" className="footer">
         <div>
@@ -128,6 +155,11 @@ export default function Layout({ children }) {
           <p>7 giorni su 7</p>
         </div>
       </footer>
+
+      <div className="fixed-cta-bar" role="contentinfo" aria-label="CTA fissa per chiamare o scrivere">
+        <a href="tel:3881125233" aria-label={t("aria.callNow")}>{t("cta.call")}</a>
+        <a href="https://wa.me/393881125233" aria-label={t("aria.whatsapp")}>{t("cta.write")}</a>
+      </div>
 
       <button
         type="button"

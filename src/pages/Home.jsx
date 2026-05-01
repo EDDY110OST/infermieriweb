@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 import foto from "../assets/foto.png";
 
 export default function Home() {
+  const { t } = useAppSettings();
   const [showAllServices, setShowAllServices] = useState(false);
   const [recensioni, setRecensioni] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
@@ -124,26 +126,25 @@ export default function Home() {
     <Layout>
       <section className="hero">
         <div className="hero-text">
-          <span className="badge">Lucca e provincia · 7 giorni su 7</span>
+          <span className="badge">{t("hero.badge")}</span>
 
-          <h1>Assistenza infermieristica professionale a domicilio</h1>
+          <h1>
+            Assistenza Infermieristica a <span className="hero-highlight">Casa Tua</span>
+          </h1>
 
-          <p>
-            ECG, medicazioni, prelievi, iniezioni e flebo direttamente a casa,
-            con rapidità, esperienza e attenzione alla persona.
-          </p>
+          <p>{t("hero.text")}</p>
 
           <div className="hero-buttons">
-            <a href="tel:3881125233" className="btn-primary">Chiama ora</a>
+            <a href="tel:3881125233" className="btn-primary">{t("cta.callNow")}</a>
             <a href="https://wa.me/393881125233" className="btn-secondary">
-              Scrivi su WhatsApp
+              {t("cta.whatsapp")}
             </a>
           </div>
 
           <div className="trust">
-            <span>✓ Rapido</span>
-            <span>✓ Professionale</span>
-            <span>✓ Wound Care</span>
+            {t("hero.trust").map((item) => (
+              <span key={item}>✓ {item}</span>
+            ))}
           </div>
         </div>
 
@@ -163,8 +164,8 @@ export default function Home() {
       </section>
 
       <section className="section white">
-        <span className="section-label">Come funziona</span>
-        <h2>Semplice, rapido, chiaro</h2>
+        <span className="section-label">{t("how.label")}</span>
+        <h2>{t("how.title")}</h2>
 
         <div className="steps-grid">
           <div className="step-card">
@@ -194,8 +195,8 @@ export default function Home() {
       </section>
 
       <section id="servizi" className="section gray">
-        <span className="section-label">Prestazioni principali</span>
-        <h2>Servizi infermieristici a domicilio</h2>
+        <span className="section-label">{t("services.label")}</span>
+        <h2>{t("services.title")}</h2>
 
         <div className="cards-grid">
           {servicesToShow.map((service) => (
@@ -216,10 +217,25 @@ export default function Home() {
               className="btn-secondary"
               style={{ padding: '12px 30px', fontSize: '16px' }}
             >
-              Scopri tutti i servizi
+              {t("cta.moreServices")}
             </button>
           </div>
         )}
+      </section>
+
+      <section className="section white faq-section">
+        <span className="section-label">{t("faq.label")}</span>
+        <h2>{t("faq.label")}</h2>
+        <p>{t("faq.intro")}</p>
+
+        <div className="faq-grid">
+          {t("faq.items").map((item) => (
+            <div key={item.question} className="faq-card">
+              <h3>{item.question}</h3>
+              <p>{item.answer}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section id="domicilio" className="section white split-section">
@@ -314,9 +330,9 @@ export default function Home() {
       </section>
 
       <section className="final-cta">
-        <h2>Hai bisogno di un infermiere a domicilio?</h2>
-        <p>Contattami ora per verificare disponibilità e tempi.</p>
-        <a href="tel:3881125233" className="btn-white">Chiama ora</a>
+        <h2>{t("finalCta.title")}</h2>
+        <p>{t("finalCta.text")}</p>
+        <a href="tel:3881125233" className="btn-white">{t("cta.callNow")}</a>
       </section>
     </Layout>
   );
