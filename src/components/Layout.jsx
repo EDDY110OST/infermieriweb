@@ -1,9 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.jpeg";
 
 export default function Layout({ children }) {
   const [showServizi, setShowServizi] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 200);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const toggleMobileNav = () => setMobileNavOpen((current) => !current);
+  const closeMobileNav = () => setMobileNavOpen(false);
 
   const servizi = [
     { id: "ecg", title: "ECG" },
@@ -45,15 +58,30 @@ export default function Layout({ children }) {
           <img src={logo} className="logo" alt="InfermieriWeb.it" />
         </Link>
 
-        <nav className="menu">
-          <Link to="/">Home</Link>
-          <Link to="/chi-siamo">Chi Siamo</Link>
-          <Link to="/domicilio">Domiciliari</Link>
-          <Link to="/strutture">Ambulatori</Link>
+        <button
+          type="button"
+          className="mobile-menu-button"
+          onClick={toggleMobileNav}
+          aria-label={mobileNavOpen ? "Chiudi menu" : "Apri menu"}
+          aria-expanded={mobileNavOpen}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <nav className={`menu${mobileNavOpen ? " open" : ""}`}>
+          <Link to="/" onClick={closeMobileNav}>Home</Link>
+          <Link to="/chi-siamo" onClick={closeMobileNav}>Chi Siamo</Link>
+          <Link to="/domicilio" onClick={closeMobileNav}>Domiciliari</Link>
+          <Link to="/strutture" onClick={closeMobileNav}>Ambulatori</Link>
           <div className="menu-dropdown">
             <button 
               className="menu-dropdown-button"
-              onClick={() => setShowServizi(!showServizi)}
+              onClick={() => {
+                setShowServizi(!showServizi);
+                setMobileNavOpen(true);
+              }}
             >
               Servizi ▼
             </button>
@@ -64,7 +92,10 @@ export default function Layout({ children }) {
                     key={servizio.id}
                     to={`/servizio/${servizio.id}`}
                     className="menu-dropdown-item"
-                    onClick={() => setShowServizi(false)}
+                    onClick={() => {
+                      setShowServizi(false);
+                      closeMobileNav();
+                    }}
                   >
                     {servizio.title}
                   </Link>
@@ -72,7 +103,7 @@ export default function Layout({ children }) {
               </div>
             )}
           </div>
-          <Link to="/recensioni">Recensioni</Link>
+          <Link to="/recensioni" onClick={closeMobileNav}>Recensioni</Link>
           <a href="tel:3881125233" className="btn-menu">Chiama ora</a>
         </nav>
       </header>
@@ -97,6 +128,15 @@ export default function Layout({ children }) {
           <p>7 giorni su 7</p>
         </div>
       </footer>
+
+      <button
+        type="button"
+        className={`scroll-top-button${showScrollTop ? " show" : ""}`}
+        onClick={scrollToTop}
+        aria-label="Torna su"
+      >
+        ↑
+      </button>
 
       <a href="https://wa.me/393881125233" className="floating-whatsapp" aria-label="WhatsApp">
         💬
