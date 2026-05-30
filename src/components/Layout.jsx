@@ -63,11 +63,16 @@ export default function Layout({ children }) {
         <div className="navbar-controls">
           <button
             type="button"
-            className="theme-toggle"
+            className={`theme-toggle ${theme}`}
             onClick={toggleTheme}
             aria-label={t("aria.themeToggle")}
           >
-            {theme === "dark" ? "🌙" : "☀️"}
+            <span className="theme-toggle__icon" aria-hidden="true">
+              {theme === "dark" ? "🌙" : "☀️"}
+            </span>
+            <span className="theme-toggle__label">
+              {t(`theme.${theme}`)}
+            </span>
           </button>
 
           <label className="language-switcher-label" htmlFor="language-select">
