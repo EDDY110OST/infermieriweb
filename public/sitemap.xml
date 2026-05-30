@@ -1,7 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
   <url>
     <loc>https://infermieriweb.it/</loc>
     <priority>1.0</priority>
   </url>
+
+  <url>
+    <loc>https://infermieriweb.it/domicilio</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://infermieriweb.it/chi-siamo</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://infermieriweb.it/strutture</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://infermieriweb.it/recensioni</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url><loc>https://infermieriweb.it/servizio/ecg</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/medicazioni</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/prelievi</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/iniezioni</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/flebo</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/desutura</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/cateteri-vescicali</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/holter-pressori</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/holter-cardiaci</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/sondini-naso-gastrici</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/gestione-peg</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/terapia-orale</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/parametri-vitali</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/clisteri-evacuativi</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/gestione-stomie</loc></url>
+  <url><loc>https://infermieriweb.it/servizio/educazione-terapeutica</loc></url>
+
 </urlset>
