@@ -1,5 +1,6 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import ReactGA from "react-ga4";
 import "./App.css";
 import Home from "./pages/Home";
 import ServiceDetail from "./pages/ServiceDetail";
@@ -9,7 +10,18 @@ import Structures from "./pages/Structures";
 import Domicilio from "./pages/Domicilio";
 import Recensioni from "./pages/Recensioni";
 
+ReactGA.initialize("G-7M0H77LRX2");
+
 export default function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname + location.search,
+    });
+  }, [location]);
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />
