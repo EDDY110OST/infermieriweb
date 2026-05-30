@@ -99,12 +99,12 @@ export default function StructureDetail() {
 
           <div className="structure-info">
             <div className="info-item">
-              <h3>📍 Indirizzo</h3>
+              <h3>{t("pages.structureDetail.address")}</h3>
               <p>{structure.address}</p>
             </div>
 
             <div className="info-item">
-              <h3>📞 Telefono</h3>
+              <h3>{t("pages.structureDetail.phone")}</h3>
               <a href={`tel:${structure.phone}`} className="phone-link">
                 {structure.phone}
               </a>

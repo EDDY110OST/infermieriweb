@@ -64,8 +64,8 @@ export default function Layout({ children }) {
               className="language-switcher"
               aria-label={t("aria.languageSwitcher")}
             >
-              <option value="it">{t("languages.it")}</option>
-              <option value="en">{t("languages.en")}</option>
+              <option value="it">🇮🇹</option>
+              <option value="en">🇬🇧</option>
             </select>
           </label>
         </div>
