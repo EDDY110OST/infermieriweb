@@ -361,7 +361,7 @@ export default function ServiceDetail() {
           </div>
 
           <div style={{ marginBottom: "40px" }}>
-            <div style={{ fontSize: "80px", marginBottom: "20px" }}>{service.icon}</div>
+            <div className="service-detail-icon">{service.icon}</div>
             <h1 style={{ fontSize: "32px", marginBottom: "10px" }}>{service.title}</h1>
             <p style={{ fontSize: "18px", color: "#666", marginBottom: "20px" }}>{service.shortDescription}</p>
           </div>

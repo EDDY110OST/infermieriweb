@@ -797,6 +797,27 @@ body {
   font-size: clamp(36px, 6vw, 42px);
   margin-bottom: 15px;
   display: block;
+  color: var(--primary);
+}
+
+.icon svg {
+  width: 1.4em;
+  height: 1.4em;
+  display: inline-block;
+}
+
+.service-detail-icon {
+  font-size: 80px;
+  color: var(--primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-detail-icon svg {
+  width: 1em;
+  height: 1em;
 }
 
 /* DOMICILIO */
