@@ -104,7 +104,7 @@ async function run() {
   }
 
   // add known static / info pages (cover common routes)
-  const known = ['/lavora-con-noi', '/contatti', '/chi-siamo', '/faq', '/servizi'];
+  const known = ['/lavora-con-noi', '/contatti', '/chi-siamo', '/faq', '/servizi', '/servizi-domiciliari', '/servizi-ambulatoriali'];
   for (const k of known) {
     if (!pages.includes(k)) urls.push({ loc: k, changefreq: 'monthly', priority: '0.7' });
   }
