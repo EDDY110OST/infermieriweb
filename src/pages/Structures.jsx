@@ -1,4 +1,5 @@
 import React from "react";
+import { MdLocalHospital, MdHealthAndSafety, MdLocalPharmacy } from "react-icons/md";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
@@ -10,21 +11,21 @@ const structures = [
     name: "Eurofins Lamm",
     address: "Via Cavalletti, 183, 55100 Lucca LU",
     phone: "0583581491",
-    icon: "🏥",
+    icon: <MdLocalHospital className="structure-icon-svg" />,
   },
   {
     id: "centro_medico_d33",
     name: "Centro Medico D33",
     address: "Via di Salicchi, 978, 55100 Lucca LU",
     phone: "05831527791",
-    icon: "⚕️",
+    icon: <MdHealthAndSafety className="structure-icon-svg" />,
   },
   {
     id: "farmacia_comunale",
     name: "Farmacia Comunale 24h Lucca",
     address: "Piazza Curtatone, 7, 55100 Lucca LU",
     phone: "0583491398",
-    icon: "💊",
+    icon: <MdLocalPharmacy className="structure-icon-svg" />,
   },
 ];
 

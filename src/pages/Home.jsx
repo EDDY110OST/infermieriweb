@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { MdMonitorHeart, MdHealing, MdBloodtype, MdLocalHospital, MdMedication, MdShowChart, MdPeople, MdMedicalServices } from "react-icons/md";
+import { FaSyringe } from "react-icons/fa";
 import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import foto from "../assets/foto.png";
@@ -13,97 +15,97 @@ export default function Home() {
   const allServices = [
     {
       id: "ecg",
-      icon: "❤️",
+      icon: <MdMonitorHeart />,
       title: "ECG",
       description: "Elettrocardiogramma a domicilio.",
     },
     {
       id: "medicazioni",
-      icon: "🩹",
+      icon: <MdHealing />,
       title: "Medicazioni",
       description: "Medicazioni semplici e complesse.",
     },
     {
       id: "prelievi",
-      icon: "🩸",
+      icon: <MdBloodtype />,
       title: "Prelievi",
       description: "Prelievi ematici a domicilio.",
     },
     {
       id: "iniezioni",
-      icon: "💉",
+      icon: <FaSyringe />,
       title: "Iniezioni",
       description: "Somministrazioni su prescrizione.",
     },
     {
       id: "holter-pressori",
-      icon: "🩺",
+      icon: <MdMonitorHeart />,
       title: "Holter pressori",
       description: "Monitoraggio pressorio continuo a domicilio.",
     },
     {
       id: "holter-cardiaci",
-      icon: "❤️",
+      icon: <MdMonitorHeart />,
       title: "Holter cardiaci",
       description: "Registrazione ECG prolungata per lo studio cardiaco.",
     },
     {
       id: "flebo",
-      icon: "💧",
+      icon: <MdLocalHospital />,
       title: "Flebo",
       description: "Terapie infusionali secondo indicazione medica.",
     },
     {
       id: "desutura",
-      icon: "🧵",
+      icon: <MdMedicalServices />,
       title: "Desutura",
       description: "Rimozione punti di sutura direttamente a domicilio.",
     },
     {
       id: "cateteri-vescicali",
-      icon: "💧",
+      icon: <MdHealing />,
       title: "Cateteri vescicali",
       description: "Gestione e cambio di cateteri vescicali a domicilio.",
     },
     {
       id: "sondini-naso-gastrici",
-      icon: "🍽️",
+      icon: <MdMedicalServices />,
       title: "Sondini naso gastrici",
       description: "Posizionamento e gestione di sondini naso gastrici.",
     },
     {
       id: "gestione-peg",
-      icon: "🍽️",
+      icon: <MdMedicalServices />,
       title: "Gestione PEG",
       description: "Assistenza per nutrizione con gastrostomia endoscopica.",
     },
     {
       id: "terapia-orale",
-      icon: "💊",
+      icon: <MdMedication />,
       title: "Terapia orale",
       description: "Somministrazione di terapie orali e farmaci a domicilio.",
     },
     {
       id: "parametri-vitali",
-      icon: "📈",
+      icon: <MdShowChart />,
       title: "Parametri vitali",
       description: "Rilevamento dei parametri vitali in sede domiciliare.",
     },
     {
       id: "clisteri-evacuativi",
-      icon: "🚽",
+      icon: <MdMedicalServices />,
       title: "Clisteri evacuativi",
       description: "Somministrazione di clisteri e supporto evacuativo.",
     },
     {
       id: "gestione-stomie",
-      icon: "🗂️",
+      icon: <MdLocalHospital />,
       title: "Gestione stomie",
       description: "Cura e assistenza per stomie e sistemi di raccolta.",
     },
     {
       id: "educazione-terapeutica",
-      icon: "👥",
+      icon: <MdPeople />,
       title: "Educazione terapeutica",
       description: "Formazione paziente/caregiver per la gestione della cura.",
     },

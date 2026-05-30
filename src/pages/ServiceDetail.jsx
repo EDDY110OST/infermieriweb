@@ -1,5 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
+import { MdMonitorHeart, MdHealing, MdBloodtype, MdLocalHospital, MdMedication, MdShowChart, MdPeople, MdMedicalServices } from "react-icons/md";
+import { FaSyringe } from "react-icons/fa";
 import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 
@@ -9,7 +11,7 @@ export default function ServiceDetail() {
 
   const servicesData = {
     ecg: {
-      icon: "❤️",
+      icon: <MdMonitorHeart />,
       title: "ECG - Elettrocardiogramma",
       shortDescription: "Monitoraggio cardiaco a domicilio",
       fullDescription: "L'elettrocardiogramma (ECG) è un esame diagnostico fondamentale per valutare la salute del cuore. Viene effettuato a domicilio per garantire massima comodità e rapidità.",
@@ -30,7 +32,7 @@ export default function ServiceDetail() {
       price: "Da € 30,00",
     },
     medicazioni: {
-      icon: "🩹",
+      icon: <MdHealing />,
       title: "Medicazioni",
       shortDescription: "Cure delle ferite a domicilio",
       fullDescription: "Offriamo servizi di medicazione sia semplice che complessa, con utilizzo di materiali sterili e secondo i protocolli medici più aggiornati.",
@@ -51,7 +53,7 @@ export default function ServiceDetail() {
       price: "Da € 25,00",
     },
     prelievi: {
-      icon: "🩸",
+      icon: <MdBloodtype />,
       title: "Prelievi Ematici",
       shortDescription: "Prelievi di sangue a domicilio",
       fullDescription: "Eseguiamo prelievi ematici a domicilio con massima professionalità e igiene, garantendo risultati affidabili.",
@@ -72,7 +74,7 @@ export default function ServiceDetail() {
       price: "Da € 15,00",
     },
     iniezioni: {
-      icon: "💉",
+      icon: <FaSyringe />,
       title: "Iniezioni",
       shortDescription: "Somministrazione farmaci per via iniettiva",
       fullDescription: "Somministriamo farmaci per via intramuscolare, sottocutanea o endovenosa secondo prescrizione medica.",
@@ -93,7 +95,7 @@ export default function ServiceDetail() {
       price: "Da € 20,00",
     },
     flebo: {
-      icon: "💧",
+      icon: <MdLocalHospital />,
       title: "Flebo - Terapie Infusionali",
       shortDescription: "Somministrazione di terapie per via endovenosa",
       fullDescription: "Eseguiamo posizionamento di accessi venosi periferici e somministrazione di terapie infusionali secondo prescrizione medica.",
@@ -114,7 +116,7 @@ export default function ServiceDetail() {
       price: "Da € 35,00",
     },
     desutura: {
-      icon: "🧵",
+      icon: <MdMedicalServices />,
       title: "Desutura",
       shortDescription: "Rimozione punti di sutura a domicilio",
       fullDescription: "Eseguiamo la rimozione dei punti di sutura direttamente a casa tua, con attenzione alla cicatrizzazione e rispetto delle indicazioni mediche.",
@@ -134,7 +136,7 @@ export default function ServiceDetail() {
       price: "Da € 30,00",
     },
     "cateteri-vescicali": {
-      icon: "💧",
+      icon: <MdHealing />,
       title: "Cateteri vescicali",
       shortDescription: "Gestione e cambio cateteri vescicali a domicilio",
       fullDescription: "Offriamo assistenza a domicilio per l'inserimento, il cambio e la gestione dei cateteri vescicali, garantendo comfort, igiene e controllo medico.",
@@ -154,7 +156,7 @@ export default function ServiceDetail() {
       price: "Da € 40,00",
     },
     "holter-pressori": {
-      icon: "🩺",
+      icon: <MdMonitorHeart />,
       title: "Holter pressori",
       shortDescription: "Monitoraggio pressorio continuo a domicilio",
       fullDescription: "Installiamo il monitor per lo studio dell'andamento della pressione arteriosa nelle 24 ore, direttamente a casa tua.",
@@ -174,7 +176,7 @@ export default function ServiceDetail() {
       price: "Da € 45,00",
     },
     "holter-cardiaci": {
-      icon: "❤️",
+      icon: <MdMonitorHeart />,
       title: "Holter cardiaci",
       shortDescription: "Registrazione ECG prolungata a domicilio",
       fullDescription: "Forniamo il monitoraggio cardiaco continuativo con Holter ECG per rilevare aritmie e variazioni del ritmo cardiaco.",
@@ -194,7 +196,7 @@ export default function ServiceDetail() {
       price: "Da € 45,00",
     },
     "sondini-naso-gastrici": {
-      icon: "🍽️",
+      icon: <MdLocalHospital />,
       title: "Sondini naso gastrici",
       shortDescription: "Posizionamento e gestione di sondini naso gastrici",
       fullDescription: "Effettuiamo il posizionamento, la gestione e la verifica del sondino naso gastrico con attenzione all'igiene e al comfort del paziente.",
@@ -213,7 +215,7 @@ export default function ServiceDetail() {
       price: "Da € 35,00",
     },
     "gestione-peg": {
-      icon: "🍽️",
+      icon: <MdLocalHospital />,
       title: "Gestione PEG",
       shortDescription: "Assistenza per nutrizione con gastrostomia endoscopica",
       fullDescription: "Forniamo assistenza domiciliare per la cura, il cambio e la gestione della PEG, garantendo sicurezza e supporto nutrizionale.",
@@ -232,7 +234,7 @@ export default function ServiceDetail() {
       price: "Da € 40,00",
     },
     "terapia-orale": {
-      icon: "💊",
+      icon: <MdMedication />,
       title: "Terapia orale",
       shortDescription: "Somministrazione di terapie orali a domicilio",
       fullDescription: "Somministriamo terapie farmacologiche orali con attenzione alla posologia, allo stato del paziente e alle interazioni.",
@@ -251,7 +253,7 @@ export default function ServiceDetail() {
       price: "Da € 25,00",
     },
     "parametri-vitali": {
-      icon: "📈",
+      icon: <MdShowChart />,
       title: "Parametri vitali",
       shortDescription: "Rilevamento dei parametri vitali a domicilio",
       fullDescription: "Misuriamo pressione, frequenza cardiaca, saturazione, temperatura e altri parametri vitali direttamente a casa tua.",
@@ -270,7 +272,7 @@ export default function ServiceDetail() {
       price: "Da € 25,00",
     },
     "clisteri-evacuativi": {
-      icon: "🚽",
+      icon: <MdMedicalServices />,
       title: "Clisteri evacuativi",
       shortDescription: "Somministrazione di clisteri e supporto evacuativo",
       fullDescription: "Forniamo assistenza domiciliare per l'esecuzione di clisteri evacuativi in modo sicuro e rispettoso della privacy.",
@@ -289,7 +291,7 @@ export default function ServiceDetail() {
       price: "Da € 35,00",
     },
     "gestione-stomie": {
-      icon: "🗂️",
+      icon: <MdLocalHospital />,
       title: "Gestione stomie",
       shortDescription: "Cura e assistenza per stomie a domicilio",
       fullDescription: "Assistiamo nella gestione delle stomie, con cambio di sacche, cura della pelle circostante e controlli costanti.",
@@ -308,7 +310,7 @@ export default function ServiceDetail() {
       price: "Da € 40,00",
     },
     "educazione-terapeutica": {
-      icon: "👥",
+      icon: <MdPeople />,
       title: "Educazione terapeutica",
       shortDescription: "Formazione paziente/caregiver per la gestione della cura",
       fullDescription: "Offriamo sessioni di educazione terapeutica per pazienti e caregiver su terapie, igiene e gestione domiciliare delle patologie.",
