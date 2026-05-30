@@ -48,10 +48,26 @@ export default function Layout({ children }) {
           <span>🕒 Lun-Dom 07:00 - 22:00</span>
         </div>
 
-        <div className="top-social">
-          <a href="#" aria-label="Facebook">f</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="TikTok">♪</a>
+        <div className="top-right">
+          <div className="top-social">
+            <a href="#" aria-label="Facebook">f</a>
+            <a href="#" aria-label="Instagram">◎</a>
+            <a href="#" aria-label="TikTok">♪</a>
+          </div>
+
+          <label className="language-switcher-label" htmlFor="language-select">
+            <span className="sr-only">{t("aria.languageSwitcher")}</span>
+            <select
+              id="language-select"
+              value={language}
+              onChange={(e) => switchLanguage(e.target.value)}
+              className="language-switcher"
+              aria-label={t("aria.languageSwitcher")}
+            >
+              <option value="it">{t("languages.it")}</option>
+              <option value="en">{t("languages.en")}</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -74,20 +90,6 @@ export default function Layout({ children }) {
               {t(`theme.${theme}`)}
             </span>
           </button>
-
-          <label className="language-switcher-label" htmlFor="language-select">
-            <span className="sr-only">{t("aria.languageSwitcher")}</span>
-            <select
-              id="language-select"
-              value={language}
-              onChange={(e) => switchLanguage(e.target.value)}
-              className="language-switcher"
-              aria-label={t("aria.languageSwitcher")}
-            >
-              <option value="it">{t("languages.it")}</option>
-              <option value="en">{t("languages.en")}</option>
-            </select>
-          </label>
         </div>
 
         <button

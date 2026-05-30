@@ -1,16 +1,16 @@
 import React from "react";
 import Layout from "../components/Layout";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 
 export default function Recensioni() {
+  const { t } = useAppSettings();
+
   return (
     <Layout>
       <section className="section white">
-        <span className="section-label">Recensioni</span>
-        <h1>Cosa dicono di InfermieriWeb</h1>
-        <p>
-          Le recensioni dei pazienti sono importanti per raccontare la qualità,
-          la puntualità e l'attenzione del nostro servizio infermieristico a domicilio.
-        </p>
+        <span className="section-label">{t("pages.reviews.label")}</span>
+        <h1>{t("pages.reviews.title")}</h1>
+        <p>{t("pages.reviews.description")}</p>
 
         <div style={{
           maxWidth: "720px",
@@ -25,7 +25,7 @@ export default function Recensioni() {
           <div style={{ fontSize: "48px", marginBottom: "15px" }}>⭐</div>
 
           <h2 style={{ fontSize: "32px", marginBottom: "10px", color: "#064e3b" }}>
-            5,0 su Google
+            {t("pages.reviews.rating")}
           </h2>
 
           <div style={{ fontSize: "28px", color: "#f59e0b", marginBottom: "10px" }}>
@@ -33,7 +33,7 @@ export default function Recensioni() {
           </div>
 
           <p style={{ fontSize: "18px", color: "#334155", marginBottom: "8px" }}>
-            Basato su <strong>35 recensioni</strong> verificate su Google.
+            {t("pages.reviews.reviewCount")}
           </p>
 
           <p style={{
@@ -43,9 +43,7 @@ export default function Recensioni() {
             margin: "0 auto 30px",
             lineHeight: "1.6"
           }}>
-            Se hai già usufruito dei nostri servizi, lasciare una recensione ci aiuta
-            a far conoscere InfermieriWeb ad altre persone che cercano assistenza
-            infermieristica a domicilio a Lucca e provincia.
+            {t("pages.reviews.prompt")}
           </p>
 
           <a
@@ -64,7 +62,7 @@ export default function Recensioni() {
               boxShadow: "0 10px 24px rgba(0,137,123,0.25)"
             }}
           >
-            ⭐ Lascia una recensione su Google
+            {t("pages.reviews.googleButton")}
           </a>
         </div>
       </section>

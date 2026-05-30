@@ -1,4 +1,5 @@
 import React from "react";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import "../styles/Structures.css";
@@ -28,12 +29,14 @@ const structures = [
 ];
 
 export default function Structures() {
+  const { t } = useAppSettings();
+
   return (
     <Layout>
       <section className="structures-page">
         <div className="structures-header">
-          <h1>Gli ambulatori con cui collaboro</h1>
-          <p>Clicca su un ambulatorio per visualizzare la mappa e i dettagli</p>
+          <h1>{t("pages.structures.title")}</h1>
+          <p>{t("pages.structures.description")}</p>
         </div>
 
         <div className="structures-list">

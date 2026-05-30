@@ -1,8 +1,10 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "../components/Layout";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 
 export default function ServiceDetail() {
+  const { t } = useAppSettings();
   const { serviceId } = useParams();
 
   const servicesData = {
@@ -332,9 +334,9 @@ export default function ServiceDetail() {
     return (
       <Layout>
         <section className="section white">
-          <h2>Servizio non trovato</h2>
-          <p>Il servizio che cerchi non è disponibile.</p>
-          <Link to="/" className="btn-primary">Torna alla home</Link>
+          <h2>{t("pages.serviceDetail.serviceNotFound")}</h2>
+          <p>{t("pages.serviceDetail.notFoundHome")}</p>
+          <Link to="/" className="btn-primary">{t("pages.serviceDetail.backHome")}</Link>
         </section>
       </Layout>
     );
@@ -355,12 +357,12 @@ export default function ServiceDetail() {
           </div>
 
           <div style={{ marginBottom: "40px" }}>
-            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>Descrizione</h2>
+            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>{t("pages.serviceDetail.descriptionTitle")}</h2>
             <p style={{ fontSize: "16px", lineHeight: "1.6", color: "#333" }}>{service.fullDescription}</p>
           </div>
 
           <div style={{ marginBottom: "40px" }}>
-            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>Caratteristiche</h2>
+            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>{t("pages.serviceDetail.featuresTitle")}</h2>
             <ul style={{ fontSize: "16px", lineHeight: "1.8", color: "#333" }}>
               {service.details.map((detail, index) => (
                 <li key={index} style={{ marginBottom: "8px" }}>✓ {detail}</li>
@@ -369,7 +371,7 @@ export default function ServiceDetail() {
           </div>
 
           <div style={{ marginBottom: "40px" }}>
-            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>Indicazioni</h2>
+            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>{t("pages.serviceDetail.indicationsTitle")}</h2>
             <ul style={{ fontSize: "16px", lineHeight: "1.8", color: "#333" }}>
               {service.indications.map((indication, index) => (
                 <li key={index} style={{ marginBottom: "8px" }}>→ {indication}</li>
@@ -378,19 +380,19 @@ export default function ServiceDetail() {
           </div>
 
           <div style={{ backgroundColor: "#f5f5f5", padding: "20px", borderRadius: "8px", marginBottom: "40px" }}>
-            <p style={{ fontSize: "18px", fontWeight: "bold", color: "#333" }}>Tariffe: {service.price}</p>
-            <p style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>*Le tariffe possono variare in base alla complessità dell'intervento. Contattaci per una consulenza personalizzata.</p>
+            <p style={{ fontSize: "18px", fontWeight: "bold", color: "#333" }}>{t("pages.serviceDetail.pricingTitle")}: {service.price}</p>
+            <p style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>{t("pages.serviceDetail.pricingNote")}</p>
           </div>
 
           <div style={{ backgroundColor: "#e8f4f8", padding: "30px", borderRadius: "8px", textAlign: "center" }}>
-            <h3 style={{ fontSize: "20px", marginBottom: "15px" }}>Contattaci per prenotare</h3>
-            <p style={{ fontSize: "16px", marginBottom: "20px" }}>Chiama o invia un messaggio su WhatsApp</p>
+            <h3 style={{ fontSize: "20px", marginBottom: "15px" }}>{t("pages.serviceDetail.contactTitle")}</h3>
+            <p style={{ fontSize: "16px", marginBottom: "20px" }}>{t("pages.serviceDetail.contactText")}</p>
             <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
               <a href="tel:3313139220" className="btn-primary" style={{ padding: "12px 30px", textDecoration: "none" }}>
-                📞 Chiama
+                {t("pages.serviceDetail.call")}
               </a>
               <a href="https://wa.me/393313139220" className="btn-secondary" style={{ padding: "12px 30px", textDecoration: "none" }}>
-                💬 WhatsApp
+                {t("pages.serviceDetail.whatsapp")}
               </a>
             </div>
           </div>

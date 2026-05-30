@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import Layout from "../components/Layout";
+import { useAppSettings } from "../contexts/AppContext.jsx";
 import "../styles/StructureDetail.css";
 
 // Custom flag icon
@@ -52,6 +53,7 @@ const structures = {
 };
 
 export default function StructureDetail() {
+  const { t } = useAppSettings();
   const { structureId } = useParams();
   const structure = structures[structureId];
 
@@ -59,8 +61,8 @@ export default function StructureDetail() {
     return (
       <Layout>
         <section className="not-found">
-          <h2>Ambulatorio non trovato</h2>
-          <Link to="/" className="btn-primary">Torna alla home</Link>
+          <h2>{t("pages.structureDetail.notFoundTitle")}</h2>
+          <Link to="/strutture" className="btn-primary">{t("pages.structureDetail.backToStructures")}</Link>
         </section>
       </Layout>
     );
@@ -70,7 +72,7 @@ export default function StructureDetail() {
     <Layout>
       <section className="structure-detail">
         <div className="structure-header">
-          <Link to="/strutture" className="back-link">← Torna agli ambulatori</Link>
+          <Link to="/strutture" className="back-link">{t("pages.structureDetail.backToStructures")}</Link>
           <h1>{structure.name}</h1>
         </div>
 
