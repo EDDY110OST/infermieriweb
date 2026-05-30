@@ -71,7 +71,10 @@ export default function Domicilio() {
         </div>
 
         <div style={{ marginTop: "40px", textAlign: "center" }}>
-          <Link to="/" className="btn-secondary">{t("pages.domicile.backHome")}</Link>
+          <Link to="/" className="btn-primary btn-home">
+            <span className="btn-icon" aria-hidden="true">🏠</span>
+            {t("pages.domicile.backHome")}
+          </Link>
         </div>
       </section>
     </Layout>

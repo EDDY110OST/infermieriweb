@@ -336,7 +336,12 @@ export default function ServiceDetail() {
         <section className="section white">
           <h2>{t("pages.serviceDetail.serviceNotFound")}</h2>
           <p>{t("pages.serviceDetail.notFoundHome")}</p>
-          <Link to="/" className="btn-primary">{t("pages.serviceDetail.backHome")}</Link>
+          <div className="page-cta">
+            <Link to="/" className="btn-primary btn-home">
+              <span className="btn-icon" aria-hidden="true">🏠</span>
+              {t("pages.serviceDetail.backHome")}
+            </Link>
+          </div>
         </section>
       </Layout>
     );
@@ -346,9 +351,12 @@ export default function ServiceDetail() {
     <Layout>
       <section className="section white service-detail">
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "40px 20px" }}>
-          <Link to="/" style={{ color: "#0066cc", textDecoration: "none", marginBottom: "20px", display: "inline-block" }}>
-            ← Torna alla home
-          </Link>
+          <div className="page-cta" style={{ marginBottom: "20px" }}>
+            <Link to="/" className="btn-primary btn-home">
+              <span className="btn-icon" aria-hidden="true">🏠</span>
+              {t("pages.serviceDetail.backHome")}
+            </Link>
+          </div>
 
           <div style={{ marginBottom: "40px" }}>
             <div style={{ fontSize: "80px", marginBottom: "20px" }}>{service.icon}</div>

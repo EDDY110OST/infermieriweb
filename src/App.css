@@ -462,6 +462,39 @@ body {
   left: 100%;
 }
 
+.btn-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 28px;
+  border-radius: 9999px;
+  box-shadow: 0 14px 30px rgba(0, 137, 123, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.btn-home:hover {
+  transform: scale(1.05);
+  box-shadow: 0 22px 44px rgba(0, 137, 123, 0.32);
+}
+
+.btn-home:active {
+  transform: scale(0.98);
+}
+
+.btn-home .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+}
+
+.page-cta {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 .btn-secondary {
   background: var(--bg-card);
   color: var(--primary);
