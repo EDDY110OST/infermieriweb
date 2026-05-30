@@ -1,24 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import logo from "../assets/logo.jpeg";
 
 export default function Layout({ children }) {
+  const location = useLocation();
   const { t, language, theme, switchLanguage, toggleTheme } = useAppSettings();
   const [showServizi, setShowServizi] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 200);
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 200);
+      setIsSticky(window.scrollY > 10);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    setShowServizi(false);
+    setShowInfo(false);
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
   const toggleMobileNav = () => setMobileNavOpen((current) => !current);
-  const closeMobileNav = () => setMobileNavOpen(false);
+  const closeMobileNav = () => {
+    setMobileNavOpen(false);
+    setShowServizi(false);
+    setShowInfo(false);
+  };
 
   const servizi = [
     { id: "ecg", title: "ECG" },
@@ -71,7 +87,7 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      <header className="navbar">
+      <header className={`navbar${isSticky ? " sticky" : ""}`}>
         <Link to="/">
           <img src={logo} className="logo" alt="InfermieriWeb.it" loading="lazy" decoding="async" />
         </Link>
@@ -105,61 +121,141 @@ export default function Layout({ children }) {
         </button>
 
         <nav className={`menu${mobileNavOpen ? " open" : ""}`}>
-          <Link to="/" onClick={closeMobileNav}>{t("nav.home")}</Link>
-          <Link to="/chi-siamo" onClick={closeMobileNav}>{t("nav.about")}</Link>
-          <Link to="/domicilio" onClick={closeMobileNav}>{t("nav.domicile") ?? t("nav.domicile")}</Link>
-          <Link to="/strutture" onClick={closeMobileNav}>{t("nav.structures")}</Link>
-          <div className="menu-dropdown">
-            <button 
+          <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMobileNav}>
+            {t("nav.home")}
+          </NavLink>
+
+          <div className={`menu-dropdown${showServizi ? " open" : ""}`}>
+            <button
+              type="button"
               className="menu-dropdown-button"
+              aria-haspopup="menu"
+              aria-expanded={showServizi}
               onClick={() => {
-                setShowServizi(!showServizi);
-                setMobileNavOpen(true);
+                setShowServizi((current) => !current);
+                setShowInfo(false);
               }}
             >
               {t("nav.services")} ▼
             </button>
+
             {showServizi && (
-              <div className="menu-dropdown-content">
-                {servizi.map((servizio) => (
-                  <Link 
-                    key={servizio.id}
-                    to={`/servizio/${servizio.id}`}
-                    className="menu-dropdown-item"
-                    onClick={() => {
-                      setShowServizi(false);
-                      closeMobileNav();
-                    }}
+              <div className="menu-dropdown-content" role="menu">
+                <div className="dropdown-section">
+                  <p className="dropdown-title">Percorsi</p>
+                  <NavLink
+                    to="/domicilio"
+                    className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")}
+                    onClick={closeMobileNav}
                   >
-                    {servizio.title}
-                  </Link>
-                ))}
+                    Servizi Domiciliari
+                  </NavLink>
+                  <NavLink
+                    to="/strutture"
+                    className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")}
+                    onClick={closeMobileNav}
+                  >
+                    Servizi Ambulatoriali
+                  </NavLink>
+                </div>
+                <div className="dropdown-divider" aria-hidden="true" />
+                <div className="dropdown-section">
+                  <p className="dropdown-title">Prestazioni</p>
+                  <NavLink to="/servizio/ecg" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>ECG</NavLink>
+                  <NavLink to="/servizio/holter-cardiaci" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Holter Cardiaco</NavLink>
+                  <NavLink to="/servizio/holter-pressori" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Holter Pressorio</NavLink>
+                  <NavLink to="/servizio/medicazioni" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Medicazioni</NavLink>
+                  <NavLink to="/servizio/prelievi" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Prelievi</NavLink>
+                  <NavLink to="/servizio/iniezioni" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Iniezioni</NavLink>
+                  <NavLink to="/servizio/flebo" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Flebo</NavLink>
+                  <NavLink to="/servizio/cateteri-vescicali" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Cateteri Vescicali</NavLink>
+                  <NavLink to="/servizio/gestione-stomie" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Gestione Stomie</NavLink>
+                  <NavLink to="/servizio/desutura" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Rimozione Punti di Sutura</NavLink>
+                  <NavLink to="/servizio/clisteri-evacuativi" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Clisteri Evacuativi</NavLink>
+                  <NavLink to="/servizio/educazione-terapeutica" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>Piano Assistenziale Personalizzato</NavLink>
+                </div>
               </div>
             )}
           </div>
-          <Link to="/recensioni" onClick={closeMobileNav}>{t("nav.reviews")}</Link>
-          <a href="tel:3313139220" className="btn-menu">{t("cta.callNow")}</a>
+
+          <NavLink to="/articoli" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMobileNav}>
+            {t("nav.articles")}
+          </NavLink>
+
+          <div className={`menu-dropdown${showInfo ? " open" : ""}`}>
+            <button
+              type="button"
+              className="menu-dropdown-button"
+              aria-haspopup="menu"
+              aria-expanded={showInfo}
+              onClick={() => {
+                setShowInfo((current) => !current);
+                setShowServizi(false);
+              }}
+            >
+              {t("nav.info")} ▼
+            </button>
+
+            {showInfo && (
+              <div className="menu-dropdown-content" role="menu">
+                <NavLink to="/chi-siamo" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>
+                  {t("nav.about")}
+                </NavLink>
+                <a href="/#faq" className="menu-dropdown-item" onClick={closeMobileNav}>
+                  FAQ
+                </a>
+                <NavLink to="/recensioni" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>
+                  {t("nav.reviews")}
+                </NavLink>
+                <NavLink to="/lavora-con-noi" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>
+                  {t("nav.workWithUs")}
+                </NavLink>
+                <a href="#contatti" className="menu-dropdown-item" onClick={closeMobileNav}>
+                  Contatti
+                </a>
+              </div>
+            )}
+          </div>
+
+          <a href="tel:3313139220" className="btn-menu btn-call">
+            📞 Chiama Ora
+          </a>
+          <a href="https://wa.me/393313139220" className="btn-menu btn-whatsapp">
+            💬 WhatsApp
+          </a>
         </nav>
       </header>
 
       <main id="main-content">{children}</main>
 
       <footer id="contatti" className="footer">
-        <div>
-          <img src={logo} className="footer-logo" alt="InfermieriWeb.it" />
-          <p>Assistenza infermieristica domiciliare su Lucca e provincia.</p>
+        <div className="footer-column">
+          <h3>Informazioni</h3>
+          <NavLink to="/" onClick={closeMobileNav}>Home</NavLink>
+          <NavLink to="/chi-siamo" onClick={closeMobileNav}>Chi Siamo</NavLink>
+          <a href="/#faq">FAQ</a>
+          <NavLink to="/recensioni" onClick={closeMobileNav}>Recensioni</NavLink>
+          <NavLink to="/lavora-con-noi" onClick={closeMobileNav}>Lavora con Noi</NavLink>
+          <a href="#contatti">Contatti</a>
         </div>
 
-        <div>
+        <div className="footer-column">
+          <h3>Servizi</h3>
+          <NavLink to="/domicilio" onClick={closeMobileNav}>Servizi Domiciliari</NavLink>
+          <NavLink to="/strutture" onClick={closeMobileNav}>Servizi Ambulatoriali</NavLink>
+          <NavLink to="/servizio/ecg" onClick={closeMobileNav}>ECG</NavLink>
+          <NavLink to="/servizio/holter-cardiaci" onClick={closeMobileNav}>Holter</NavLink>
+          <NavLink to="/servizio/medicazioni" onClick={closeMobileNav}>Medicazioni</NavLink>
+          <NavLink to="/servizio/prelievi" onClick={closeMobileNav}>Prelievi</NavLink>
+          <NavLink to="/servizio/iniezioni" onClick={closeMobileNav}>Iniezioni</NavLink>
+        </div>
+
+        <div className="footer-column">
           <h3>Contatti</h3>
           <p>📞 3313139220</p>
+          <a href="https://wa.me/393313139220" target="_blank" rel="noreferrer">💬 WhatsApp</a>
           <p>✉️ infermieri.ef@gmail.com</p>
-        </div>
-
-        <div>
-          <h3>Orari</h3>
-          <p>Lun-Dom 07:00 - 22:00</p>
-          <p>7 giorni su 7</p>
+          <p>Area operativa: Lucca e provincia</p>
         </div>
       </footer>
 

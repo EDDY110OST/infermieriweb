@@ -4,6 +4,7 @@ import { MdMonitorHeart, MdHealing, MdBloodtype, MdLocalHospital, MdMedication, 
 import { FaSyringe } from "react-icons/fa";
 import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
+import { articles } from "../data/articles";
 import foto from "../assets/foto.png";
 
 export default function Home() {
@@ -113,6 +114,10 @@ export default function Home() {
 
   const featuredServices = allServices.slice(0, 6); // Mostra i primi 6 servizi
   const servicesToShow = showAllServices ? allServices : featuredServices;
+  const latestArticles = articles
+    .slice()
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 3);
 
   useEffect(() => {
     // Carica recensioni dal localStorage
@@ -225,7 +230,34 @@ export default function Home() {
         )}
       </section>
 
-      <section className="section white faq-section">
+      <section id="articoli" className="section gray">
+        <span className="section-label">Ultimi Articoli</span>
+        <h2>Notizie utili per la tua assistenza infermieristica</h2>
+
+        <div className="article-preview-grid">
+          {latestArticles.map((article) => (
+            <Link key={article.slug} to={`/articoli/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="article-preview-card">
+                <img src={article.image} alt={article.title} loading="lazy" />
+                <div>
+                  <span className="article-preview-category">{article.category}</span>
+                  <h3>{article.title}</h3>
+                  <p>{article.excerpt}</p>
+                  <span className="article-preview-link">Leggi</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '30px' }}>
+          <Link to="/articoli" className="btn-secondary" style={{ padding: '12px 30px' }}>
+            Vedi tutti gli articoli
+          </Link>
+        </div>
+      </section>
+
+      <section id="faq" className="section white faq-section">
         <span className="section-label">{t("faq.label")}</span>
         <h2>{t("faq.label")}</h2>
         <p>{t("faq.intro")}</p>

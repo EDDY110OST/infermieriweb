@@ -14,7 +14,11 @@ const translations = {
       domicile: "Domiciliari",
       structures: "Ambulatori",
       services: "Servizi",
-      reviews: "Recensioni"
+      reviews: "Recensioni",
+      articles: "Articoli",
+      info: "Info",
+      workWithUs: "Lavora con Noi",
+      contact: "Contatti"
     },
     cta: {
       callNow: "Chiama ora",
@@ -367,7 +371,11 @@ items: [
       domicile: "Home Care",
       structures: "Clinics",
       services: "Services",
-      reviews: "Reviews"
+      reviews: "Reviews",
+      articles: "Articles",
+      info: "Info",
+      workWithUs: "Work with Us",
+      contact: "Contact"
     },
     cta: {
       callNow: "Call now",

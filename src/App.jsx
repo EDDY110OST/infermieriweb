@@ -9,6 +9,9 @@ import StructureDetail from "./pages/StructureDetail";
 import Structures from "./pages/Structures";
 import Domicilio from "./pages/Domicilio";
 import Recensioni from "./pages/Recensioni";
+import LavoraConNoi from "./pages/LavoraConNoi";
+import Articoli from "./pages/Articoli";
+import Articolo from "./pages/Articolo";
 
 ReactGA.initialize("G-7M0H77LRX2");
 
@@ -31,6 +34,9 @@ export default function App() {
       <Route path="/strutture" element={<Structures />} />
       <Route path="/struttura/:structureId" element={<StructureDetail />} />
       <Route path="/recensioni" element={<Recensioni />} />
+      <Route path="/articoli" element={<Articoli />} />
+      <Route path="/articoli/:slug" element={<Articolo />} />
+      <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
     </Routes>
   );
 }
