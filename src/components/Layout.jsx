@@ -43,7 +43,7 @@ export default function Layout({ children }) {
     <div className="page">
       <div className="top-bar">
         <div className="top-left">
-          <span>📞 3881125233</span>
+          <span>📞 3313139220</span>
           <span>✉️ infermieri.ef@gmail.com</span>
           <span>🕒 Lun-Dom 07:00 - 22:00</span>
         </div>
@@ -131,7 +131,7 @@ export default function Layout({ children }) {
             )}
           </div>
           <Link to="/recensioni" onClick={closeMobileNav}>{t("nav.reviews")}</Link>
-          <a href="tel:3881125233" className="btn-menu">{t("cta.callNow")}</a>
+          <a href="tel:3313139220" className="btn-menu">{t("cta.callNow")}</a>
         </nav>
       </header>
 
@@ -145,7 +145,7 @@ export default function Layout({ children }) {
 
         <div>
           <h3>Contatti</h3>
-          <p>📞 3881125233</p>
+          <p>📞 3313139220</p>
           <p>✉️ infermieri.ef@gmail.com</p>
         </div>
 
@@ -157,8 +157,8 @@ export default function Layout({ children }) {
       </footer>
 
       <div className="fixed-cta-bar" role="contentinfo" aria-label="CTA fissa per chiamare o scrivere">
-        <a href="tel:3881125233" aria-label={t("aria.callNow")}>{t("cta.call")}</a>
-        <a href="https://wa.me/393881125233" aria-label={t("aria.whatsapp")}>{t("cta.write")}</a>
+        <a href="tel:3313139220" aria-label={t("aria.callNow")}>{t("cta.call")}</a>
+        <a href="https://wa.me/393313139220" aria-label={t("aria.whatsapp")}>{t("cta.write")}</a>
       </div>
 
       <button
@@ -170,7 +170,7 @@ export default function Layout({ children }) {
         ↑
       </button>
 
-      <a href="https://wa.me/393881125233" className="floating-whatsapp" aria-label="WhatsApp">
+      <a href="https://wa.me/393313139220" className="floating-whatsapp" aria-label="WhatsApp">
         💬
       </a>
     </div>

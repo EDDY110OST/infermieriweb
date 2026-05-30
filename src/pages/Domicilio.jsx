@@ -124,8 +124,8 @@ export default function Domicilio() {
           <h2>Vuoi prenotare una prestazione a domicilio?</h2>
           <p style={{ color: "#fff" }}>Chiama o scrivi subito per verificare disponibilità e costo nella tua zona.</p>
           <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="tel:3881125233" className="btn-primary">📞 Chiama ora</a>
-            <a href="https://wa.me/393881125233" className="btn-secondary">💬 WhatsApp</a>
+            <a href="tel:3313139220" className="btn-primary">📞 Chiama ora</a>
+            <a href="https://wa.me/393313139220" className="btn-secondary">💬 WhatsApp</a>
           </div>
         </div>
 

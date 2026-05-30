@@ -386,10 +386,10 @@ export default function ServiceDetail() {
             <h3 style={{ fontSize: "20px", marginBottom: "15px" }}>Contattaci per prenotare</h3>
             <p style={{ fontSize: "16px", marginBottom: "20px" }}>Chiama o invia un messaggio su WhatsApp</p>
             <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
-              <a href="tel:3881125233" className="btn-primary" style={{ padding: "12px 30px", textDecoration: "none" }}>
+              <a href="tel:3313139220" className="btn-primary" style={{ padding: "12px 30px", textDecoration: "none" }}>
                 📞 Chiama
               </a>
-              <a href="https://wa.me/393881125233" className="btn-secondary" style={{ padding: "12px 30px", textDecoration: "none" }}>
+              <a href="https://wa.me/393313139220" className="btn-secondary" style={{ padding: "12px 30px", textDecoration: "none" }}>
                 💬 WhatsApp
               </a>
             </div>

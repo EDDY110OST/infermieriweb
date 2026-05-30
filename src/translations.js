@@ -46,7 +46,7 @@ const translations = {
       items: [
         {
           question: "Come posso prenotare una visita?",
-          answer: "Puoi chiamare direttamente o scrivere su WhatsApp al numero 3881125233 per fissare l'intervento a domicilio."
+          answer: "Puoi chiamare direttamente o scrivere su WhatsApp al numero 3313139220 per fissare l'intervento a domicilio."
         },
         {
           question: "Quali servizi posso richiedere a domicilio?",
@@ -75,7 +75,7 @@ const translations = {
       en: "English"
     },
     aria: {
-      callNow: "Chiama il numero 3881125233",
+      callNow: "Chiama il numero 3313139220",
       whatsapp: "Contatta via WhatsApp",
       languageSwitcher: "Cambia lingua del sito",
       themeToggle: "Cambia tema chiaro o scuro",
@@ -144,7 +144,7 @@ const translations = {
       items: [
         {
           question: "How can I book a visit?",
-          answer: "You can call directly or message on WhatsApp at 3881125233 to schedule the home visit."
+          answer: "You can call directly or message on WhatsApp at 3313139220 to schedule the home visit."
         },
         {
           question: "Which services can I request at home?",
@@ -173,7 +173,7 @@ const translations = {
       en: "English"
     },
     aria: {
-      callNow: "Call number 3881125233",
+      callNow: "Call number 3313139220",
       whatsapp: "Contact via WhatsApp",
       languageSwitcher: "Switch site language",
       themeToggle: "Toggle light or dark theme",

@@ -135,8 +135,8 @@ export default function Home() {
           <p>{t("hero.text")}</p>
 
           <div className="hero-buttons">
-            <a href="tel:3881125233" className="btn-primary">{t("cta.callNow")}</a>
-            <a href="https://wa.me/393881125233" className="btn-secondary">
+            <a href="tel:3313139220" className="btn-primary">{t("cta.callNow")}</a>
+            <a href="https://wa.me/393313139220" className="btn-secondary">
               {t("cta.whatsapp")}
             </a>
           </div>
@@ -251,7 +251,7 @@ export default function Home() {
         <div className="info-box">
           <h3>Zone servite</h3>
           <p>Lucca, Capannori, Porcari, Altopascio e provincia.</p>
-          <a href="tel:3881125233" className="btn-primary">Verifica disponibilità</a>
+          <a href="tel:3313139220" className="btn-primary">Verifica disponibilità</a>
         </div>
       </section>
 
@@ -332,7 +332,7 @@ export default function Home() {
       <section className="final-cta">
         <h2>{t("finalCta.title")}</h2>
         <p>{t("finalCta.text")}</p>
-        <a href="tel:3881125233" className="btn-white">{t("cta.callNow")}</a>
+        <a href="tel:3313139220" className="btn-white">{t("cta.callNow")}</a>
       </section>
     </Layout>
   );

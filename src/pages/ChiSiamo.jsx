@@ -149,10 +149,10 @@ export default function ChiSiamo() {
               La tua salute è la nostra priorità. Scopri come possiamo aiutarti con assistenza professionale e dedicata.
             </p>
             <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
-              <a href="tel:3881125233" className="btn-primary" style={{ padding: "14px 28px", textDecoration: "none" }}>
-                📞 Chiama: 3881125233
+              <a href="tel:3313139220" className="btn-primary" style={{ padding: "14px 28px", textDecoration: "none" }}>
+                📞 Chiama: 3313139220
               </a>
-              <a href="https://wa.me/393881125233" className="btn-secondary" style={{ padding: "14px 28px", textDecoration: "none" }}>
+              <a href="https://wa.me/393313139220" className="btn-secondary" style={{ padding: "14px 28px", textDecoration: "none" }}>
                 💬 WhatsApp
               </a>
               <a href="mailto:infermieri.ef@gmail.com" className="btn-primary" style={{ padding: "14px 28px", textDecoration: "none" }}>
