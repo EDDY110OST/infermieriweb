@@ -43,24 +43,48 @@ const translations = {
     faq: {
       label: "Domande frequenti",
       intro: "Le risposte alle domande più comuni su come prenotare e ricevere assistenza infermieristica a domicilio.",
-      items: [
-        {
-          question: "Come posso prenotare una visita?",
-          answer: "Puoi chiamare direttamente o scrivere su WhatsApp al numero 3313139220 per fissare l'intervento a domicilio."
-        },
-        {
-          question: "Quali servizi posso richiedere a domicilio?",
-          answer: "Offriamo ECG, medicazioni, prelievi, iniezioni, flebo, gestione sondini e molti altri servizi infermieristici direttamente a casa."
-        },
-        {
-          question: "In quali zone operate?",
-          answer: "Operiamo a Lucca e provincia, inclusi Capannori, Porcari, Altopascio e i comuni limitrofi."
-        },
-        {
-          question: "È possibile richiedere assistenza in emergenza?",
-          answer: "Sì, siamo disponibili 7 giorni su 7 dalle 07:00 alle 22:00 e possiamo valutare interventi rapidi a domicilio."
-        }
-      ]
+items: [
+  {
+    question: "Come posso prenotare una visita infermieristica?",
+    answer: "Puoi chiamarci o scriverci su WhatsApp al 331 313 9220. Ti risponderemo rapidamente per valutare la tua esigenza e fissare l'appuntamento."
+  },
+  {
+    question: "In quali zone operate?",
+    answer: "Effettuiamo assistenza infermieristica a domicilio a Lucca, Capannori, Porcari, Altopascio, Montecarlo e nei comuni limitrofi."
+  },
+  {
+    question: "Quanto costa un intervento infermieristico a domicilio?",
+    answer: "Il costo varia in base al tipo di prestazione richiesta. Contattaci per un preventivo gratuito e senza impegno."
+  },
+  {
+    question: "Quali prestazioni infermieristiche effettuate?",
+    answer: "Offriamo ECG, medicazioni semplici e complesse, iniezioni, flebo, gestione stomie, cateteri vescicali, prelievi, rimozione punti di sutura, monitoraggio parametri vitali e molto altro."
+  },
+  {
+    question: "Posso richiedere un infermiere anche per una sola prestazione?",
+    answer: "Sì. Puoi richiedere una singola prestazione oppure un piano assistenziale continuativo personalizzato in base alle tue esigenze."
+  },
+  {
+    question: "È necessaria la prescrizione medica?",
+    answer: "Per alcune prestazioni può essere richiesta la prescrizione del medico. Se hai dubbi, contattaci e ti forniremo tutte le informazioni necessarie."
+  },
+  {
+    question: "In quanto tempo riuscite a intervenire?",
+    answer: "Cerchiamo sempre di garantire la massima rapidità. In molti casi riusciamo a programmare l'intervento entro 24 ore dalla richiesta."
+  },
+  {
+    question: "Siete disponibili nei weekend e nei festivi?",
+    answer: "Sì, operiamo 7 giorni su 7, compresi sabato, domenica e festivi, su appuntamento."
+  },
+  {
+    question: "Posso richiedere un ECG a domicilio?",
+    answer: "Certamente. Eseguiamo ECG a domicilio con refertazione specialistica, evitando al paziente spostamenti inutili."
+  },
+  {
+    question: "Perché scegliere InfermieriWeb?",
+    answer: "Collaboriamo con infermieri qualificati e iscritti all'Ordine Professionale, offrendo assistenza professionale, puntualità, sicurezza e attenzione alle esigenze del paziente."
+  }
+]
     },
     finalCta: {
       title: "Hai bisogno di un infermiere a domicilio?",
