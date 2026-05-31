@@ -34,9 +34,34 @@ export default defineConfig({
         ],
       },
       workbox: {
-        navigateFallback: '/offline.html',
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/\.json$/, /\.svg$/, /\.png$/, /\.jpg$/, /\.jpeg$/, /api\//],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,json}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.(js|css)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'cdn-cache',
+              expiration: {
+                maxEntries: 32,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 1 week
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/api\./,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 5 * 60, // 5 minutes
+              },
+            },
+          },
+        ],
       },
       devOptions: {
         enabled: true,
