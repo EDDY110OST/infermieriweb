@@ -11,7 +11,6 @@ import foto from "../assets/foto.png";
 export default function Home() {
   const { t } = useAppSettings();
   const [showAllServices, setShowAllServices] = useState(false);
-  const [openFaq, setOpenFaq] = useState(null);
   const [recensioni, setRecensioni] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -288,22 +287,16 @@ export default function Home() {
         <p>{t("faq.intro")}</p>
 
         <div className="faq-grid">
-          {t("faq.items").map((item, index) => (
-            <button
-              key={item.question}
-              type="button"
-              className={`faq-item${openFaq === index ? " open" : ""}`}
-              onClick={() => setOpenFaq(openFaq === index ? null : index)}
-              aria-expanded={openFaq === index}
-            >
-              <div className="faq-question">
+          {t("faq.items").map((item) => (
+            <details key={item.question} className="faq-item">
+              <summary className="faq-question">
                 <span>{item.question}</span>
-                <span aria-hidden="true">{openFaq === index ? "−" : "+"}</span>
-              </div>
-              <div className="faq-answer" aria-hidden={openFaq !== index}>
+                <span aria-hidden="true">+</span>
+              </summary>
+              <div className="faq-answer">
                 <p>{item.answer}</p>
               </div>
-            </button>
+            </details>
           ))}
         </div>
       </section>

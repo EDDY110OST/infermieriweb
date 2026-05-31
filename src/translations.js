@@ -47,48 +47,68 @@ const translations = {
     faq: {
       label: "Domande frequenti",
       intro: "Le risposte alle domande più comuni su come prenotare e ricevere assistenza infermieristica a domicilio.",
-items: [
-  {
-    question: "Come posso prenotare una visita infermieristica?",
-    answer: "Puoi chiamarci o scriverci su WhatsApp al 331 313 9220. Ti risponderemo rapidamente per valutare la tua esigenza e fissare l'appuntamento."
-  },
-  {
-    question: "In quali zone operate?",
-    answer: "Effettuiamo assistenza infermieristica a domicilio a Lucca, Capannori, Porcari, Altopascio, Montecarlo e nei comuni limitrofi."
-  },
-  {
-    question: "Quanto costa un intervento infermieristico a domicilio?",
-    answer: "Il costo varia in base al tipo di prestazione richiesta. Contattaci per un preventivo gratuito e senza impegno."
-  },
-  {
-    question: "Quali prestazioni infermieristiche effettuate?",
-    answer: "Offriamo ECG, medicazioni semplici e complesse, iniezioni, flebo, gestione stomie, cateteri vescicali, prelievi, rimozione punti di sutura, monitoraggio parametri vitali e molto altro."
-  },
-  {
-    question: "Posso richiedere un infermiere anche per una sola prestazione?",
-    answer: "Sì. Puoi richiedere una singola prestazione oppure un piano assistenziale continuativo personalizzato in base alle tue esigenze."
-  },
-  {
-    question: "È necessaria la prescrizione medica?",
-    answer: "Per alcune prestazioni può essere richiesta la prescrizione del medico. Se hai dubbi, contattaci e ti forniremo tutte le informazioni necessarie."
-  },
-  {
-    question: "In quanto tempo riuscite a intervenire?",
-    answer: "Cerchiamo sempre di garantire la massima rapidità. In molti casi riusciamo a programmare l'intervento entro 24 ore dalla richiesta."
-  },
-  {
-    question: "Siete disponibili nei weekend e nei festivi?",
-    answer: "Sì, operiamo 7 giorni su 7, compresi sabato, domenica e festivi, su appuntamento."
-  },
-  {
-    question: "Posso richiedere un ECG a domicilio?",
-    answer: "Certamente. Eseguiamo ECG a domicilio con refertazione specialistica, evitando al paziente spostamenti inutili."
-  },
-  {
-    question: "Perché scegliere InfermieriWeb?",
-    answer: "Collaboriamo con infermieri qualificati e iscritti all'Ordine Professionale, offrendo assistenza professionale, puntualità, sicurezza e attenzione alle esigenze del paziente."
-  }
-]
+      items: [
+        {
+          question: "Avete infermieri professionisti iscritti all’albo?",
+          answer: "Sì, tutti gli infermieri che operano con InfermieriWeb.it sono professionisti regolarmente iscritti all’Ordine delle Professioni Infermieristiche."
+        },
+        {
+          question: "Posso richiedere medicazioni, prelievi o flebo a casa?",
+          answer: "Sì. Offriamo medicazioni, prelievi, iniezioni, flebo e altre prestazioni infermieristiche protette direttamente a domicilio."
+        },
+        {
+          question: "In quali zone di Lucca e provincia intervenite?",
+          answer: "Operiamo a Lucca, Capannori, Porcari, Altopascio e nei comuni limitrofi. Contattaci per verificare disponibilità nella tua zona."
+        },
+        {
+          question: "Come prenoto un servizio infermieristico a domicilio?",
+          answer: "Contattaci telefonicamente o via WhatsApp al 331 313 9220. Ti forniremo subito un appuntamento e tutte le informazioni utili."
+        },
+        {
+          question: "Qual è l’orario di disponibilità del servizio?",
+          answer: "Siamo disponibili 7 giorni su 7, dalle 07:00 alle 22:00, per interventi programmati e assistenza infermieristica urgente."
+        },
+        {
+          question: "Come posso prenotare una visita infermieristica?",
+          answer: "Puoi chiamarci o scriverci su WhatsApp al 331 313 9220. Ti risponderemo rapidamente per valutare la tua esigenza e fissare l'appuntamento."
+        },
+        {
+          question: "In quali zone operate?",
+          answer: "Effettuiamo assistenza infermieristica a domicilio a Lucca, Capannori, Porcari, Altopascio, Montecarlo e nei comuni limitrofi."
+        },
+        {
+          question: "Quanto costa un intervento infermieristico a domicilio?",
+          answer: "Il costo varia in base al tipo di prestazione richiesta. Contattaci per un preventivo gratuito e senza impegno."
+        },
+        {
+          question: "Quali prestazioni infermieristiche effettuate?",
+          answer: "Offriamo ECG, medicazioni semplici e complesse, iniezioni, flebo, gestione stomie, cateteri vescicali, prelievi, rimozione punti di sutura, monitoraggio parametri vitali e molto altro."
+        },
+        {
+          question: "Posso richiedere un infermiere anche per una sola prestazione?",
+          answer: "Sì. Puoi richiedere una singola prestazione oppure un piano assistenziale continuativo personalizzato in base alle tue esigenze."
+        },
+        {
+          question: "È necessaria la prescrizione medica?",
+          answer: "Per alcune prestazioni può essere richiesta la prescrizione del medico. Se hai dubbi, contattaci e ti forniremo tutte le informazioni necessarie."
+        },
+        {
+          question: "In quanto tempo riuscite a intervenire?",
+          answer: "Cerchiamo sempre di garantire la massima rapidità. In molti casi riusciamo a programmare l'intervento entro 24 ore dalla richiesta."
+        },
+        {
+          question: "Siete disponibili nei weekend e nei festivi?",
+          answer: "Sì, operiamo 7 giorni su 7, compresi sabato, domenica e festivi, su appuntamento."
+        },
+        {
+          question: "Posso richiedere un ECG a domicilio?",
+          answer: "Certamente. Eseguiamo ECG a domicilio con refertazione specialistica, evitando al paziente spostamenti inutili."
+        },
+        {
+          question: "Perché scegliere InfermieriWeb?",
+          answer: "Collaboriamo con infermieri qualificati e iscritti all'Ordine Professionale, offrendo assistenza professionale, puntualità, sicurezza e attenzione alle esigenze del paziente."
+        }
+      ]
     },
     finalCta: {
       title: "Hai bisogno di un infermiere a domicilio?",
@@ -405,6 +425,26 @@ items: [
       label: "Frequently asked questions",
       intro: "Answers to the most common questions about booking and receiving home nursing care.",
       items: [
+        {
+          question: "Are your nurses registered professionals?",
+          answer: "Yes, all nurses working with InfermieriWeb.it are registered with the Nursing Professional Order."
+        },
+        {
+          question: "Can I request dressings, blood tests or IV therapy at home?",
+          answer: "Yes. We provide dressings, blood tests, injections, IV therapy and other qualified nursing services at home."
+        },
+        {
+          question: "Which areas of Lucca and the province do you serve?",
+          answer: "We operate in Lucca, Capannori, Porcari, Altopascio, and nearby municipalities. Contact us to confirm service availability in your area."
+        },
+        {
+          question: "How do I book a home nursing service?",
+          answer: "Contact us by phone or WhatsApp at 331 313 9220. We will arrange an appointment and share all the necessary details."
+        },
+        {
+          question: "What are your service hours?",
+          answer: "We are available 7 days a week from 07:00 to 22:00 for scheduled visits and urgent nursing support."
+        },
         {
           question: "How can I book a visit?",
           answer: "You can call directly or message on WhatsApp at 3313139220 to schedule the home visit."

@@ -1066,7 +1066,6 @@ body {
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
   padding: 24px;
   text-align: left;
-  cursor: pointer;
   transition: all 0.3s ease;
   display: grid;
   gap: 14px;
@@ -1075,6 +1074,17 @@ body {
 .faq-item:hover {
   transform: translateY(-4px);
   border-color: var(--primary-light);
+}
+
+.faq-item summary {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
 }
 
 .faq-question {
@@ -1090,10 +1100,11 @@ body {
 .faq-answer {
   max-height: 0;
   overflow: hidden;
+  padding-top: 0;
   transition: max-height 0.3s ease, padding 0.3s ease;
 }
 
-.faq-item.open .faq-answer {
+.faq-item[open] .faq-answer {
   max-height: 260px;
   padding-top: 8px;
 }
