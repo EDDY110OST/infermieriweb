@@ -289,6 +289,14 @@ export default function Home() {
                     style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
                   />
                 )}
+                {service.id === "iniezioni" && (
+                  <img
+                    src="/images/iniezioni-domicilio-lucca.png"
+                    alt="Infermiere durante una iniezione a domicilio a Lucca"
+                    loading="lazy"
+                    style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
+                  />
+                )}
                 <div className="icon">{service.icon}</div>
                 <h3>{service.title}</h3>
                 <p>{service.description}</p>
