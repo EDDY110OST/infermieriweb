@@ -89,6 +89,42 @@ body {
   background: var(--primary-dark);
 }
 
+.fixed-cta-bar {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.fixed-cta-bar a {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  padding: 14px 20px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 14px 30px rgba(0, 137, 123, 0.25);
+  transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.fixed-cta-bar a:hover {
+  transform: translateY(-2px);
+}
+
+.fixed-cta-bar a:nth-of-type(2) {
+  background: linear-gradient(135deg, #25d366, #20b954);
+}
+
 /* TOP BAR */
 
 .top-bar {
