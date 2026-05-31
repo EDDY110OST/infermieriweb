@@ -289,7 +289,16 @@ export default function Home() {
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '16px' }}>Servizi principali disponibili:</p>
           <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', listStyle: 'none', padding: 0, margin: 0 }}>
-            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Medicazioni a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Medicazioni semplici e complesse direttamente a casa tua.</p></li>
+            <li>
+              <h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Medicazioni a domicilio</h3>
+              <img
+                src="/images/medicazione-domiciliare-lucca.png"
+                alt="Infermiere durante una medicazione a domicilio a Lucca"
+                loading="lazy"
+                style={{ width: '100%', borderRadius: '16px', margin: '12px 0 0' }}
+              />
+              <p style={{ margin: '8px 0 0 0' }}>Medicazioni semplici e complesse direttamente a casa tua.</p>
+            </li>
             <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>ECG a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Elettrocardiogramma con refertazione specialistica.</p></li>
             <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Prelievi a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Prelievi ematici eseguiti a domicilio.</p></li>
             <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Iniezioni a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Somministrazioni farmacologiche su prescrizione medica.</p></li>
