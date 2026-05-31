@@ -5,11 +5,13 @@ import { FaSyringe } from "react-icons/fa";
 import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { articles } from "../data/articles";
+import { getArticleImage } from "../utils/articleImageFallback";
 import foto from "../assets/foto.png";
 
 export default function Home() {
   const { t } = useAppSettings();
   const [showAllServices, setShowAllServices] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
   const [recensioni, setRecensioni] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -238,7 +240,7 @@ export default function Home() {
           {latestArticles.map((article) => (
             <Link key={article.slug} to={`/articoli/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="article-preview-card">
-                <img src={article.image} alt={article.title} loading="lazy" />
+                <img src={getArticleImage(article)} alt={article.title} loading="lazy" />
                 <div>
                   <span className="article-preview-category">{article.category}</span>
                   <h3>{article.title}</h3>
@@ -263,11 +265,22 @@ export default function Home() {
         <p>{t("faq.intro")}</p>
 
         <div className="faq-grid">
-          {t("faq.items").map((item) => (
-            <div key={item.question} className="faq-card">
-              <h3>{item.question}</h3>
-              <p>{item.answer}</p>
-            </div>
+          {t("faq.items").map((item, index) => (
+            <button
+              key={item.question}
+              type="button"
+              className={`faq-item${openFaq === index ? " open" : ""}`}
+              onClick={() => setOpenFaq(openFaq === index ? null : index)}
+              aria-expanded={openFaq === index}
+            >
+              <div className="faq-question">
+                <span>{item.question}</span>
+                <span aria-hidden="true">{openFaq === index ? "−" : "+"}</span>
+              </div>
+              <div className="faq-answer" aria-hidden={openFaq !== index}>
+                <p>{item.answer}</p>
+              </div>
+            </button>
           ))}
         </div>
       </section>

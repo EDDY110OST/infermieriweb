@@ -145,7 +145,7 @@ export default function Articolo() {
         </div>
 
         <div className="article-hero-image">
-          <img src={article.image} alt={article.title} loading="lazy" />
+          <img src={getArticleImage(article)} alt={article.title} loading="lazy" />
         </div>
 
         <div className="article-content-wrap">

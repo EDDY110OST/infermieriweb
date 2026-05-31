@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
+import { getArticleImage } from "../utils/articleImageFallback";
 import { articles } from "../data/articles";
 
 const categories = [
@@ -122,7 +123,7 @@ export default function Articoli() {
                 className="article-card"
               >
                 <div className="article-card-image">
-                  <img src={article.image} alt={article.title} loading="lazy" />
+                  <img src={getArticleImage(article)} alt={article.title} loading="lazy" />
                   <span className="article-card-category">{article.category}</span>
                 </div>
                 <div className="article-card-body">
