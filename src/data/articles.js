@@ -10,27 +10,104 @@ export const articles = [
     image: "https://images.unsplash.com/photo-1580281657521-7b00d8ed9090?auto=format&fit=crop&w=900&q=80",
     sections: [
       {
-        id: "costo-infermiere",
-        title: "Quanto costa un infermiere a domicilio?",
+        id: "introduzione",
+        title: "Quanto costa un infermiere a domicilio a Lucca?",
         content: [
-          "Il costo di un'infermiere a domicilio a Lucca dipende dalla tipologia di prestazione, dalla durata dell'intervento e dalla distanza del trasferimento.",
-          "In generale, visite brevi come medicazioni o prelievi hanno prezzi diversi da interventi più complessi come flebo, cateteri o assistenza programmata." 
+          "Sempre più persone scelgono l'assistenza infermieristica a domicilio per ricevere cure professionali senza dover uscire di casa.",
+          "Ma quanto costa un infermiere a domicilio a Lucca? La risposta dipende da diversi fattori, tra cui il tipo di prestazione richiesta, la durata dell'intervento e la frequenza degli accessi."
         ]
       },
       {
-        id: "fattori",
-        title: "I fattori che influenzano il prezzo",
+        id: "dipende-da",
+        title: "Da cosa dipende il costo di un infermiere a domicilio?",
         content: [
-          "Tra i principali elementi che incidono sul prezzo ci sono: il tipo di prestazione, la complessità clinica, il tempo richiesto, le esigenze di materiali e il livello di specializzazione richiesto.",
-          "Noi di InfermieriWeb valutiamo sempre ogni richiesta con trasparenza e forniamo preventivi chiari prima dell'intervento."
+          "Il costo di una prestazione infermieristica può variare in base a diversi aspetti specifici, che influenzano il preventivo finale.",
+          "Scopriamo i principali elementi da considerare quando si calcola il prezzo di un infermiere a domicilio."
         ]
       },
       {
-        id: "preventivo",
-        title: "Richiedere un preventivo a Lucca e provincia",
+        id: "tipologia-di-prestazione",
+        title: "Tipologia di prestazione",
         content: [
-          "Il modo più semplice è contattarci su WhatsApp o telefono: ti risponderemo rapidamente e potremo definire insieme la soluzione migliore.",
-          "Non esitare a chiedere informazioni anche per interventi continuativi o piani assistenziali personalizzati." 
+          "Prestazioni semplici come iniezioni o medicazioni di base hanno generalmente un costo inferiore rispetto a servizi più complessi come:",
+          "- Gestione catetere vescicale",
+          "- Gestione stomie",
+          "- Medicazioni avanzate",
+          "- Fleboclisi",
+          "- Monitoraggi specialistici"
+        ]
+      },
+      {
+        id: "durata-intervento",
+        title: "Durata dell'intervento",
+        content: [
+          "Alcune prestazioni richiedono pochi minuti, mentre altre necessitano di una permanenza più lunga presso il domicilio del paziente.",
+          "La durata influisce direttamente sul costo, perché aumenta il tempo di presenza dell'infermiere e la complessità dell'assistenza."
+        ]
+      },
+      {
+        id: "zona-intervento",
+        title: "Zona di intervento",
+        content: [
+          "La distanza e l'area geografica possono influire sul costo finale, soprattutto per interventi in comuni più lontani dal centro di Lucca.",
+          "Nel calcolo del prezzo si può tenere conto anche del tempo di viaggio e delle eventuali spese accessorie per raggiungere il domicilio."
+        ]
+      },
+      {
+        id: "frequenza-prestazioni",
+        title: "Frequenza delle prestazioni",
+        content: [
+          "In caso di assistenza continuativa o accessi programmati, possono essere valutate soluzioni personalizzate.",
+          "Gli interventi ricorrenti possono beneficiare di preventivi su misura, pensati per garantire continuità e risparmio."
+        ]
+      },
+      {
+        id: "prezzi-indicativi",
+        title: "Prezzi indicativi delle principali prestazioni infermieristiche",
+        content: [
+          "Di seguito alcuni esempi indicativi:",
+          "- Iniezioni: da 10 €",
+          "- Medicazioni semplici: da 20 €",
+          "- Medicazioni complesse: da 30 €",
+          "- ECG a domicilio: da 50 €",
+          "- Fleboclisi: da 25 €",
+          "- Gestione catetere vescicale: da 25 €",
+          "- Gestione stomia: da 30 €",
+          "- Piano assistenziale personalizzato: su valutazione",
+          "I costi possono variare in base alla complessità del caso e alle specifiche esigenze del paziente."
+        ]
+      },
+      {
+        id: "quando-conviene",
+        title: "Quando conviene richiedere un infermiere a domicilio?",
+        content: [
+          "L'assistenza infermieristica domiciliare è particolarmente utile per:",
+          "- Persone anziane con difficoltà negli spostamenti",
+          "- Pazienti dimessi recentemente dall'ospedale",
+          "- Persone con patologie croniche",
+          "- Pazienti che necessitano di controlli periodici",
+          "- Familiari che desiderano un supporto professionale a casa"
+        ]
+      },
+      {
+        id: "perche-scegliere",
+        title: "Perché scegliere InfermieriWeb?",
+        content: [
+          "InfermieriWeb collabora con infermieri qualificati e regolarmente iscritti all'Ordine Professionale.",
+          "Offriamo:",
+          "- Professionalità e puntualità",
+          "- Assistenza personalizzata",
+          "- Disponibilità a Lucca e provincia",
+          "- Supporto domiciliare rapido",
+          "- Ampia gamma di prestazioni infermieristiche"
+        ]
+      },
+      {
+        id: "preventivo-gratuito",
+        title: "Richiedi un preventivo gratuito",
+        content: [
+          "Se desideri conoscere il costo esatto della prestazione di cui hai bisogno, contattaci senza impegno.",
+          "Valuteremo insieme la situazione e ti forniremo un preventivo chiaro e personalizzato per le tue esigenze."
         ]
       }
     ]
