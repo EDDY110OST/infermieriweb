@@ -265,6 +265,14 @@ export default function Home() {
           {servicesToShow.map((service) => (
             <Link key={service.id} to={`/servizio/${service.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="service-card">
+                {service.id === "medicazioni" && (
+                  <img
+                    src="/images/medicazione-domiciliare-lucca.png"
+                    alt="Infermiere durante una medicazione a domicilio a Lucca"
+                    loading="lazy"
+                    style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
+                  />
+                )}
                 <div className="icon">{service.icon}</div>
                 <h3>{service.title}</h3>
                 <p>{service.description}</p>
