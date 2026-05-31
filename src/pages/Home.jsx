@@ -8,6 +8,48 @@ import { articles } from "../data/articles";
 import { getArticleImage } from "../utils/articleImageFallback";
 import foto from "../assets/foto.png";
 
+const medicalBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "MedicalBusiness",
+  "name": "Infermieri Web",
+  "url": "https://infermieriweb.it/",
+  "areaServed": [
+    {
+      "@type": "City",
+      "name": "Lucca"
+    },
+    {
+      "@type": "City",
+      "name": "Capannori"
+    },
+    {
+      "@type": "City",
+      "name": "Porcari"
+    },
+    {
+      "@type": "City",
+      "name": "Altopascio"
+    }
+  ],
+  "medicalSpecialty": "Nursing",
+  "serviceType": [
+    "Medicazioni a domicilio",
+    "ECG a domicilio",
+    "Prelievi a domicilio",
+    "Iniezioni a domicilio",
+    "Flebo a domicilio",
+    "Cateteri vescicali",
+    "Gestione stomie",
+    "Assistenza infermieristica personalizzata"
+  ],
+  "telephone": "+393313139220",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Lucca",
+    "addressCountry": "IT"
+  }
+};
+
 export default function Home() {
   const { t } = useAppSettings();
   const [showAllServices, setShowAllServices] = useState(false);
@@ -140,6 +182,9 @@ export default function Home() {
           <h1>
             Infermiere a domicilio a <span className="hero-highlight">Lucca</span>
           </h1>
+          <script type="application/ld+json">
+            {JSON.stringify(medicalBusinessSchema)}
+          </script>
 
           <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '24px' }}>
             Servizi infermieristici a domicilio a Lucca e provincia. Medicazioni, ECG, prelievi, iniezioni e flebo direttamente a casa.

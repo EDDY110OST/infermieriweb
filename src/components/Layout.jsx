@@ -114,13 +114,14 @@ export default function Layout({ children }) {
           onClick={toggleMobileNav}
           aria-label={t("aria.menuToggle")}
           aria-expanded={mobileNavOpen}
+          aria-controls="main-navigation"
         >
           <span />
           <span />
           <span />
         </button>
 
-        <nav className={`menu${mobileNavOpen ? " open" : ""}`}>
+        <nav id="main-navigation" className={`menu${mobileNavOpen ? " open" : ""}`} aria-label="Menu principale">
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMobileNav}>
             {t("nav.home")}
           </NavLink>
@@ -131,6 +132,7 @@ export default function Layout({ children }) {
               className="menu-dropdown-button"
               aria-haspopup="menu"
               aria-expanded={showServizi}
+              aria-controls="services-panel"
               onClick={() => {
                 setShowServizi((current) => !current);
                 setShowInfo(false);
@@ -140,7 +142,7 @@ export default function Layout({ children }) {
             </button>
 
             {showServizi && (
-              <div className="menu-dropdown-content" role="menu">
+              <div id="services-panel" className="menu-dropdown-content" role="menu">
                 <div className="dropdown-section">
                   <p className="dropdown-title">Percorsi</p>
                   <NavLink
@@ -188,6 +190,7 @@ export default function Layout({ children }) {
               className="menu-dropdown-button"
               aria-haspopup="menu"
               aria-expanded={showInfo}
+              aria-controls="info-panel"
               onClick={() => {
                 setShowInfo((current) => !current);
                 setShowServizi(false);
@@ -197,7 +200,7 @@ export default function Layout({ children }) {
             </button>
 
             {showInfo && (
-              <div className="menu-dropdown-content" role="menu">
+              <div id="info-panel" className="menu-dropdown-content" role="menu">
                 <NavLink to="/chi-siamo" className={({ isActive }) => (isActive ? "menu-dropdown-item active" : "menu-dropdown-item")} onClick={closeMobileNav}>
                   {t("nav.about")}
                 </NavLink>
@@ -217,10 +220,10 @@ export default function Layout({ children }) {
             )}
           </div>
 
-          <a href="tel:3313139220" className="btn-menu btn-call">
+          <a href="tel:3313139220" className="btn-menu btn-call" aria-label="Chiama Infermieri Web">
             📞 Chiama Ora
           </a>
-          <a href="https://wa.me/393313139220" className="btn-menu btn-whatsapp">
+          <a href="https://wa.me/393313139220" className="btn-menu btn-whatsapp" aria-label="Scrivi a Infermieri Web su WhatsApp">
             💬 WhatsApp
           </a>
         </nav>
@@ -253,7 +256,7 @@ export default function Layout({ children }) {
         <div className="footer-column">
           <h3>Contatti</h3>
           <p>📞 3313139220</p>
-          <a href="https://wa.me/393313139220" target="_blank" rel="noreferrer">💬 WhatsApp</a>
+          <a href="https://wa.me/393313139220" target="_blank" rel="noreferrer" aria-label="Scrivi a Infermieri Web su WhatsApp">💬 WhatsApp</a>
           <p>✉️ infermieri.ef@gmail.com</p>
           <p>Area operativa: Lucca e provincia</p>
         </div>
@@ -268,7 +271,7 @@ export default function Layout({ children }) {
         ↑
       </button>
 
-      <a href="https://wa.me/393313139220" className="floating-whatsapp" aria-label="WhatsApp">
+      <a href="https://wa.me/393313139220" className="floating-whatsapp" aria-label="Scrivi a Infermieri Web su WhatsApp">
         💬
       </a>
     </div>

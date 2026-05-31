@@ -225,6 +225,15 @@ body {
   outline-offset: 3px;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #00897b;
+  outline-offset: 3px;
+}
+
 .theme-toggle__label {
   display: none;
 }
