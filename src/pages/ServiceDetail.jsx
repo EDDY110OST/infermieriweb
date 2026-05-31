@@ -29,7 +29,7 @@ export default function ServiceDetail() {
         "Valutazione pre-operatoria",
         "Screening preventivo per fattori di rischio",
       ],
-      price: "Da € 30,00",
+      price: "Da € 50,00",
     },
     medicazioni: {
       icon: <MdHealing />,
@@ -50,7 +50,7 @@ export default function ServiceDetail() {
         "Ferite traumatiche",
         "Gestione di cateteri e drenaggi",
       ],
-      price: "Da € 25,00",
+      price: "Da € 30,00",
     },
     prelievi: {
       icon: <MdBloodtype />,
@@ -71,7 +71,7 @@ export default function ServiceDetail() {
         "Controlli clinici periodici",
         "Monitoraggio terapeutico",
       ],
-      price: "Da € 15,00",
+      price: "Da € 20,00",
     },
     iniezioni: {
       icon: <FaSyringe />,
@@ -173,7 +173,7 @@ export default function ServiceDetail() {
         "Valutazione di pressione variabile",
         "Monitoraggio post-degenza",
       ],
-      price: "Da € 45,00",
+      price: "Da € 80,00",
     },
     "holter-cardiaci": {
       icon: <MdMonitorHeart />,
@@ -193,7 +193,7 @@ export default function ServiceDetail() {
         "Controllo post-infarto",
         "Screening cardiaco in corso di terapia",
       ],
-      price: "Da € 45,00",
+      price: "Da € 100,00",
     },
     "sondini-naso-gastrici": {
       icon: <MdLocalHospital />,
@@ -212,7 +212,7 @@ export default function ServiceDetail() {
         "Somministrazione di farmaci via sondino",
         "Supporto a pazienti con deglutizione compromessa",
       ],
-      price: "Da € 35,00",
+      price: "Da € 60,00",
     },
     "gestione-peg": {
       icon: <MdLocalHospital />,
@@ -231,7 +231,7 @@ export default function ServiceDetail() {
         "Assistenza post-operatoria PEG",
         "Supporto in pazienti neurologici o oncologici",
       ],
-      price: "Da € 40,00",
+      price: "Da € 50,00",
     },
     "terapia-orale": {
       icon: <MdMedication />,
@@ -288,7 +288,7 @@ export default function ServiceDetail() {
         "Preparazione per esami diagnostici",
         "Supporto in pazienti neurologici o anziani",
       ],
-      price: "Da € 35,00",
+      price: "Da € 40,00",
     },
     "gestione-stomie": {
       icon: <MdLocalHospital />,
@@ -326,7 +326,7 @@ export default function ServiceDetail() {
         "Caregiver che supportano assistiti fragili",
         "Persone in dimissione dall'ospedale",
       ],
-      price: "Da € 30,00",
+      price: "Da € 80,00",
     },
   };
 
