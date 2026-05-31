@@ -142,15 +142,16 @@ export default function Home() {
           </h1>
 
           <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '24px' }}>
-            Medicazioni, ECG e prelievi a casa. Contatta Infermieri Web per richiedere informazioni sul servizio.
+            Servizi infermieristici a domicilio a Lucca e provincia. Medicazioni, ECG, prelievi, iniezioni e flebo direttamente a casa.
           </p>
 
-          <p>{t("hero.text")}</p>
-
           <div className="hero-buttons">
-            <a href="tel:3313139220" className="btn-primary" aria-label="Chiama Infermieri Web al 331 313 9220">📞 Chiama ora</a>
-            <a href="https://wa.me/393313139220" className="btn-secondary" aria-label="Scrivici su WhatsApp per prenotare una prestazione infermieristica">
-              💬 Scrivici su WhatsApp
+            <Link to="/contatti" className="btn-primary" aria-label="Richiedi informazioni su servizi infermieristici a domicilio">Richiedi informazioni</Link>
+            <a href="https://wa.me/393313139220" className="btn-secondary" aria-label="Scrivici su WhatsApp per richiedere informazioni o prenotare">
+              Scrivici su WhatsApp
+            </a>
+            <a href="tel:3313139220" className="btn-white" aria-label="Chiama ora Infermieri Web per assistenza infermieristica a domicilio">
+              Chiama ora
             </a>
           </div>
 
@@ -165,7 +166,7 @@ export default function Home() {
           <img 
             src={foto} 
             className="hero-photo lazy-image" 
-            alt="Dott. Eduard G.D. - Infermiere professionale"
+            alt="Dott. Eduard G.D., infermiere a domicilio"
             loading="lazy"
           />
 
@@ -184,25 +185,25 @@ export default function Home() {
           <div className="step-card">
             <div className="step-number">1</div>
             <h3>Contatto</h3>
-            <p>Chiami o scrivi su WhatsApp.</p>
+            <p>Chiami o scrivi su WhatsApp per richiedere il servizio.</p>
           </div>
 
           <div className="step-card">
             <div className="step-number">2</div>
             <h3>Valutazione</h3>
-            <p>Capisco il bisogno e ti guido.</p>
+            <p>Verifico la tua esigenza e pianifico l'intervento adeguato.</p>
           </div>
 
           <div className="step-card">
             <div className="step-number">3</div>
             <h3>Appuntamento</h3>
-            <p>Fissiamo giorno e orario.</p>
+            <p>Fissiamo data e orario dell'intervento a domicilio.</p>
           </div>
 
           <div className="step-card">
             <div className="step-number">4</div>
             <h3>Intervento</h3>
-            <p>Arrivo a domicilio puntuale.</p>
+            <p>Prestazione infermieristica a casa tua nella zona di Lucca.</p>
           </div>
         </div>
       </section>
@@ -311,8 +312,7 @@ export default function Home() {
           <span className="section-label">Domicilio</span>
           <h2>Assistenza direttamente a casa tua</h2>
           <p>
-            Interventi rapidi nelle zone di Lucca e provincia, con disponibilità
-            7 giorni su 7 dalle 07:00 alle 22:00.
+            Interventi a domicilio in Lucca e provincia 7 giorni su 7, dalle 07:00 alle 22:00.
           </p>
         </div>
 
@@ -348,7 +348,7 @@ export default function Home() {
           <div className="review-grid">
             <div className="review-card">
               <div>★★★★★</div>
-              <p>Servizio rapido, professionale e molto umano.</p>
+              <p>Servizio puntuale e attento alle esigenze del paziente.</p>
             </div>
             <div className="review-card">
               <div>★★★★★</div>

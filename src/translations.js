@@ -32,13 +32,13 @@ const translations = {
     },
     hero: {
       badge: "Lucca e provincia · 7 giorni su 7",
-      title: "Assistenza infermieristica professionale a domicilio",
-      text: "ECG, medicazioni, prelievi, iniezioni e flebo direttamente a casa, con rapidità, esperienza e attenzione alla persona.",
-      trust: ["Rapido", "Professionale", "Wound Care"]
+      title: "Infermiere a domicilio a Lucca",
+      text: "Servizi infermieristici a domicilio a Lucca e provincia. Medicazioni, ECG, prelievi, iniezioni e flebo direttamente a casa.",
+      trust: ["Disponibilità", "Competenza", "Wound Care"]
     },
     how: {
       label: "Come funziona",
-      title: "Semplice, rapido, chiaro"
+      title: "Il percorso per l'assistenza a domicilio"
     },
     services: {
       label: "Prestazioni principali",
