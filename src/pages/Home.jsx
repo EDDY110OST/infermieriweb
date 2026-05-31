@@ -138,15 +138,19 @@ export default function Home() {
           <span className="badge">{t("hero.badge")}</span>
 
           <h1>
-            Assistenza Infermieristica a <span className="hero-highlight">Casa Tua</span>
+            Infermiere a domicilio a <span className="hero-highlight">Lucca</span>
           </h1>
+
+          <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '24px' }}>
+            Medicazioni, ECG e prelievi a casa. Contatta Infermieri Web per richiedere informazioni sul servizio.
+          </p>
 
           <p>{t("hero.text")}</p>
 
           <div className="hero-buttons">
-            <a href="tel:3313139220" className="btn-primary">{t("cta.callNow")}</a>
-            <a href="https://wa.me/393313139220" className="btn-secondary">
-              {t("cta.whatsapp")}
+            <a href="tel:3313139220" className="btn-primary" aria-label="Chiama Infermieri Web al 331 313 9220">📞 Chiama ora</a>
+            <a href="https://wa.me/393313139220" className="btn-secondary" aria-label="Scrivici su WhatsApp per prenotare una prestazione infermieristica">
+              💬 Scrivici su WhatsApp
             </a>
           </div>
 
@@ -205,7 +209,11 @@ export default function Home() {
 
       <section id="servizi" className="section gray">
         <span className="section-label">{t("services.label")}</span>
-        <h2>{t("services.title")}</h2>
+        <h2>Servizi infermieristici a domicilio</h2>
+        
+        <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px' }}>
+          Infermieri Web offre servizi infermieristici a domicilio a Lucca e zone limitrofe. Le prestazioni includono medicazioni, ECG, prelievi, iniezioni, flebo, cateteri vescicali, gestione stomie e assistenza infermieristica personalizzata. Tutti i servizi sono erogati da infermieri qualificati e iscritti all'Ordine Professionale.
+        </p>
 
         <div className="cards-grid">
           {servicesToShow.map((service) => (
@@ -225,11 +233,24 @@ export default function Home() {
               onClick={() => setShowAllServices(true)}
               className="btn-secondary"
               style={{ padding: '12px 30px', fontSize: '16px' }}
+              aria-label="Visualizza tutti i servizi infermieristici disponibili a domicilio"
             >
-              {t("cta.moreServices")}
+              Scopri tutti i servizi
             </button>
           </div>
         )}
+        
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '16px' }}>Servizi principali disponibili:</p>
+          <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', listStyle: 'none', padding: 0, margin: 0 }}>
+            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Medicazioni a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Medicazioni semplici e complesse direttamente a casa tua.</p></li>
+            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>ECG a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Elettrocardiogramma con refertazione specialistica.</p></li>
+            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Prelievi a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Prelievi ematici eseguiti a domicilio.</p></li>
+            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Iniezioni a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Somministrazioni farmacologiche su prescrizione medica.</p></li>
+            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Flebo a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Terapie infusionali secondo indicazione medica.</p></li>
+            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Gestione stomie</h3><p style={{ margin: '8px 0 0 0' }}>Cura e assistenza per stomie e sistemi di raccolta.</p></li>
+          </ul>
+        </div>
       </section>
 
       <section id="articoli" className="section gray">
@@ -253,7 +274,7 @@ export default function Home() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '30px' }}>
-          <Link to="/articoli" className="btn-secondary" style={{ padding: '12px 30px' }}>
+          <Link to="/articoli" className="btn-secondary" style={{ padding: '12px 30px' }} aria-label="Leggi tutti gli articoli sulla assistenza infermieristica">
             Vedi tutti gli articoli
           </Link>
         </div>
@@ -298,7 +319,7 @@ export default function Home() {
         <div className="info-box">
           <h3>Zone servite</h3>
           <p>Lucca, Capannori, Porcari, Altopascio e provincia.</p>
-          <a href="tel:3313139220" className="btn-primary">Verifica disponibilità</a>
+          <a href="tel:3313139220" className="btn-primary" aria-label="Verifica disponibilità del servizio a domicilio per la tua zona">Verifica disponibilità</a>
         </div>
       </section>
 
@@ -370,16 +391,16 @@ export default function Home() {
         )}
 
         <div style={{ textAlign: 'center', marginTop: '30px' }}>
-          <Link to="/recensioni" className="btn-primary" style={{ padding: '12px 30px' }}>
-            Lascia una recensione
+          <Link to="/recensioni" className="btn-primary" style={{ padding: '12px 30px' }} aria-label="Visualizza tutte le recensioni o lascia una recensione sul servizio">
+            Visualizza tutte le recensioni
           </Link>
         </div>
       </section>
 
       <section className="final-cta">
-        <h2>{t("finalCta.title")}</h2>
-        <p>{t("finalCta.text")}</p>
-        <a href="tel:3313139220" className="btn-white">{t("cta.callNow")}</a>
+        <h2>Hai bisogno di un infermiere a domicilio?</h2>
+        <p>Contattami ora per verificare disponibilità e tempi di intervento.</p>
+        <a href="tel:3313139220" className="btn-white" aria-label="Chiama Infermieri Web per richiedere informazioni o prenotare un intervento infermieristico">📞 Chiama ora</a>
       </section>
     </Layout>
   );
