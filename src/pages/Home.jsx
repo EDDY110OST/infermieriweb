@@ -285,26 +285,61 @@ export default function Home() {
             </button>
           </div>
         )}
-        
-        <div style={{ textAlign: 'center', marginTop: '40px' }}>
-          <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '16px' }}>Servizi principali disponibili:</p>
-          <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', listStyle: 'none', padding: 0, margin: 0 }}>
-            <li>
-              <h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Medicazioni a domicilio</h3>
-              <img
-                src="/images/medicazione-domiciliare-lucca.png"
-                alt="Infermiere durante una medicazione a domicilio a Lucca"
-                loading="lazy"
-                style={{ width: '100%', borderRadius: '16px', margin: '12px 0 0' }}
-              />
-              <p style={{ margin: '8px 0 0 0' }}>Medicazioni semplici e complesse direttamente a casa tua.</p>
+
+        <div style={{ marginTop: '40px', maxWidth: '960px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <h2>Che cosa offre Infermieri Web?</h2>
+          <p style={{ fontSize: '16px', lineHeight: '1.8', marginBottom: '24px' }}>
+            Infermieri Web offre servizi infermieristici a domicilio a Lucca e nei comuni limitrofi. Le prestazioni sono rivolte a persone che necessitano di assistenza infermieristica direttamente a casa, con interventi programmati in base alle esigenze assistenziali.
+          </p>
+          <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', listStyle: 'none', padding: 0, margin: 0 }}>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Medicazioni semplici e complesse
             </li>
-            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>ECG a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Elettrocardiogramma con refertazione specialistica.</p></li>
-            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Prelievi a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Prelievi ematici eseguiti a domicilio.</p></li>
-            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Iniezioni a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Somministrazioni farmacologiche su prescrizione medica.</p></li>
-            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Flebo a domicilio</h3><p style={{ margin: '8px 0 0 0' }}>Terapie infusionali secondo indicazione medica.</p></li>
-            <li><h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Gestione stomie</h3><p style={{ margin: '8px 0 0 0' }}>Cura e assistenza per stomie e sistemi di raccolta.</p></li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              ECG a domicilio
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Holter cardiaco
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Holter pressorio
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Prelievi del sangue
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Iniezioni
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Flebo
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Cateteri vescicali
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Gestione stomie
+            </li>
+            <li style={{ paddingLeft: '22px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+              Piano assistenziale personalizzato
+            </li>
           </ul>
+
+          <div style={{ marginTop: '40px' }}>
+            <h2>Dove è disponibile il servizio?</h2>
+            <p style={{ fontSize: '16px', lineHeight: '1.8' }}>
+              Il servizio è disponibile a Lucca, Capannori, Porcari, Altopascio, Montecarlo e nelle zone limitrofe della provincia.
+            </p>
+          </div>
         </div>
       </section>
 
