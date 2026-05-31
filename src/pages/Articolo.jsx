@@ -1,20 +1,33 @@
 import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Layout from "../components/Layout";
+import { getArticleImage } from "../utils/articleImageFallback";
 import { articles } from "../data/articles";
 
 export default function Articolo() {
   const { slug } = useParams();
   const article = articles.find((item) => item.slug === slug);
+  const safeCategory = article?.category || "Articolo";
+  const safeDate = article?.date || "";
+  const safeReadingTime = article?.readingTime || "";
+  const articleSections = Array.isArray(article?.sections) && article.sections.length
+    ? article.sections
+    : [
+        {
+          id: "overview",
+          title: article?.title || "Dettagli articolo",
+          content: [article?.excerpt || "Non ci sono dettagli aggiuntivi disponibili."],
+        },
+      ];
 
   useEffect(() => {
     if (!article) return;
 
     const meta = {
       title: `${article.title} | InfermieriWeb`,
-      description: article.excerpt,
+      description: article.excerpt || "Scopri di più su InfermieriWeb.",
       url: `https://infermieriweb.it/articoli/${article.slug}`,
-      image: article.image,
+      image: getArticleImage(article),
     };
 
     document.title = meta.title;
@@ -40,8 +53,8 @@ export default function Articolo() {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: article.title,
-      description: article.excerpt,
-      image: [article.image],
+      description: article.excerpt || "Scopri di più su InfermieriWeb.",
+      image: [meta.image],
       author: {
         "@type": "Person",
         name: "InfermieriWeb"
@@ -54,8 +67,8 @@ export default function Articolo() {
           url: "https://infermieriweb.it/logo.jpeg"
         }
       },
-      datePublished: article.date,
-      dateModified: article.date,
+      datePublished: article.date || new Date().toISOString().split("T")[0],
+      dateModified: article.date || new Date().toISOString().split("T")[0],
       mainEntityOfPage: {
         "@type": "WebPage",
         "@id": meta.url
@@ -136,11 +149,11 @@ export default function Articolo() {
         </nav>
 
         <div className="article-header">
-          <span className="article-category">{article.category}</span>
+          <span className="article-category">{safeCategory}</span>
           <h1>{article.title}</h1>
           <div className="article-meta">
-            <span>{article.date}</span>
-            <span>{article.readingTime}</span>
+            {safeDate && <span>{safeDate}</span>}
+            {safeReadingTime && <span>{safeReadingTime}</span>}
           </div>
         </div>
 
@@ -152,7 +165,7 @@ export default function Articolo() {
           <aside className="article-toc">
             <h3>Indice</h3>
             <ul>
-              {article.sections.map((section) => (
+              {articleSections.map((section) => (
                 <li key={section.id}>
                   <a href={`#${section.id}`}>{section.title}</a>
                 </li>
@@ -161,12 +174,15 @@ export default function Articolo() {
           </aside>
 
           <article className="article-content">
-            {article.sections.map((section, index) => (
+            {articleSections.map((section, index) => (
               <section key={section.id} id={section.id} className="article-section">
                 <h2>{section.title}</h2>
-                {section.content.map((paragraph, idx) => (
-                  <p key={`${section.id}-${idx}`}>{paragraph}</p>
-                ))}
+                {Array.isArray(section.content)
+                  ? section.content.map((paragraph, idx) => (
+                      <p key={`${section.id}-${idx}`}>{paragraph}</p>
+                    ))
+                  : <p>{section.content || ""}</p>
+                }
                 {index === 0 && (
                   <div className="article-cta-card">
                     <h3>Hai bisogno di assistenza infermieristica?</h3>

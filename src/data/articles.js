@@ -1,5 +1,6 @@
 export const articles = [
   {
+    id: "quanto-costa-infermiere-domicilio-lucca",
     slug: "quanto-costa-infermiere-domicilio-lucca",
     category: "Assistenza Domiciliare",
     title: "Quanto costa un infermiere a domicilio a Lucca?",
@@ -35,6 +36,7 @@ export const articles = [
     ]
   },
   {
+    id: "ecg-a-domicilio-come-funziona",
     slug: "ecg-a-domicilio-come-funziona",
     category: "ECG",
     title: "ECG a domicilio: come funziona e quando è utile",
@@ -70,6 +72,7 @@ export const articles = [
     ]
   },
   {
+    id: "prelievi-sangue-a-domicilio",
     slug: "prelievi-sangue-a-domicilio",
     category: "Prelievi",
     title: "Prelievi del sangue a domicilio: tutto quello che devi sapere",
@@ -105,6 +108,7 @@ export const articles = [
     ]
   },
   {
+    id: "medicazioni-semplici-e-complesse",
     slug: "medicazioni-semplici-e-complesse",
     category: "Medicazioni",
     title: "Medicazioni semplici e complesse: differenze e indicazioni",
@@ -140,6 +144,7 @@ export const articles = [
     ]
   },
   {
+    id: "catetere-vescicale-sostituzione-gestione",
     slug: "catetere-vescicale-sostituzione-gestione",
     category: "Cateteri",
     title: "Catetere vescicale: quando sostituirlo e come gestirlo",
@@ -167,6 +172,7 @@ export const articles = [
     ]
   },
   {
+    id: "gestione-della-stomia-a-domicilio",
     slug: "gestione-della-stomia-a-domicilio",
     category: "Stomie",
     title: "Gestione della stomia a domicilio",
@@ -194,6 +200,7 @@ export const articles = [
     ]
   },
   {
+    id: "holter-cardiaco-pressorio-differenze",
     slug: "holter-cardiaco-pressorio-differenze",
     category: "Holter",
     title: "Holter cardiaco e pressorio: differenze e utilizzo",
@@ -221,6 +228,7 @@ export const articles = [
     ]
   },
   {
+    id: "quando-richiedere-assistenza-infermieristica-domiciliare",
     slug: "quando-richiedere-assistenza-infermieristica-domiciliare",
     category: "Assistenza Domiciliare",
     title: "Quando richiedere un'assistenza infermieristica domiciliare",
