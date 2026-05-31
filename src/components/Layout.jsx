@@ -259,11 +259,6 @@ export default function Layout({ children }) {
         </div>
       </footer>
 
-      <div className="fixed-cta-bar" role="contentinfo" aria-label="CTA fissa per chiamare o scrivere">
-        <a href="tel:3313139220" aria-label={t("aria.callNow")}>{t("cta.call")}</a>
-        <a href="https://wa.me/393313139220" aria-label={t("aria.whatsapp")}>{t("cta.write")}</a>
-      </div>
-
       <button
         type="button"
         className={`scroll-top-button${showScrollTop ? " show" : ""}`}
