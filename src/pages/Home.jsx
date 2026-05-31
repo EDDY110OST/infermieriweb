@@ -19,27 +19,28 @@ export default function Home() {
     {
       id: "ecg",
       icon: <MdMonitorHeart />,
-      title: "ECG",
-      description: "Elettrocardiogramma a domicilio.",
+      title: "ECG a domicilio",
+      description: "Elettrocardiogramma eseguito a domicilio su appuntamento.",
     },
     {
       id: "medicazioni",
       icon: <MdHealing />,
-      title: "Medicazioni",
-      description: "Medicazioni semplici e complesse.",
+      title: "Medicazioni a domicilio",
+      description: "Servizio infermieristico per medicazioni semplici e complesse a domicilio.",
     },
     {
       id: "prelievi",
       icon: <MdBloodtype />,
-      title: "Prelievi",
-      description: "Prelievi ematici a domicilio.",
+      title: "Prelievi a domicilio",
+      description: "Prelievi ematici a domicilio per persone con difficoltà di spostamento o necessità organizzative.",
     },
     {
       id: "iniezioni",
       icon: <FaSyringe />,
-      title: "Iniezioni",
-      description: "Somministrazioni su prescrizione.",
+      title: "Iniezioni a domicilio",
+      description: "Somministrazione di terapia iniettiva a domicilio secondo prescrizione.",
     },
+
     {
       id: "holter-pressori",
       icon: <MdMonitorHeart />,
@@ -55,8 +56,8 @@ export default function Home() {
     {
       id: "flebo",
       icon: <MdLocalHospital />,
-      title: "Flebo",
-      description: "Terapie infusionali secondo indicazione medica.",
+      title: "Flebo a domicilio",
+      description: "Somministrazione di terapia infusionale a domicilio secondo prescrizione.",
     },
     {
       id: "desutura",
@@ -68,7 +69,7 @@ export default function Home() {
       id: "cateteri-vescicali",
       icon: <MdHealing />,
       title: "Cateteri vescicali",
-      description: "Gestione e cambio di cateteri vescicali a domicilio.",
+      description: "Assistenza infermieristica per gestione o sostituzione del catetere vescicale.",
     },
     {
       id: "sondini-naso-gastrici",
@@ -104,7 +105,7 @@ export default function Home() {
       id: "gestione-stomie",
       icon: <MdLocalHospital />,
       title: "Gestione stomie",
-      description: "Cura e assistenza per stomie e sistemi di raccolta.",
+      description: "Supporto infermieristico per cura e gestione della stomia.",
     },
     {
       id: "educazione-terapeutica",
@@ -213,7 +214,7 @@ export default function Home() {
         <h2>Servizi infermieristici a domicilio</h2>
         
         <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px' }}>
-          Infermieri Web offre servizi infermieristici a domicilio a Lucca e zone limitrofe. Le prestazioni includono medicazioni, ECG, prelievi, iniezioni, flebo, cateteri vescicali, gestione stomie e assistenza infermieristica personalizzata. Tutti i servizi sono erogati da infermieri qualificati e iscritti all'Ordine Professionale.
+          Infermieri Web offre servizi infermieristici a domicilio a Lucca e zone limitrofe. Le prestazioni includono medicazioni, ECG, prelievi, iniezioni, flebo, cateteri vescicali, gestione stomie e assistenza infermieristica personalizzata.
         </p>
 
         <div className="cards-grid">
