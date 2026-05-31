@@ -66,13 +66,13 @@ export const articles = [
         title: "Prezzi indicativi delle principali prestazioni infermieristiche",
         content: [
           "Di seguito alcuni esempi indicativi:",
-          "- Iniezioni: da 10 €",
-          "- Medicazioni semplici: da 20 €",
-          "- Medicazioni complesse: da 30 €",
+          "- Iniezioni: da 20 €",
+          "- Medicazioni semplici: da 30 €",
+          "- Medicazioni complesse: da 40 €",
           "- ECG a domicilio: da 50 €",
-          "- Fleboclisi: da 25 €",
-          "- Gestione catetere vescicale: da 25 €",
-          "- Gestione stomia: da 30 €",
+          "- Fleboclisi: da 35 €",
+          "- Gestione catetere vescicale: da 40 €",
+          "- Gestione stomia: da 40 €",
           "- Piano assistenziale personalizzato: su valutazione",
           "I costi possono variare in base alla complessità del caso e alle specifiche esigenze del paziente."
         ]
