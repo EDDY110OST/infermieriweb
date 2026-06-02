@@ -156,11 +156,8 @@ body {
 }
 
 .navbar-container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding-left: 32px;
-  padding-right: 32px;
+  width: min(100% - 48px, 1400px);
+  margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -170,16 +167,18 @@ body {
 
 .navbar-logo {
   flex: 0 0 auto;
-  margin-right: 48px;
+  margin-left: 0 !important;
+  margin-right: 40px;
+  flex-shrink: 0;
 }
 
 .navbar-right {
-  flex: 0 1 auto;
+  margin-left: auto;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 28px;
-  margin-left: auto;
+  gap: 24px;
+  width: auto;
+  max-width: none;
 }
 
 .navbar-menu {
