@@ -89,7 +89,7 @@ export default function Layout({ children }) {
 
       <header className={`navbar${isSticky ? " sticky" : ""}`}>
         <Link to="/">
-          <img src={logo} className="logo" alt="InfermieriWeb.it" loading="lazy" decoding="async" />
+          <img src={logo} className="logo" alt="InfermieriWeb.it" width="982" height="265" loading="lazy" decoding="async" />
         </Link>
 
         <div className="navbar-controls">

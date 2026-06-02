@@ -123,7 +123,7 @@ export default function Articoli() {
                 className="article-card"
               >
                 <div className="article-card-image">
-                  <img src={getArticleImage(article)} alt={article.title} loading="lazy" />
+                  <img src={getArticleImage(article)} alt={article.title} width="900" height="540" loading="lazy" />
                   <span className="article-card-category">{article.category}</span>
                 </div>
                 <div className="article-card-body">

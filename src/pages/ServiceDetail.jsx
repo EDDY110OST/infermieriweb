@@ -404,6 +404,8 @@ export default function ServiceDetail() {
                 <img
                   src="/images/medicazione-domiciliare-lucca.png"
                   alt="Infermiere durante una medicazione a domicilio a Lucca"
+                  width="1536"
+                  height="1024"
                   loading="lazy"
                   style={{ width: "100%", maxHeight: "560px", objectFit: "cover", borderRadius: "18px", marginTop: "24px" }}
                 />
@@ -416,6 +418,8 @@ export default function ServiceDetail() {
                   <img
                     src="/images/ecg-domicilio-lucca.png"
                     alt="Infermiere durante un ECG a domicilio a Lucca"
+                    width="1536"
+                    height="1024"
                     loading="lazy"
                     style={{ width: "100%", maxHeight: "560px", objectFit: "cover", borderRadius: "18px", marginTop: "24px" }}
                   />
@@ -424,6 +428,8 @@ export default function ServiceDetail() {
                   <img
                     src="/images/prelievi-domicilio-lucca.png"
                     alt="Infermiere durante un prelievo del sangue a domicilio a Lucca"
+                    width="1536"
+                    height="1024"
                     loading="lazy"
                     style={{ width: "100%", maxHeight: "560px", objectFit: "cover", borderRadius: "18px", marginTop: "24px" }}
                   />
@@ -501,6 +507,8 @@ export default function ServiceDetail() {
               <img
                 src="/images/iniezioni-domicilio-lucca.png"
                 alt="Infermiere durante una iniezione a domicilio a Lucca"
+                width="1536"
+                height="1024"
                 loading="lazy"
                 style={{ width: "100%", maxHeight: "560px", objectFit: "cover", borderRadius: "18px", marginTop: "24px" }}
               />

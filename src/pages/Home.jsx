@@ -212,6 +212,8 @@ export default function Home() {
             src={foto} 
             className="hero-photo lazy-image" 
             alt="Dott. Eduard G.D., infermiere a domicilio"
+            width="1024"
+            height="1534"
             loading="lazy"
           />
 
@@ -269,6 +271,8 @@ export default function Home() {
                   <img
                     src="/images/medicazione-domiciliare-lucca.png"
                     alt="Infermiere durante una medicazione a domicilio a Lucca"
+                    width="1536"
+                    height="1024"
                     loading="lazy"
                     style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
                   />
@@ -277,6 +281,8 @@ export default function Home() {
                   <img
                     src="/images/ecg-domicilio-lucca.png"
                     alt="Infermiere durante un ECG a domicilio a Lucca"
+                    width="1536"
+                    height="1024"
                     loading="lazy"
                     style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
                   />
@@ -285,6 +291,8 @@ export default function Home() {
                   <img
                     src="/images/prelievi-domicilio-lucca.png"
                     alt="Infermiere durante un prelievo del sangue a domicilio a Lucca"
+                    width="1536"
+                    height="1024"
                     loading="lazy"
                     style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
                   />
@@ -293,6 +301,8 @@ export default function Home() {
                   <img
                     src="/images/iniezioni-domicilio-lucca.png"
                     alt="Infermiere durante una iniezione a domicilio a Lucca"
+                    width="1536"
+                    height="1024"
                     loading="lazy"
                     style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "18px", marginBottom: "18px" }}
                   />
@@ -383,7 +393,7 @@ export default function Home() {
           {latestArticles.map((article) => (
             <Link key={article.slug} to={`/articoli/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="article-preview-card">
-                <img src={getArticleImage(article)} alt={article.title} loading="lazy" />
+                <img src={getArticleImage(article)} alt={article.title} width="900" height="540" loading="lazy" />
                 <div>
                   <span className="article-preview-category">{article.category}</span>
                   <h3>{article.title}</h3>
