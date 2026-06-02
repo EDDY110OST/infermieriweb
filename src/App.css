@@ -698,9 +698,21 @@ textarea:focus-visible {
   overflow: hidden;
 }
 
-.btn-secondary:hover {
-  background: #1fa847;
-  color: white;
+.hero .btn-secondary {
+  background: linear-gradient(135deg, #25d366, #20b954) !important;
+  color: white !important;
+  border: none !important;
+  border-color: transparent !important;
+  padding: 17px 36px !important;
+  border-radius: 50px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.hero .btn-secondary:hover {
+  background: #1fa847 !important;
+  color: white !important;
   transform: translateY(-3px);
   box-shadow: 0 10px 25px rgba(0, 137, 123, 0.18);
 }
