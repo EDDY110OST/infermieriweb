@@ -685,9 +685,9 @@ textarea:focus-visible {
 }
 
 .btn-secondary {
-  background: var(--bg-card);
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  background: linear-gradient(135deg, #25d366, #20b954);
+  color: white;
+  border: none;
   padding: 14px 28px;
   border-radius: 50px;
   text-decoration: none;
@@ -699,11 +699,11 @@ textarea:focus-visible {
 }
 
 .btn-secondary:hover {
-    background: rgba(0, 137, 123, 0.08);
-    color: var(--primary); 
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 137, 123, 0.12);
-  }
+  background: #1fa847;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 137, 123, 0.18);
+}
 
   .btn-secondary:disabled,
   .btn-primary:disabled,
@@ -781,7 +781,7 @@ textarea:focus-visible {
 
 .dark-theme .hero h1,
 .dark-theme .hero p {
-  color: var(--text-primary);
+  color: #073763;
 }
 
 .hero-buttons {
@@ -1963,6 +1963,7 @@ textarea:focus-visible {
 
   .hero h1 {
     font-size: clamp(32px, 8vw, 42px);
+    color: #073763;
   }
 
   .hero-buttons,

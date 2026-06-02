@@ -191,7 +191,6 @@ export default function Home() {
           </p>
 
           <div className="hero-buttons">
-            <Link to="/contatti" className="btn-primary" aria-label="Richiedi informazioni su servizi infermieristici a domicilio">Richiedi informazioni</Link>
             <a href="https://wa.me/393313139220" className="btn-secondary" aria-label="Scrivici su WhatsApp per richiedere informazioni o prenotare">
               Scrivici su WhatsApp
             </a>
