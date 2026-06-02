@@ -87,41 +87,43 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      <header className={`navbar${isSticky ? " sticky" : ""}`}>
-        <Link to="/">
-          <img src={logo} className="logo" alt="InfermieriWeb.it" width="982" height="265" loading="lazy" decoding="async" />
-        </Link>
+      <header className={`site-header${isSticky ? " sticky" : ""}`}>
+        <div className="navbar-container">
+          <Link to="/">
+            <img src={logo} className="logo" alt="InfermieriWeb.it" width="982" height="265" loading="lazy" decoding="async" />
+          </Link>
 
-        <div className="navbar-controls">
-          <button
-            type="button"
-            className={`theme-toggle ${theme}`}
-            onClick={toggleTheme}
-            aria-label={t("aria.themeToggle")}
-          >
-            <span className="theme-toggle__icon" aria-hidden="true">
-              {theme === "dark" ? "🌙" : "☀️"}
-            </span>
-            <span className="theme-toggle__label">
-              {t(`theme.${theme}`)}
-            </span>
-          </button>
-        </div>
+          <div className="navbar-right">
+            <div className="navbar-controls">
+              <button
+                type="button"
+                className={`theme-toggle ${theme}`}
+                onClick={toggleTheme}
+                aria-label={t("aria.themeToggle")}
+              >
+                <span className="theme-toggle__icon" aria-hidden="true">
+                  {theme === "dark" ? "🌙" : "☀️"}
+                </span>
+                <span className="theme-toggle__label">
+                  {t(`theme.${theme}`)}
+                </span>
+              </button>
+            </div>
 
-        <button
-          type="button"
-          className="mobile-menu-button"
-          onClick={toggleMobileNav}
-          aria-label={t("aria.menuToggle")}
-          aria-expanded={mobileNavOpen}
-          aria-controls="main-navigation"
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+            <button
+              type="button"
+              className="mobile-menu-button"
+              onClick={toggleMobileNav}
+              aria-label={t("aria.menuToggle")}
+              aria-expanded={mobileNavOpen}
+              aria-controls="main-navigation"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
 
-        <nav id="main-navigation" className={`menu${mobileNavOpen ? " open" : ""}`} aria-label="Menu principale">
+            <nav id="main-navigation" className={`menu${mobileNavOpen ? " open" : ""}`} aria-label="Menu principale">
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMobileNav}>
             {t("nav.home")}
           </NavLink>
@@ -227,6 +229,8 @@ export default function Layout({ children }) {
             💬 WhatsApp
           </a>
         </nav>
+          </div>
+        </div>
       </header>
 
       <main id="main-content">{children}</main>

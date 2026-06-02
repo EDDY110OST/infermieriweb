@@ -139,31 +139,44 @@ body {
 
 /* NAVBAR */
 
-.navbar {
+.site-header {
   position: sticky;
   top: 0;
   z-index: 1000;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
   background: var(--bg-card);
-  padding: 0 32px;
-  min-height: 92px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   box-shadow: 0 6px 22px rgba(15, 23, 42, 0.05);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
 
-.navbar > a {
-  margin-right: auto;
-}
-
-.navbar.sticky {
+.site-header.sticky {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
   background: rgba(255, 255, 255, 0.96);
+}
+
+.navbar-container {
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 32px;
+  padding-right: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  min-height: 92px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navbar-container > a {
+  margin-right: auto;
 }
 
 .top-right {
