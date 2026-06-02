@@ -31,6 +31,20 @@
   --border-light: rgba(255, 255, 255, 0.12);
 }
 
+.dark-theme .service-detail,
+.dark-theme .service-detail *,
+.dark-theme .service-card,
+.dark-theme .service-card * {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .service-detail a,
+.dark-theme .service-detail li,
+.dark-theme .service-card a,
+.dark-theme .service-card li {
+  color: var(--text-primary) !important;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -763,6 +777,11 @@ textarea:focus-visible {
   color: #073763;
   max-width: 760px;
   margin-bottom: 35px;
+}
+
+.dark-theme .hero h1,
+.dark-theme .hero p {
+  color: var(--text-primary);
 }
 
 .hero-buttons {
@@ -1895,15 +1914,42 @@ textarea:focus-visible {
 
 @media (max-width: 650px) {
   .top-bar {
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     text-align: center;
     padding: 10px 6%;
+    gap: 10px;
   }
 
   .top-left {
     justify-content: center;
     flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .top-right {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .top-social {
+    justify-content: center;
     gap: 10px;
+  }
+
+  .top-social a {
+    width: 34px;
+    height: 34px;
+  }
+
+  .language-switcher {
+    width: auto;
   }
 
   .logo {
