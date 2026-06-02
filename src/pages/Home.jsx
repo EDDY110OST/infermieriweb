@@ -212,9 +212,11 @@ export default function Home() {
             src={foto} 
             className="hero-photo lazy-image" 
             alt="Dott. Eduard G.D., infermiere a domicilio"
-            width="1024"
-            height="1534"
-            loading="lazy"
+            width="601"
+            height="901"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
 
           <div className="caption">

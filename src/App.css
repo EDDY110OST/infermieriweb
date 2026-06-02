@@ -653,6 +653,7 @@ textarea:focus-visible {
 .hero-photo {
   width: 100%;
   display: block;
+  aspect-ratio: 601 / 901;
   border-radius: 20px;
   transition: transform 0.3s ease;
 }
