@@ -1822,6 +1822,29 @@ textarea:focus-visible {
     width: 100%;
   }
 
+  .mobile-menu-footer {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    padding-top: 18px;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  .menu.open .mobile-menu-footer {
+    display: flex;
+  }
+
+  .mobile-menu-footer .theme-toggle,
+  .mobile-menu-footer .btn-menu {
+    width: 100%;
+  }
+
+  .navbar-actions .navbar-controls,
+  .navbar-actions .btn-menu:not(.mobile-menu-button) {
+    display: none;
+  }
+
   .menu-dropdown-content {
     position: static;
     transform: none;

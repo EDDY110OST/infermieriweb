@@ -194,6 +194,31 @@ export default function Layout({ children }) {
                   </div>
                 )}
               </div>
+
+              <div className="mobile-menu-footer">
+                <div className="mobile-menu-controls">
+                  <button
+                    type="button"
+                    className={`theme-toggle ${theme}`}
+                    onClick={toggleTheme}
+                    aria-label={t("aria.themeToggle")}
+                  >
+                    <span className="theme-toggle__icon" aria-hidden="true">
+                      {theme === "dark" ? "🌙" : "☀️"}
+                    </span>
+                    <span className="theme-toggle__label">
+                      {t(`theme.${theme}`)}
+                    </span>
+                  </button>
+                </div>
+
+                <a href="tel:3313139220" className="btn-menu btn-call" aria-label="Chiama Infermieri Web" onClick={closeMobileNav}>
+                  📞 Chiama Ora
+                </a>
+                <a href="https://wa.me/393313139220" className="btn-menu btn-whatsapp" aria-label="Scrivi a Infermieri Web su WhatsApp" onClick={closeMobileNav}>
+                  💬 WhatsApp
+                </a>
+              </div>
             </nav>
 
             <div className="navbar-actions">
