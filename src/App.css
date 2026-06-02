@@ -144,8 +144,10 @@ body {
   top: 0;
   z-index: 1000;
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
   background: var(--bg-card);
-  padding: 24px 6%;
+  padding: 24px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -561,9 +563,11 @@ textarea:focus-visible {
 .hero {
   min-height: 760px;
   padding: clamp(60px, 8vw, 120px) 6%;
+  max-width: 1400px;
+  margin: 0 auto;
   background: linear-gradient(135deg, #eefcff 0%, #ffffff 50%, #f0f9ff 100%);
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr 520px;
   gap: clamp(40px, 6vw, 70px);
   align-items: center;
   position: relative;
@@ -652,8 +656,10 @@ textarea:focus-visible {
 
 .hero-photo {
   width: 100%;
+  height: auto;
   display: block;
   aspect-ratio: 601 / 901;
+  object-fit: cover;
   border-radius: 20px;
   transition: transform 0.3s ease;
 }
