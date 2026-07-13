@@ -102,3 +102,23 @@ CREATE TABLE IF NOT EXISTS applications (
   status TEXT NOT NULL DEFAULT 'new', -- new|approved|rejected
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Coordinate per la ricerca su mappa (aggiunte 13/7/26, richiesta Bruno)
+ALTER TABLE nurses ADD COLUMN IF NOT EXISTS lat DOUBLE PRECISION;
+ALTER TABLE nurses ADD COLUMN IF NOT EXISTS lng DOUBLE PRECISION;
+
+-- Recensioni verificate: si possono lasciare solo tramite il link inviato
+-- dopo una prenotazione completata (anti-recensioni false). Pubblicazione
+-- dopo moderazione.
+CREATE TABLE IF NOT EXISTS reviews (
+  id SERIAL PRIMARY KEY,
+  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
+  booking_id INT REFERENCES bookings(id),
+  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  text TEXT NOT NULL DEFAULT '',
+  author_name TEXT NOT NULL DEFAULT '',
+  review_token TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending', -- pending|published|rejected
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_reviews_nurse ON reviews (nurse_id, status);
