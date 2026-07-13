@@ -2013,3 +2013,85 @@ textarea:focus-visible {
     padding: clamp(40px, 6vw, 80px) 6%;
   }
 }
+/* ============================================================
+   RESTYLING LEGGERO 2026 — coerenza tipografica e pulizia
+   (layer di rifinitura: vince per cascata, non tocca i blocchi sopra)
+   ============================================================ */
+
+/* Utility screen-reader-only: era usata nel markup ma mai definita,
+   per questo l'etichetta "Cambia lingua del sito" appariva visibile */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Tipografia: titoli più compatti e senza righe orfane */
+h1, h2, h3 {
+  letter-spacing: -0.015em;
+}
+
+.hero h1,
+.section h2 {
+  text-wrap: balance;
+}
+
+/* Top bar più elegante: meno "gridata" */
+.top-bar {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.language-switcher-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Accessibilità: stato di focus visibile navigando con la tastiera */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+/* Top bar mobile: da 5 righe impilate a poche righe compatte */
+@media (max-width: 650px) {
+  .top-bar {
+    padding: 8px 4%;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .top-left {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 16px;
+  }
+
+  .top-right {
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    width: auto;
+  }
+
+  .top-social {
+    gap: 8px;
+  }
+
+  .top-social a {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+}
