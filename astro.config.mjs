@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   site: "https://infermieriweb.it",
   trailingSlash: "never",
+  build: { format: "file" },
   integrations: [react(), sitemap()],
   vite: {
     resolve: {
