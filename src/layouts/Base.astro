@@ -75,6 +75,8 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
   </head>
 
   <body>
-    <slot />
+    <div id="root">
+      <slot />
+    </div>
   </body>
 </html>

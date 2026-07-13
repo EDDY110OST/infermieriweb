@@ -183,10 +183,12 @@ body {
 }
 
 .navbar-logo {
-  flex: 0 0 auto;
+  /* Il logo ha un box intrinseco di 982px in gran parte vuoto: deve potersi
+     comprimere, altrimenti i bottoni a destra escono dallo schermo. */
+  flex: 0 1 auto;
+  min-width: 0;
   margin-left: 0 !important;
   margin-right: 24px;
-  flex-shrink: 0;
 }
 
 .navbar-right {
@@ -220,8 +222,9 @@ body {
   }
 
   .navbar-right {
-    margin-left: 0;
-    justify-content: flex-start;
+    /* Ancora menu e bottoni al bordo destro del contenitore */
+    margin-left: auto;
+    justify-content: flex-end;
   }
 }
 
@@ -396,6 +399,7 @@ textarea:focus-visible {
 
 .logo {
   height: 86px;
+  max-width: 100%;
   object-fit: contain;
 }
 

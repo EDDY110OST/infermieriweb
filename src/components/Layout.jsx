@@ -91,7 +91,7 @@ export default function Layout({ children }) {
         <div className="navbar-container">
           <div className="navbar-logo">
             <Link to="/">
-              <img src={logo} className="logo" alt="InfermieriWeb.it" width="982" height="265" loading="lazy" decoding="async" />
+              <img src={logo.src ?? logo} className="logo" alt="InfermieriWeb.it" width="982" height="265" loading="lazy" decoding="async" />
             </Link>
           </div>
 

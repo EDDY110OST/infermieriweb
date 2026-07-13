@@ -163,7 +163,7 @@ export default function Home() {
 
         <div className="hero-photo-card">
           <img 
-            src={foto} 
+            src={foto.src ?? foto} 
             className="hero-photo lazy-image" 
             alt="Dott. Eduard G.D., infermiere a domicilio"
             width="601"
