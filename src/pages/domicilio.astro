@@ -1,0 +1,15 @@
+---
+import Base from "../layouts/Base.astro";
+import DomicilioIsland from "../islands/DomicilioIsland.jsx";
+import { pageSeo } from "../data/seo.js";
+import { medicalBusinessSchema } from "../data/schema.js";
+---
+
+<Base
+  title={pageSeo.domicilio.title}
+  description={pageSeo.domicilio.description}
+  path="/domicilio"
+  schemas={[medicalBusinessSchema]}
+>
+  <DomicilioIsland client:load pathname="/domicilio" />
+</Base>

@@ -19,22 +19,9 @@ export function AppSettingsProvider({ children }) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const current = translations[language];
-    document.documentElement.lang = current.locale;
-    document.title = current.seo.title;
-    const setMeta = (selector, attr, value) => {
-      const element = document.querySelector(selector);
-      if (element) element.setAttribute(attr, value);
-    };
-
-    setMeta("meta[name='description']", "content", current.seo.description);
-    setMeta("meta[property='og:title']", "content", current.seo.title);
-    setMeta("meta[property='og:description']", "content", current.seo.description);
-    setMeta("meta[property='og:url']", "content", current.seo.url);
-    setMeta("meta[property='og:image']", "content", current.seo.image);
-    setMeta("meta[name='twitter:title']", "content", current.seo.title);
-    setMeta("meta[name='twitter:description']", "content", current.seo.description);
-    setMeta("meta[name='twitter:image']", "content", current.seo.image);
+    // Title, description e canonical arrivano già corretti dall'HTML statico:
+    // qui si aggiornano solo lingua del documento e tema.
+    document.documentElement.lang = translations[language].locale;
 
     if (theme === "dark") {
       document.documentElement.classList.add("dark-theme");

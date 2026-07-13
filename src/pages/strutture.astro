@@ -1,0 +1,15 @@
+---
+import Base from "../layouts/Base.astro";
+import StructuresIsland from "../islands/StructuresIsland.jsx";
+import { pageSeo } from "../data/seo.js";
+import { medicalBusinessSchema } from "../data/schema.js";
+---
+
+<Base
+  title={pageSeo.strutture.title}
+  description={pageSeo.strutture.description}
+  path="/strutture"
+  schemas={[medicalBusinessSchema]}
+>
+  <StructuresIsland client:load pathname="/strutture" />
+</Base>

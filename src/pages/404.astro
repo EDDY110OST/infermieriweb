@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Pagina non trovata | Infermieri Web"
+  description="La pagina che cerchi non esiste o è stata spostata. Torna alla home di Infermieri Web per i servizi infermieristici a domicilio a Lucca."
+  path="/404"
+>
+  <div class="page">
+    <main id="main-content">
+      <section class="section white" style="text-align: center; padding: 90px 20px;">
+        <span class="section-label">Errore 404</span>
+        <h1 style="margin-bottom: 12px;">Pagina non trovata</h1>
+        <p style="max-width: 480px; margin: 0 auto 28px;">
+          La pagina che cerchi non esiste o è stata spostata. Puoi tornare alla home
+          oppure contattarci direttamente.
+        </p>
+        <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+          <a href="/" class="btn-primary" style="padding: 12px 30px; text-decoration: none;">🏠 Torna alla home</a>
+          <a href="https://wa.me/393313139220" class="btn-secondary" style="padding: 12px 30px; text-decoration: none;">💬 WhatsApp</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</Base>
+
+<style>
+  h1 {
+    font-size: 34px;
+  }
+</style>

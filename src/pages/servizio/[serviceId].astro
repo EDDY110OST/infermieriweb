@@ -1,0 +1,29 @@
+---
+import Base from "../../layouts/Base.astro";
+import ServiceDetailIsland from "../../islands/ServiceDetailIsland.jsx";
+import { servicesData } from "../../data/services.js";
+import { serviceSeo } from "../../data/seo.js";
+import { medicalBusinessSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
+
+export function getStaticPaths() {
+  return Object.keys(servicesData).map((serviceId) => ({ params: { serviceId } }));
+}
+
+const { serviceId } = Astro.params;
+const service = servicesData[serviceId];
+const seo = serviceSeo(serviceId, service);
+const path = `/servizio/${serviceId}`;
+
+const schemas = [
+  medicalBusinessSchema,
+  breadcrumbSchema([
+    { name: "Home", url: `${SITE_URL}/` },
+    { name: "Servizi", url: `${SITE_URL}/domicilio` },
+    { name: service.title, url: `${SITE_URL}${path}` },
+  ]),
+];
+---
+
+<Base title={seo.title} description={seo.description} path={path} schemas={schemas}>
+  <ServiceDetailIsland client:load pathname={path} params={{ serviceId }} />
+</Base>

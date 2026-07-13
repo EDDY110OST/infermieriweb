@@ -1,0 +1,80 @@
+---
+import "@fontsource-variable/inter";
+import "../index.css";
+import "../App.css";
+
+const {
+  title,
+  description,
+  path = "/",
+  ogType = "website",
+  ogImage = "https://infermieriweb.it/logo.jpeg",
+  ogImageAlt = "Logo Infermieri Web",
+  schemas = [],
+} = Astro.props;
+
+const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path, Astro.site).href.replace(/\/$/, "");
+---
+
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00897b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="InfermieriWeb" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="/logo-512.png" />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta property="og:site_name" content="InfermieriWeb.it" />
+    <meta property="og:locale" content="it_IT" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {schemas.map((schema) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
+
+    <script is:inline>
+      // Applica il tema salvato prima del primo paint (evita lo sfarfallio)
+      try {
+        var t = localStorage.getItem("siteTheme");
+        if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.classList.add("dark-theme");
+        }
+      } catch (e) {}
+    </script>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7M0H77LRX2"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-7M0H77LRX2');
+    </script>
+  </head>
+
+  <body>
+    <slot />
+  </body>
+</html>

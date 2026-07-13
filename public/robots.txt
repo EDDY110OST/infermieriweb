@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://infermieriweb.it/sitemap.xml
+
+Sitemap: https://infermieriweb.it/sitemap-index.xml

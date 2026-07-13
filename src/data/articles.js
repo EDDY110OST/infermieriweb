@@ -7,7 +7,6 @@ export const articles = [
     excerpt: "Scopri i principali fattori che determinano il prezzo dell'assistenza infermieristica a domicilio a Lucca e provincia.",
     date: "2026-05-15",
     readingTime: "4 min",
-    image: "https://images.unsplash.com/photo-1580281657521-7b00d8ed9090?auto=format&fit=crop&w=900&q=80",
     sections: [
       {
         id: "introduzione",
@@ -120,7 +119,7 @@ export const articles = [
     excerpt: "Spieghiamo come si svolge un ECG a domicilio, i suoi vantaggi e quando è consigliato per la tua salute cardiaca.",
     date: "2026-05-20",
     readingTime: "5 min",
-    image: "https://images.unsplash.com/photo-1580281657521-6f30adc66d4a?auto=format&fit=crop&w=900&q=80",
+    image: "/images/ecg-domicilio-lucca.webp",
     sections: [
       {
         id: "ecg-domiciliare",
@@ -156,7 +155,7 @@ export const articles = [
     excerpt: "Tutto sui prelievi a domicilio: preparazione, sicurezza, quando preferirli e come richiedere il servizio a Lucca.",
     date: "2026-05-10",
     readingTime: "4 min",
-    image: "https://images.unsplash.com/photo-1580281657521-4a9f1bc25f32?auto=format&fit=crop&w=900&q=80",
+    image: "/images/prelievi-domicilio-lucca.webp",
     sections: [
       {
         id: "preparazione",
@@ -192,7 +191,7 @@ export const articles = [
     excerpt: "Scopri quando richiedere medicazioni semplici o complesse a domicilio e come InfermieriWeb garantisce sicurezza e cura personalizzata.",
     date: "2026-05-05",
     readingTime: "5 min",
-    image: "https://images.unsplash.com/photo-1580281657521-5d9f2ecc2088?auto=format&fit=crop&w=900&q=80",
+    image: "/images/medicazione-domiciliare-lucca.webp",
     sections: [
       {
         id: "tipologie",
@@ -228,7 +227,6 @@ export const articles = [
     excerpt: "Guida completa alla sostituzione e gestione del catetere vescicale a domicilio, con consigli pratici e indicazioni professionali.",
     date: "2026-05-18",
     readingTime: "5 min",
-    image: "https://images.unsplash.com/photo-1580281657521-46f2e0eb3f04?auto=format&fit=crop&w=900&q=80",
     sections: [
       {
         id: "sostituzione",
@@ -256,7 +254,6 @@ export const articles = [
     excerpt: "Scopri le migliori pratiche per la cura della stomia a domicilio e come un infermiere specializzato può fare la differenza.",
     date: "2026-05-12",
     readingTime: "5 min",
-    image: "https://images.unsplash.com/photo-1580281657521-33bfbc51ef1c?auto=format&fit=crop&w=900&q=80",
     sections: [
       {
         id: "cura-stomia",
@@ -284,7 +281,6 @@ export const articles = [
     excerpt: "Capisci quando è utile un holter cardiaco o pressorio e quali vantaggi offre il monitoraggio a domicilio.",
     date: "2026-05-22",
     readingTime: "6 min",
-    image: "https://images.unsplash.com/photo-1580281657521-111951c77a29?auto=format&fit=crop&w=900&q=80",
     sections: [
       {
         id: "holter-cardiaco",
@@ -312,7 +308,7 @@ export const articles = [
     excerpt: "Vediamo i segnali più comuni che indicano la necessità di un infermiere a domicilio e come organizzare il servizio su Lucca.",
     date: "2026-05-08",
     readingTime: "4 min",
-    image: "https://images.unsplash.com/photo-1580281657521-abc79f8a31f6?auto=format&fit=crop&w=900&q=80",
+    image: "/images/iniezioni-domicilio-lucca.webp",
     sections: [
       {
         id: "segnali",

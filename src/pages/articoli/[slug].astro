@@ -1,0 +1,34 @@
+---
+import Base from "../../layouts/Base.astro";
+import ArticoloIsland from "../../islands/ArticoloIsland.jsx";
+import { articles } from "../../data/articles.js";
+import { articleSeo } from "../../data/seo.js";
+import { getArticleImage } from "../../utils/articleImageFallback.js";
+import { medicalBusinessSchema, articleSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
+
+export function getStaticPaths() {
+  return articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+
+const { slug } = Astro.params;
+const { article } = Astro.props;
+const seo = articleSeo(article);
+const path = `/articoli/${slug}`;
+
+const rawImage = getArticleImage(article);
+const ogImage = rawImage.startsWith("data:") ? `${SITE_URL}/logo.jpeg` : new URL(rawImage, SITE_URL).href;
+
+const schemas = [
+  medicalBusinessSchema,
+  articleSchema(article, ogImage),
+  breadcrumbSchema([
+    { name: "Home", url: `${SITE_URL}/` },
+    { name: "Articoli", url: `${SITE_URL}/articoli` },
+    { name: article.title, url: `${SITE_URL}${path}` },
+  ]),
+];
+---
+
+<Base title={seo.title} description={seo.description} path={path} ogType="article" ogImage={ogImage} ogImageAlt={article.title} schemas={schemas}>
+  <ArticoloIsland client:load pathname={path} params={{ slug }} />
+</Base>

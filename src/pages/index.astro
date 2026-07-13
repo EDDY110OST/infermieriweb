@@ -1,0 +1,18 @@
+---
+import Base from "../layouts/Base.astro";
+import HomeIsland from "../islands/HomeIsland.jsx";
+import { pageSeo } from "../data/seo.js";
+import { medicalBusinessSchema, faqSchema } from "../data/schema.js";
+import translations from "../translations.js";
+
+const faqItems = translations.it.faq.items;
+---
+
+<Base
+  title={pageSeo.home.title}
+  description={pageSeo.home.description}
+  path="/"
+  schemas={[medicalBusinessSchema, faqSchema(faqItems)]}
+>
+  <HomeIsland client:load pathname="/" />
+</Base>
