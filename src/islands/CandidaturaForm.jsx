@@ -5,7 +5,8 @@ const PROFESSIONI = ["infermiere", "fisioterapista", "ostetrica", "medico specia
 export default function CandidaturaForm() {
   const [dati, setDati] = useState({
     name: "", email: "", phone: "", profession: "infermiere",
-    albo_number: "", city: "", province: "", message: "", privacy: false,
+    albo_name: "", albo_number: "", albo_date: "", vat_number: "",
+    city: "", province: "", message: "", privacy: false,
   });
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
@@ -52,8 +53,22 @@ export default function CandidaturaForm() {
         {PROFESSIONI.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
       </select>
 
-      <label htmlFor="cf-albo">Numero iscrizione all'albo (es. OPI)</label>
-      <input id="cf-albo" value={dati.albo_number} onChange={(e) => setDati({ ...dati, albo_number: e.target.value })} />
+      <label htmlFor="cf-albo-nome">Albo di appartenenza * <span style={{ fontWeight: 400 }}>(es. OPI Lucca)</span></label>
+      <input id="cf-albo-nome" required minLength={3} placeholder="es. OPI Lucca" value={dati.albo_name} onChange={(e) => setDati({ ...dati, albo_name: e.target.value })} />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div>
+          <label htmlFor="cf-albo">N. iscrizione *</label>
+          <input id="cf-albo" required value={dati.albo_number} onChange={(e) => setDati({ ...dati, albo_number: e.target.value })} />
+        </div>
+        <div>
+          <label htmlFor="cf-albo-data">Data iscrizione *</label>
+          <input id="cf-albo-data" required type="date" value={dati.albo_date} onChange={(e) => setDati({ ...dati, albo_date: e.target.value })} />
+        </div>
+      </div>
+
+      <label htmlFor="cf-piva">Partita IVA * <span style={{ fontWeight: 400 }}>(11 cifre)</span></label>
+      <input id="cf-piva" required pattern="[0-9]{11}" inputMode="numeric" minLength={11} maxLength={11} placeholder="es. 01234567890" value={dati.vat_number} onChange={(e) => setDati({ ...dati, vat_number: e.target.value.replace(/\D/g, "") })} />
 
       <label htmlFor="cf-email">Email *</label>
       <input id="cf-email" required type="email" value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />
