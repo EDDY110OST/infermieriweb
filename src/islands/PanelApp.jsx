@@ -89,8 +89,9 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        start: `${blocco.data}T${blocco.dalle}:00+02:00`,
-        end: `${blocco.dataFine || blocco.data}T${blocco.alle}:00+02:00`,
+        // ora locale nuda: l'offset di Roma (legale/solare) lo calcola il server
+        start_local: `${blocco.data}T${blocco.dalle}`,
+        end_local: `${blocco.dataFine || blocco.data}T${blocco.alle}`,
         reason: blocco.reason,
       }),
     });

@@ -22,14 +22,14 @@ export const pageSeo = {
       "InfermieriWeb mette in contatto pazienti e infermieri liberi professionisti a domicilio: professionisti verificati, recensioni vere, zero commissioni.",
   },
   recensioni: {
-    title: "Recensioni dei pazienti | Infermieri Web Lucca",
+    title: "Recensioni verificate dei pazienti | InfermieriWeb",
     description:
-      "Le recensioni di chi ha scelto Infermieri Web per l'assistenza infermieristica a domicilio a Lucca: valutazione 5,0 su Google basata su recensioni verificate.",
+      "Le recensioni dei professionisti di InfermieriWeb: può lasciarle solo chi ha completato davvero una prenotazione. Nessuna recensione anonima o comprata.",
   },
   articoli: {
-    title: "Guide e Consigli Infermieristici | InfermieriWeb",
+    title: "Guide e consigli infermieristici per pazienti e famiglie | InfermieriWeb",
     description:
-      "Articoli informativi realizzati da professionisti sanitari per aiutarti a comprendere meglio la tua salute e le prestazioni infermieristiche disponibili a Lucca e provincia.",
+      "Come funziona un ECG a domicilio, quanto costa un infermiere, come gestire un catetere: guide chiare scritte con i professionisti della rete.",
   },
   lavoraConNoi: {
     title: "Lavora con noi: infermieri a domicilio a Lucca | Infermieri Web",

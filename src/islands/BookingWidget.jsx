@@ -20,10 +20,14 @@ function prossimiGiorni(n = 14) {
 
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 
-export default function BookingWidget({ professionalId, services }) {
+export default function BookingWidget({ professionalId, services, servizioIniziale }) {
   const giorni = useMemo(() => prossimiGiorni(14), []);
-  const [servizio, setServizio] = useState(services[0]?.id || 0);
+  const [servizio, setServizio] = useState(
+    () => (servizioIniziale && services.some((s) => s.id === servizioIniziale) ? servizioIniziale : services[0]?.id || 0)
+  );
   const [giorno, setGiorno] = useState(giorni[0].iso);
+  const [giorniPieni, setGiorniPieni] = useState({});
+  const [cercoPrimoLibero, setCercoPrimoLibero] = useState(true);
   const [slots, setSlots] = useState([]);
   const [slot, setSlot] = useState(null);
   const [caricamento, setCaricamento] = useState(false);
@@ -40,10 +44,40 @@ export default function BookingWidget({ professionalId, services }) {
     setSlot(null);
     fetch(`/api/slots?professional_id=${professionalId}&service_id=${servizio}&date=${giorno}`)
       .then((r) => r.json())
-      .then((d) => setSlots(d.slots || []))
+      .then((d) => {
+        setSlots(d.slots || []);
+        setGiorniPieni((g) => ({ ...g, [giorno]: (d.slots || []).length === 0 }));
+      })
       .catch(() => setSlots([]))
       .finally(() => setCaricamento(false));
   }, [professionalId, servizio, giorno]);
+
+  // Il paziente non deve MAI atterrare su "nessun orario": si apre sul primo giorno utile
+  // (di sera "oggi" è quasi sempre pieno e sembrerebbe un professionista senza disponibilità)
+  useEffect(() => {
+    if (!servizio) return;
+    let attivo = true;
+    setCercoPrimoLibero(true);
+    (async () => {
+      for (const g of giorni.slice(0, 14)) {
+        if (!attivo) return;
+        try {
+          const r = await fetch(`/api/slots?professional_id=${professionalId}&service_id=${servizio}&date=${g.iso}`);
+          const d = await r.json();
+          if (!attivo) return;
+          setGiorniPieni((prec) => ({ ...prec, [g.iso]: (d.slots || []).length === 0 }));
+          if ((d.slots || []).length > 0) {
+            setGiorno(g.iso);
+            setSlots(d.slots);
+            break;
+          }
+        } catch { /* si prosegue col giorno dopo */ }
+      }
+      if (attivo) setCercoPrimoLibero(false);
+    })();
+    return () => { attivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professionalId, servizio]);
 
   const servizioSel = services.find((s) => s.id === Number(servizio));
 
@@ -127,7 +161,7 @@ export default function BookingWidget({ professionalId, services }) {
           <button
             type="button"
             key={g.iso}
-            className={`pf-day${giorno === g.iso ? " sel" : ""}`}
+            className={`pf-day${giorno === g.iso ? " sel" : ""}${giorniPieni[g.iso] ? " pieno" : ""}`}
             onClick={() => setGiorno(g.iso)}
             aria-selected={giorno === g.iso}
           >
@@ -142,7 +176,9 @@ export default function BookingWidget({ professionalId, services }) {
       {caricamento ? (
         <p className="pf-note">Cerco gli orari liberi…</p>
       ) : slots.length === 0 ? (
-        <p className="pf-note">Nessun orario libero in questo giorno: prova il successivo.</p>
+        <p className="pf-note">
+          {cercoPrimoLibero ? "Cerco il primo giorno disponibile…" : "Nessun orario libero in questo giorno: scegline un altro qui sopra (i giorni pieni sono in grigio)."}
+        </p>
       ) : (
         <div className="pf-slots" role="listbox" aria-label="Scegli l'orario">
           {slots.map((s) => (
@@ -183,11 +219,11 @@ export default function BookingWidget({ professionalId, services }) {
           <label htmlFor="bw-email">Email * <span style={{ fontWeight: 400 }}>(riceverai conferma e link per disdire)</span></label>
           <input id="bw-email" type="email" required value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />
 
-          <label htmlFor="bw-indirizzo">{perAltri ? "Indirizzo dove ricevere la visita" : "Indirizzo della visita (per prestazioni a domicilio)"}</label>
-          <input id="bw-indirizzo" value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via, numero civico" />
+          <label htmlFor="bw-indirizzo">Dove deve venire l'infermiere? *</label>
+          <input id="bw-indirizzo" required minLength={5} value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via e numero civico" />
 
-          <label htmlFor="bw-citta">Città</label>
-          <input id="bw-citta" value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} autoComplete="address-level2" />
+          <label htmlFor="bw-citta">Città *</label>
+          <input id="bw-citta" required minLength={2} value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} autoComplete="address-level2" />
 
           <div className="pf-check">
             <input id="bw-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />

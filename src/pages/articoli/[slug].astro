@@ -44,5 +44,5 @@ const schemas = [
 ---
 
 <Platform title={seo.title} description={seo.description} path={path} ogType="article" ogImage={ogImage} ogImageAlt={article.title} schemas={schemas}>
-  <ArticoloIsland client:load pathname={path} params={{ slug }} article={article} related={related} />
+  <ArticoloIsland pathname={path} params={{ slug }} article={article} related={related} />
 </Platform>

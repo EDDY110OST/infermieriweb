@@ -5,15 +5,15 @@ import { medicalBusinessSchema } from "../data/schema.js";
 ---
 
 <Platform
-  title="Cerca un professionista sanitario a domicilio | InfermieriWeb"
-  description="Trova infermieri e professionisti sanitari a domicilio nella tua città: mappa, recensioni verificate, prezzi chiari e prenotazione online gratuita."
+  title="Infermiere a domicilio nella tua città: cerca e prenota | InfermieriWeb"
+  description="Cerca un infermiere a domicilio nella tua città: mappa, prezzi chiari, recensioni di chi ha prenotato davvero. Prenotazione online gratuita, senza registrazione."
   path="/cerca"
   schemas={[medicalBusinessSchema]}
 >
   <section class="pf-section" style="padding-top: 40px;">
     <div class="pf-container" style="margin-bottom: 24px;">
       <span class="pf-kicker">Ricerca</span>
-      <h2 style="color: var(--iw-navy);">Trova il professionista nella tua zona</h2>
+      <h1 style="color: var(--iw-navy); font-size: clamp(26px, 3.6vw, 38px); font-weight: 800;">Trova un infermiere a domicilio nella tua zona</h1>
     </div>
     <SearchApp client:only="react" />
   </section>

@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
+import { romeDateTime } from "../../../lib/slots.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -17,10 +18,16 @@ export async function POST({ request }) {
   } catch {
     return json({ error: "Richiesta non valida" }, 400);
   }
-  const start = new Date(body.start || "");
-  const end = new Date(body.end || "");
+  // Ora locale di Roma → istante corretto anche in ora solare (niente offset cablati)
+  const daLocale = (testo) => {
+    const m = String(testo || "").match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/);
+    if (!m) return null;
+    return romeDateTime(m[1], Number(m[2]) * 60 + Number(m[3]));
+  };
+  const start = body.start_local ? daLocale(body.start_local) : new Date(body.start || "");
+  const end = body.end_local ? daLocale(body.end_local) : new Date(body.end || "");
   const reason = String(body.reason || "").slice(0, 160);
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+  if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
     return json({ error: "Intervallo non valido" }, 400);
   }
 

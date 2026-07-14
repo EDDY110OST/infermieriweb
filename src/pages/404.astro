@@ -1,32 +1,26 @@
 ---
-import Base from "../layouts/Base.astro";
+import Platform from "../layouts/Platform.astro";
 ---
 
-<Base
-  title="Pagina non trovata | Infermieri Web"
-  description="La pagina che cerchi non esiste o è stata spostata. Torna alla home di Infermieri Web per i servizi infermieristici a domicilio a Lucca."
+<Platform
+  title="Pagina non trovata | InfermieriWeb"
+  description="La pagina che cerchi non esiste o è stata spostata. Cerca un infermiere a domicilio nella tua zona o torna alla home."
   path="/404"
 >
-  <div class="page">
-    <main id="main-content">
-      <section class="section white" style="text-align: center; padding: 90px 20px;">
-        <span class="section-label">Errore 404</span>
-        <h1 style="margin-bottom: 12px;">Pagina non trovata</h1>
-        <p style="max-width: 480px; margin: 0 auto 28px;">
-          La pagina che cerchi non esiste o è stata spostata. Puoi tornare alla home
-          oppure contattarci direttamente.
-        </p>
-        <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
-          <a href="/" class="btn-primary" style="padding: 12px 30px; text-decoration: none;">🏠 Torna alla home</a>
-          <a href="https://wa.me/393313139220" class="btn-secondary" style="padding: 12px 30px; text-decoration: none;">💬 WhatsApp</a>
-        </div>
-      </section>
-    </main>
-  </div>
-</Base>
-
-<style>
-  h1 {
-    font-size: 34px;
-  }
-</style>
+  <section class="pf-section pf-center">
+    <div class="pf-container" style="max-width: 620px;">
+      <span class="pf-kicker">Errore 404</span>
+      <h2 style="color: var(--iw-navy); margin-bottom: 12px;">Questa pagina non esiste</h2>
+      <p style="color: var(--iw-slate); margin-bottom: 28px;">
+        Forse è stata spostata o l'indirizzo è sbagliato. Cerca direttamente l'infermiere che ti serve:
+      </p>
+      <form class="pf-searchbar" action="/cerca" method="get" role="search" style="margin: 0 auto 24px;">
+        <input type="search" name="q" placeholder="Città o prestazione (es. Lucca, ECG…)" aria-label="Cerca per città o prestazione" />
+        <button class="pf-btn" type="submit">Cerca</button>
+      </form>
+      <p>
+        <a class="pf-btn secondario" href="/">Torna alla home</a>
+      </p>
+    </div>
+  </section>
+</Platform>

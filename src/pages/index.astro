@@ -26,7 +26,9 @@ const categorie = [
 ];
 
 const faqItems = [
+  { question: "Quanto costa un infermiere a domicilio?", answer: "Dipende dalla prestazione: si va da circa 20 € per un prelievo o un'iniezione a circa 100 € per un holter cardiaco. Ogni professionista pubblica i suoi prezzi \"a partire da\" nella propria scheda, così conosci la cifra prima di prenotare. Il costo può variare in base alla complessità e alla distanza." },
   { question: "Quanto costa prenotare su InfermieriWeb?", answer: "Nulla: la prenotazione è gratuita per il paziente. Il compenso della prestazione si regola direttamente con il professionista, ai prezzi indicati nella sua scheda." },
+  { question: "Come si paga la prestazione?", answer: "Si paga direttamente al professionista, secondo le modalità che indica lui. Su InfermieriWeb non ci sono pagamenti online e non tratteniamo commissioni." },
   { question: "I professionisti sono verificati?", answer: "Sì: pubblichiamo solo professionisti iscritti al proprio albo (es. OPI per gli infermieri), verificati al momento dell'iscrizione." },
   { question: "Come funzionano le recensioni?", answer: "Solo chi ha completato una prenotazione riceve il link per lasciare una recensione: niente recensioni false, solo esperienze reali." },
   { question: "Posso disdire una prenotazione?", answer: "Sì, direttamente online dal link ricevuto alla conferma, fino a poche ore prima dell'appuntamento." },
@@ -34,17 +36,17 @@ const faqItems = [
 ---
 
 <Platform
-  title="InfermieriWeb — Prenota un infermiere a domicilio nella tua città"
-  description="Cerca l'infermiere a domicilio nella tua zona, guarda recensioni e prezzi e prenota online in un minuto. Gratis per il paziente, professionisti verificati iscritti all'albo."
+  title="Infermiere a domicilio: trova e prenota vicino a te | InfermieriWeb"
+  description="Trova un infermiere a domicilio nella tua zona: prezzi chiari, recensioni verificate e prenotazione online in un minuto. Gratis per il paziente."
   path="/"
   schemas={[medicalBusinessSchema, faqSchema(faqItems)]}
 >
   <section class="pf-hero pf-hero-split">
     <div class="pf-hero-testo">
       <span class="pf-hero-occhiello">La rete degli infermieri a domicilio</span>
-      <h1>Trova l'infermiere giusto <span class="nowrap-desktop">nella tua zona</span></h1>
+      <h1>Trova un infermiere a domicilio <span class="nowrap-desktop">nella tua zona</span></h1>
       <p class="sottotitolo">
-        Confronta prezzi, recensioni verificate e disponibilità. Prenota in pochi minuti,
+        Confronta prezzi, recensioni verificate e disponibilità. Prenoti in un minuto,
         senza registrazione. <strong>Gratis per te.</strong>
       </p>
       <form class="pf-search" action="/cerca" method="get" role="search">
@@ -113,7 +115,7 @@ const faqItems = [
   <section class="pf-section pf-center">
     <span class="pf-kicker">La rete</span>
     <h2>I professionisti sulla mappa</h2>
-    <p class="pf-sub">La rete cresce in tutta Italia. Trova chi copre la tua zona o esplora la mappa.</p>
+    <p class="pf-sub">La rete è partita da Lucca e si sta aprendo a nuove zone. Cerca la tua città o esplora la mappa.</p>
     <HomeMap />
     <p style="margin-top: 26px;">
       <a class="pf-btn" href="/cerca">Cerca nella tua zona</a>
@@ -168,16 +170,30 @@ const faqItems = [
     </p>
   </section>
 
+  <section class="pf-section pf-center">
+    <span class="pf-kicker">Domande frequenti</span>
+    <h2>Le domande che ci fanno più spesso</h2>
+    <div class="pf-faq">
+      {faqItems.map((item) => (
+        <details class="pf-faq-item">
+          <summary>{item.question}</summary>
+          <p>{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
   <section class="pf-section">
     <div class="pf-band">
       <div>
-        <h2>Sei un professionista sanitario?</h2>
+        <h2>Sei un infermiere libero professionista?</h2>
         <p>
-          Scheda personale, agenda online, prenotazioni e recensioni verificate: la tua presenza
-          digitale, pronta in un giorno. <strong>Gratis in fase di lancio.</strong>
+          I pazienti della tua zona ti trovano su Google, prenotano sui tuoi orari reali e il
+          compenso lo incassi tu, per intero. Zero commissioni.
+          <strong>Gratis per i primi professionisti.</strong>
         </p>
       </div>
-      <a class="pf-btn" href="/lavora-con-noi">Unisciti alla rete</a>
+      <a class="pf-btn" href="/lavora-con-noi">Voglio la mia scheda</a>
     </div>
   </section>
 </Platform>

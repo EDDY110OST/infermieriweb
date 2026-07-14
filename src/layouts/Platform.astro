@@ -6,11 +6,10 @@ import logo from "../assets/logo.jpeg";
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
 const nav = [
-  { href: "/cerca", label: "Trova un professionista" },
   { href: "/professionisti", label: "Zone coperte" },
   { href: "/articoli", label: "Blog salute" },
   { href: "/lavora-con-noi", label: "Per i professionisti" },
-  { href: "/area-professionisti", label: "Accedi" },
+  { href: "/area-professionisti", label: "Area professionisti", spento: true },
 ];
 ---
 
@@ -26,7 +25,7 @@ const nav = [
         </button>
         <nav class="pf-nav" id="pf-nav" aria-label="Menu principale">
           {nav.map((item) => (
-            <a href={item.href} aria-current={current === item.href ? "page" : undefined}>{item.label}</a>
+            <a href={item.href} class={item.spento ? "pf-nav-spento" : undefined} aria-current={current === item.href ? "page" : undefined}>{item.label}</a>
           ))}
           <a class="pf-cta" href="/cerca">Prenota una prestazione</a>
         </nav>

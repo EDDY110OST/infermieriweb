@@ -7,6 +7,7 @@ import { sql } from "../../lib/db.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 
 const { slug } = Astro.params;
+const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
 
 const [pro] = await sql`
   SELECT id, slug, name, profession, albo_number, bio, photo_url, region, province, city,
@@ -160,7 +161,7 @@ try {
       <div class="pf-panel" style="position: sticky; top: 90px;">
         <h2>Prenota online</h2>
         {services.length > 0 ? (
-          <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} />
+          <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} />
         ) : (
           <p class="pf-note">
             Questo professionista sta completando il suo profilo: le prenotazioni online

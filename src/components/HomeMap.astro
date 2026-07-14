@@ -24,19 +24,29 @@
       const pins = (professionisti || []).filter((p) => p.lat && p.lng);
       for (const p of pins) {
         const stelle = p.review_count > 0 ? `⭐ ${String(p.avg_rating).replace(".", ",")} (${p.review_count})` : (p.google_rating ? `⭐ ${p.google_rating}` : "");
-        L.marker([p.lat, p.lng], { icon: icona })
-          .addTo(map)
-          .bindPopup(
-            `<div class="pf-pin-popup">
-              <img src="${p.photo_url}" alt="" />
-              <div>
-                <div class="nome">${p.name}</div>
-                <div class="prof">${p.profession.charAt(0).toUpperCase() + p.profession.slice(1)} · ${p.city}</div>
-                <div style="font-size:12px">${stelle}</div>
-                <a href="/p/${p.slug}">Vedi scheda e prenota →</a>
-              </div>
-            </div>`
-          );
+        // Popup costruito con textContent: i dati arrivano dal profilo del professionista
+        // e non devono poter iniettare HTML nella home
+        const box = document.createElement("div");
+        box.className = "pf-pin-popup";
+        const foto = document.createElement("img");
+        foto.src = p.photo_url;
+        foto.alt = "";
+        const testi = document.createElement("div");
+        const nome = document.createElement("div");
+        nome.className = "nome";
+        nome.textContent = p.name;
+        const prof = document.createElement("div");
+        prof.className = "prof";
+        prof.textContent = `${p.profession.charAt(0).toUpperCase() + p.profession.slice(1)} · ${p.city}`;
+        const voto = document.createElement("div");
+        voto.style.fontSize = "12px";
+        voto.textContent = stelle;
+        const link = document.createElement("a");
+        link.href = `/p/${encodeURIComponent(p.slug)}`;
+        link.textContent = "Vedi scheda e prenota →";
+        testi.append(nome, prof, voto, link);
+        box.append(foto, testi);
+        L.marker([p.lat, p.lng], { icon: icona }).addTo(map).bindPopup(box);
       }
       if (pins.length === 1) map.setView([pins[0].lat, pins[0].lng], 9);
     })

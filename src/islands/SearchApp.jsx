@@ -17,6 +17,39 @@ function Stelle({ pro }) {
   return <span className="pf-stars"><span className="n">Nuovo sulla piattaforma</span></span>;
 }
 
+function ListaAttesa({ zona }) {
+  const [email, setEmail] = useState("");
+  const [fatto, setFatto] = useState(false);
+  const [errore, setErrore] = useState("");
+
+  const invia = async (e) => {
+    e.preventDefault();
+    setErrore("");
+    const r = await fetch("/api/lista-attesa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, zona }),
+    });
+    const d = await r.json();
+    if (!r.ok) return setErrore(d.error || "Errore");
+    setFatto(true);
+  };
+
+  if (fatto) return <div className="pf-successo">✅ Grazie! Ti scriveremo appena un professionista copre la tua zona.</div>;
+
+  return (
+    <form onSubmit={invia} style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+      <input
+        type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+        placeholder="La tua email" aria-label="La tua email per la lista d'attesa"
+        style={{ flex: 1, minWidth: 200, border: "1px solid var(--iw-line)", borderRadius: "var(--iw-r-ctrl)", padding: "12px 14px", fontSize: 15, fontFamily: "inherit" }}
+      />
+      <button className="pf-btn">Avvisatemi</button>
+      {errore && <div className="pf-errore" style={{ width: "100%" }}>{errore}</div>}
+    </form>
+  );
+}
+
 export default function SearchApp() {
   const [q, setQ] = useState(() =>
     typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("q") || "" : ""
@@ -34,14 +67,18 @@ export default function SearchApp() {
       .finally(() => setCaricamento(false));
   }, []);
 
+  // Ricerca a parole: "infermiere a Lucca" e "medicazioni Lucca" devono funzionare,
+  // non solo la frase esatta. Le parole di servizio non contano.
+  const STOPWORD = new Set(["a", "ad", "di", "da", "in", "per", "il", "lo", "la", "un", "uno", "una", "vicino", "zona", "casa", "domicilio", "e"]);
+
   const risultati = useMemo(() => {
-    const testo = q.trim().toLowerCase();
-    if (!testo) return tutti;
-    // cerca per nome, zona E prestazione offerta ("chi fa l'ECG vicino a me?")
-    return tutti.filter((p) =>
-      [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
-        .join(" ").toLowerCase().includes(testo)
-    );
+    const parole = q.trim().toLowerCase().split(/\s+/).filter((t) => t && !STOPWORD.has(t));
+    if (!parole.length) return tutti;
+    return tutti.filter((p) => {
+      const campi = [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
+        .join(" ").toLowerCase();
+      return parole.every((t) => campi.includes(t));
+    });
   }, [q, tutti]);
 
   // Mappa Leaflet
@@ -97,11 +134,18 @@ export default function SearchApp() {
 
         {!caricamento && risultati.length === 0 && (
           <div className="pf-panel">
-            <h2>Nessun professionista in questa zona, per ora</h2>
+            <h2>{tutti.length ? "Non ci siamo ancora arrivati" : "Nessun professionista disponibile"}</h2>
             <p style={{ color: "var(--iw-slate)" }}>
-              La rete sta crescendo in tutta Italia. Sei un professionista sanitario di questa zona?
+              In questa zona non c'è ancora un professionista della rete. Lasciaci la tua email:
+              ti avvisiamo appena arriviamo — di solito apriamo prima le zone da cui riceviamo più richieste.
             </p>
-            <a className="pf-btn" href="/lavora-con-noi">Unisciti gratis alla piattaforma</a>
+            <ListaAttesa zona={q} />
+            <p className="pf-note" style={{ marginTop: 14 }}>
+              Oppure <a href="/professionisti">guarda le zone già coperte</a>.
+            </p>
+            <p className="pf-note" style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--iw-line)" }}>
+              Sei un infermiere di questa zona? <a href="/lavora-con-noi">Entra nella rete (gratis)</a>.
+            </p>
           </div>
         )}
 
