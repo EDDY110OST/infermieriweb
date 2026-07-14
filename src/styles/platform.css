@@ -571,8 +571,11 @@
 .pf-faq-item[open] summary::after { content: "−"; }
 .pf-faq-item p { margin: 12px 0 0; line-height: 1.7; color: var(--iw-slate); }
 
-/* Voce di menu defilata (area riservata ai professionisti) */
+/* Voce di menu defilata (area riservata ai professionisti):
+   spenta a riposo, ma al passaggio del mouse si accende come le altre */
 .pf-nav-spento { color: var(--iw-muted) !important; font-weight: 500 !important; }
+.pf-nav-spento:hover,
+.pf-nav-spento[aria-current="page"] { color: var(--iw-primary-deep) !important; }
 
 
 /* ============================================================
