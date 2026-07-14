@@ -123,7 +123,7 @@ export default function SearchApp() {
         <form className="pf-searchbar" onSubmit={(e) => e.preventDefault()} role="search">
           <input
             type="search"
-            placeholder="Città o prestazione (es. Lucca, ECG, medicazioni…)"
+            placeholder="Città o prestazione (es. Lucca, ECG)"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             aria-label="Cerca un professionista per città o prestazione"
