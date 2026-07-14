@@ -70,19 +70,19 @@
   display: flex; align-items: center; gap: 24px;
 }
 
-.pf-logo img { height: 68px; width: auto; display: block; }
+.pf-logo img { height: 76px; width: auto; display: block; }
 
-.pf-nav { display: flex; align-items: center; gap: 26px; margin-left: auto; }
+.pf-nav { display: flex; align-items: center; gap: 22px; margin-left: auto; }
 
 .pf-nav a {
-  text-decoration: none; font-weight: 600; font-size: 15px; color: var(--iw-slate);
+  text-decoration: none; font-weight: 600; font-size: 17px; color: var(--iw-slate);
   transition: color 0.2s ease;
 }
 .pf-nav a:hover, .pf-nav a[aria-current="page"] { color: var(--iw-primary-deep); }
 
 .pf-cta {
-  background: var(--iw-primary-deep); color: #fff !important; font-weight: 700; font-size: 15px;
-  padding: 13px 26px; border-radius: var(--iw-r-ctrl); text-decoration: none;
+  background: var(--iw-primary-deep); color: #fff !important; font-weight: 700; font-size: 16px;
+  padding: 13px 24px; border-radius: var(--iw-r-ctrl); text-decoration: none;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 .pf-cta:hover { background: var(--iw-primary); transform: translateY(-1px); }
@@ -93,7 +93,7 @@
 }
 .pf-burger span { display: block; height: 3px; border-radius: 99px; background: var(--iw-navy); }
 
-@media (max-width: 860px) {
+@media (max-width: 960px) {
   .pf-nav {
     display: none; position: absolute; top: 100%; left: 0; right: 0;
     background: #fff; border-bottom: 1px solid var(--iw-line);
