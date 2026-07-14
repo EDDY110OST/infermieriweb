@@ -233,10 +233,9 @@ const translations = {
             description: "Disponibili sempre, puntuali e discreti nel mantenere la massima riservatezza."
           }
         ],
-        ctaTitle: "Contattaci Oggi",
-        ctaText: "La tua salute è la nostra priorità. Scopri come possiamo aiutarti con assistenza professionale e dedicata.",
+        ctaTitle: "Hai bisogno di assistenza a domicilio?",
+        ctaText: "Trova un professionista che copre la tua zona e prenota online in un minuto. Gratis per te.",
         ctaCall: "📞 Chiama: 3313139220",
-        ctaWhatsApp: "💬 WhatsApp",
         ctaEmail: "✉️ Email"
       },
       domicile: {
@@ -318,9 +317,8 @@ const translations = {
         costsParagraph2: "Per avere un preventivo preciso, contattaci specificando la tua località: ti forniremo subito un'indicazione chiara e personalizzata.",
         costsNote: "Nota: il prezzo finale dipende dalla distanza dalla base operativa e dal tipo di prestazione richiesto.",
         ctaTitle: "Vuoi prenotare una prestazione a domicilio?",
-        ctaText: "Chiama o scrivi subito per verificare disponibilità e costo nella tua zona.",
-        ctaCallNow: "📞 Chiama ora",
-        ctaWhatsApp: "💬 WhatsApp",
+        ctaText: "Cerca la tua città: vedi prezzi, recensioni e orari liberi dei professionisti che coprono la tua zona.",
+        ctaFindPro: "🔍 Trova un infermiere",
         backHome: "← Torna alla home"
       },
       reviews: {
@@ -354,9 +352,9 @@ const translations = {
         indicationsTitle: "Indicazioni",
         pricingTitle: "Tariffe",
         pricingNote: "Le tariffe possono variare in base alla complessità dell'intervento. Contattaci per una consulenza personalizzata.",
-        contactTitle: "Contattaci per prenotare",
-        contactText: "Chiama o invia un messaggio su WhatsApp",
-        call: "📞 Chiama",
+        contactTitle: "Prenota questa prestazione",
+        contactText: "Scegli il professionista che copre la tua zona e prenota online, senza registrazione.",
+        findPro: "🔍 Trova un infermiere",
         whatsapp: "💬 WhatsApp"
       }
     },
@@ -586,10 +584,9 @@ const translations = {
             description: "Always available, punctual, and discreet while maintaining maximum confidentiality."
           }
         ],
-        ctaTitle: "Contact us today",
-        ctaText: "Your health is our priority. Find out how we can help you with professional and dedicated care.",
+        ctaTitle: "Do you need care at home?",
+        ctaText: "Find a professional covering your area and book online in a minute. Free for you.",
         ctaCall: "Call: 3313139220",
-        ctaWhatsApp: "WhatsApp",
         ctaEmail: "Email"
       },
       domicile: {
@@ -671,9 +668,8 @@ const translations = {
         costsParagraph2: "For a precise quote, contact us specifying your location: we will immediately provide a clear and personalized estimate.",
         costsNote: "Note: the final price depends on the distance from the operating base and the type of requested service.",
         ctaTitle: "Do you want to book a home service?",
-        ctaText: "Call or message now to check availability and cost in your area.",
-        ctaCallNow: "Call now",
-        ctaWhatsApp: "WhatsApp",
+        ctaText: "Search your town: see prices, reviews and real free slots of the professionals covering your area.",
+        ctaFindPro: "🔍 Find a nurse",
         backHome: "← Back to home"
       },
       reviews: {
@@ -707,7 +703,7 @@ const translations = {
         indicationsTitle: "Indications",
         pricingTitle: "Pricing",
         pricingNote: "Prices may vary depending on the complexity of the service. Contact us for a personalized consultation.",
-        contactTitle: "Contact us to book",
+        contactTitle: "Book this service",
         contactText: "Call or send a message on WhatsApp",
         call: "Call",
         whatsapp: "WhatsApp"

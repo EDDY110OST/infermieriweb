@@ -162,11 +162,11 @@ export default function ServiceDetail() {
                     </details>
                     <details className="faq-item">
                       <summary className="faq-question">In quali zone è disponibile il servizio?</summary>
-                      <div className="faq-answer"><p>Il servizio è disponibile a Lucca e nei comuni limitrofi.</p></div>
+                      <div className="faq-answer"><p>Cerca la tua città su InfermieriWeb: vedi subito i professionisti che coprono la tua zona.</p></div>
                     </details>
                     <details className="faq-item">
                       <summary className="faq-question">Come posso richiedere informazioni?</summary>
-                      <div className="faq-answer"><p>È possibile contattare Infermieri Web telefonicamente o tramite WhatsApp.</p></div>
+                      <div className="faq-answer"><p>Ogni professionista ha la sua scheda su InfermieriWeb con prestazioni, prezzi e orari liberi: prenoti online in un minuto, senza registrazione e senza costi.</p></div>
                     </details>
                   </div>
                 </section>
@@ -184,12 +184,12 @@ export default function ServiceDetail() {
                     {
                       "@type": "Question",
                       "name": "In quali zone è disponibile il servizio?",
-                      "acceptedAnswer": { "@type": "Answer", "text": "Il servizio è disponibile a Lucca e nei comuni limitrofi." }
+                      "acceptedAnswer": { "@type": "Answer", "text": "Cerca la tua città su InfermieriWeb: vedi subito i professionisti che coprono la tua zona." }
                     },
                     {
                       "@type": "Question",
                       "name": "Come posso richiedere informazioni?",
-                      "acceptedAnswer": { "@type": "Answer", "text": "È possibile contattare Infermieri Web telefonicamente o tramite WhatsApp." }
+                      "acceptedAnswer": { "@type": "Answer", "text": "Ogni professionista ha la sua scheda su InfermieriWeb con prestazioni, prezzi e orari liberi: prenoti online in un minuto, senza registrazione e senza costi." }
                     }
                   ]
                 }) }} />
@@ -239,11 +239,8 @@ export default function ServiceDetail() {
             <h3 style={{ fontSize: "20px", marginBottom: "15px" }}>{t("pages.serviceDetail.contactTitle")}</h3>
             <p style={{ fontSize: "16px", marginBottom: "20px" }}>{t("pages.serviceDetail.contactText")}</p>
             <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
-              <a href="tel:3313139220" className="btn-primary" style={{ padding: "12px 30px", textDecoration: "none" }}>
-                {t("pages.serviceDetail.call")}
-              </a>
-              <a href="https://wa.me/393313139220" className="btn-secondary" style={{ padding: "12px 30px", textDecoration: "none" }}>
-                {t("pages.serviceDetail.whatsapp")}
+              <a href="/cerca" className="btn-primary" style={{ padding: "12px 30px", textDecoration: "none" }}>
+                {t("pages.serviceDetail.findPro")}
               </a>
             </div>
           </div>

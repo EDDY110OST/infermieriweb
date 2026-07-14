@@ -64,8 +64,7 @@ export default function Domicilio() {
           <h2>{t("pages.domicile.ctaTitle")}</h2>
           <p style={{ color: "#fff" }}>{t("pages.domicile.ctaText")}</p>
           <div style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="tel:3313139220" className="btn-primary">{t("pages.domicile.ctaCallNow")}</a>
-            <a href="https://wa.me/393313139220" className="btn-secondary">{t("pages.domicile.ctaWhatsApp")}</a>
+            <a href="/cerca" className="btn-primary">{t("pages.domicile.ctaFindPro")}</a>
           </div>
         </div>
 

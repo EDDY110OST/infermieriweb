@@ -181,12 +181,9 @@ export default function Articolo({ article, related = [] }) {
                 {index === 0 && (
                   <div className="article-cta-card">
                     <h3>Hai bisogno di assistenza infermieristica?</h3>
-                    <p>Scrivici su WhatsApp e ricevi supporto rapido per la tua situazione a Lucca e provincia.</p>
-                    <a
-                      href="https://wa.me/393313139220?text=Salve%2C%20ho%20bisogno%20di%20assistenza%20infermieristica.%20"
-                      className="btn-primary"
-                    >
-                      Contatta su WhatsApp
+                    <p>Trova un infermiere che copre la tua zona: prezzi chiari, recensioni verificate e prenotazione online in un minuto. Gratis per te.</p>
+                    <a href="/cerca" className="btn-primary">
+                      Trova un infermiere
                     </a>
                   </div>
                 )}
