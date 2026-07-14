@@ -6,7 +6,7 @@ export default function CandidaturaForm() {
   const [dati, setDati] = useState({
     name: "", email: "", phone: "", profession: "infermiere",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
-    city: "", province: "", message: "", privacy: false,
+    city: "", province: "", address: "", message: "", privacy: false,
   });
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
@@ -81,6 +81,9 @@ export default function CandidaturaForm() {
 
       <label htmlFor="cf-prov">Provincia</label>
       <input id="cf-prov" value={dati.province} onChange={(e) => setDati({ ...dati, province: e.target.value })} />
+
+      <label htmlFor="cf-indirizzo">Indirizzo studio/sede <span style={{ fontWeight: 400 }}>(per il tuo segnaposto sulla mappa)</span></label>
+      <input id="cf-indirizzo" placeholder="es. Via Roma 12" value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" />
 
       <label htmlFor="cf-msg">Raccontaci di te (prestazioni offerte, zone coperte…)</label>
       <textarea id="cf-msg" rows={4} value={dati.message} onChange={(e) => setDati({ ...dati, message: e.target.value })} />

@@ -23,6 +23,7 @@ export async function POST({ request }) {
   const alboDate = String(body.albo_date || "").trim();
   const vatNumber = String(body.vat_number || "").replace(/\D/g, "");
   const city = String(body.city || "").trim();
+  const address = String(body.address || "").trim().slice(0, 200);
   const province = String(body.province || "").trim();
   const message = String(body.message || "").trim().slice(0, 2000);
 
@@ -42,8 +43,8 @@ export async function POST({ request }) {
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
-    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, message)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${message})`;
+    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message)
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message})`;
 
   // TODO: notifica email a Bruno/Eduard (Brevo) quando ci sarà l'account
   return json({ ok: true });

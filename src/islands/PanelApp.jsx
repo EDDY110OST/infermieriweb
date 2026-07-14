@@ -26,6 +26,54 @@ export default function PanelApp() {
   const [blocco, setBlocco] = useState({ data: "", dalle: "", alle: "", reason: "" });
   const [mostraBlocco, setMostraBlocco] = useState(false);
   const [statoPush, setStatoPush] = useState("idle");
+  const [mostraProfilo, setMostraProfilo] = useState(false);
+  const [profilo, setProfilo] = useState(null);
+  const [esitoProfilo, setEsitoProfilo] = useState(null);
+  const [salvoProfilo, setSalvoProfilo] = useState(false);
+
+  const apriProfilo = async () => {
+    const apertura = !mostraProfilo;
+    setMostraProfilo(apertura);
+    setEsitoProfilo(null);
+    if (apertura && !profilo) {
+      const r = await fetch("/api/panel/profilo");
+      if (r.ok) setProfilo((await r.json()).profilo);
+    }
+  };
+
+  const salvaProfilo = async (e) => {
+    e.preventDefault();
+    setSalvoProfilo(true);
+    setEsitoProfilo(null);
+    try {
+      const r = await fetch("/api/panel/profilo", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bio: profilo.bio, phone: profilo.phone, address: profilo.address,
+          city: profilo.city, province: profilo.province,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
+      if (d.geocoded) {
+        setEsitoProfilo({
+          tipo: "ok",
+          testo: d.geocoded.precision === "indirizzo"
+            ? `✅ Salvato. Segnaposto sulla mappa aggiornato al tuo indirizzo: ${d.geocoded.matched}`
+            : `✅ Salvato. Indirizzo non trovato con precisione: il segnaposto è al centro di ${profilo.city}. Controlla via e numero civico.`,
+        });
+      } else if (d.posizioneCambiata) {
+        setEsitoProfilo({ tipo: "warn", testo: "Salvato, ma l'indirizzo non è stato trovato sulla mappa: verifica che sia scritto per esteso (es. Via Roma 12)." });
+      } else {
+        setEsitoProfilo({ tipo: "ok", testo: "✅ Profilo salvato." });
+      }
+    } catch (err) {
+      setEsitoProfilo({ tipo: "err", testo: err.message });
+    } finally {
+      setSalvoProfilo(false);
+    }
+  };
 
   // Notifiche push (modello Prenotazioni Sbarba): stato del dispositivo
   useEffect(() => {
@@ -185,6 +233,7 @@ export default function PanelApp() {
           {statoPush === "attive" && (
             <span style={{ fontSize: 13.5, color: "var(--iw-primary-deep)", fontWeight: 700 }}>🔔 Notifiche attive</span>
           )}
+          <button className="pf-btn secondario" onClick={apriProfilo}>📍 Il mio profilo</button>
           <button className="pf-btn secondario" onClick={() => setMostraBlocco(!mostraBlocco)}>+ Blocca orario</button>
           <button className="pf-btn pericolo" onClick={esci}>Esci</button>
         </div>
@@ -201,6 +250,48 @@ export default function PanelApp() {
         <div className="pf-panel" style={{ marginBottom: 16, fontSize: 14.5 }}>
           🔕 Le notifiche sono bloccate nelle impostazioni del browser per questo sito: riattivale da lì.
         </div>
+      )}
+
+      {mostraProfilo && (
+        <form className="pf-panel pf-book" onSubmit={salvaProfilo} style={{ marginBottom: 18 }}>
+          <h2>📍 Il mio profilo</h2>
+          {!profilo ? (
+            <p className="pf-note">Caricamento…</p>
+          ) : (
+            <>
+              <label htmlFor="pr-indirizzo">Indirizzo dello studio/sede <span style={{ fontWeight: 400 }}>(posiziona il tuo segnaposto sulla mappa)</span></label>
+              <input id="pr-indirizzo" placeholder="es. Via Roma 12" value={profilo.address || ""} onChange={(e) => setProfilo({ ...profilo, address: e.target.value })} autoComplete="street-address" />
+
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+                <div>
+                  <label htmlFor="pr-citta">Città *</label>
+                  <input id="pr-citta" required minLength={2} value={profilo.city || ""} onChange={(e) => setProfilo({ ...profilo, city: e.target.value })} />
+                </div>
+                <div>
+                  <label htmlFor="pr-prov">Provincia</label>
+                  <input id="pr-prov" value={profilo.province || ""} onChange={(e) => setProfilo({ ...profilo, province: e.target.value })} />
+                </div>
+              </div>
+
+              <label htmlFor="pr-tel">Telefono</label>
+              <input id="pr-tel" type="tel" value={profilo.phone || ""} onChange={(e) => setProfilo({ ...profilo, phone: e.target.value })} />
+
+              <label htmlFor="pr-bio">Presentazione (compare sulla tua scheda pubblica)</label>
+              <textarea id="pr-bio" rows={4} maxLength={1200} value={profilo.bio || ""} onChange={(e) => setProfilo({ ...profilo, bio: e.target.value })} />
+
+              {esitoProfilo && (
+                <div className={esitoProfilo.tipo === "err" ? "pf-errore" : "pf-successo"} style={esitoProfilo.tipo === "warn" ? { background: "#fff7ed", color: "#b45309", borderColor: "#fed7aa" } : {}}>
+                  {esitoProfilo.testo}
+                </div>
+              )}
+
+              <button className="pf-btn" disabled={salvoProfilo}>{salvoProfilo ? "Salvo…" : "Salva profilo"}</button>
+              <p className="pf-note" style={{ marginTop: 8 }}>
+                La tua scheda pubblica: <a href={`/p/${profilo.slug}`} target="_blank" rel="noreferrer">infermieriweb.it/p/{profilo.slug}</a>
+              </p>
+            </>
+          )}
+        </form>
       )}
 
       {mostraBlocco && (
