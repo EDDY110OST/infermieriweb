@@ -1,11 +1,8 @@
 import React, { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getArticleImage } from "../utils/articleImageFallback";
-import { articles } from "../data/articles";
 
-export default function Articolo() {
-  const { slug } = useParams();
-  const article = articles.find((item) => item.slug === slug);
+export default function Articolo({ article, related = [] }) {
   const safeCategory = article?.category || "Articolo";
   const safeDate = article?.date || "";
   const safeReadingTime = article?.readingTime || "";
@@ -134,7 +131,6 @@ export default function Articolo() {
     );
   }
 
-  const related = articles.filter((item) => item.slug !== article.slug).slice(0, 3);
 
   return (
     <>

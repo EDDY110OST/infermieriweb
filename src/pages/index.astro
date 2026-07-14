@@ -1,14 +1,18 @@
 ---
+export const prerender = false;
+
 import Platform from "../layouts/Platform.astro";
 import HomeMap from "../components/HomeMap.astro";
-import { articles } from "../data/articles.js";
 import { getArticleImage } from "../utils/articleImageFallback.js";
 import { medicalBusinessSchema, faqSchema } from "../data/schema.js";
+import { sql } from "../lib/db.js";
+import { mapArticolo } from "../lib/blog.js";
 
-const ultimiArticoli = articles
-  .slice()
-  .sort((a, b) => new Date(b.date) - new Date(a.date))
-  .slice(0, 3);
+const righeArticoli = await sql`
+  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
+  FROM articles WHERE status = 'published'
+  ORDER BY published_at DESC, id DESC LIMIT 3`;
+const ultimiArticoli = righeArticoli.map(mapArticolo);
 
 const categorie = [
   { emoji: "🩹", nome: "Medicazioni", da: "da 30 €", href: "/servizio/medicazioni" },

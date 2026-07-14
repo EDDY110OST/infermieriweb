@@ -1,8 +1,18 @@
 ---
+export const prerender = false;
+
 import Platform from "../../layouts/Platform.astro";
 import ArticoliIsland from "../../islands/ArticoliIsland.jsx";
 import { pageSeo } from "../../data/seo.js";
 import { medicalBusinessSchema } from "../../data/schema.js";
+import { sql } from "../../lib/db.js";
+import { mapArticolo } from "../../lib/blog.js";
+
+const righe = await sql`
+  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
+  FROM articles WHERE status = 'published'
+  ORDER BY published_at DESC, id DESC`;
+const articoli = righe.map(mapArticolo);
 ---
 
 <Platform
@@ -11,5 +21,5 @@ import { medicalBusinessSchema } from "../../data/schema.js";
   path="/articoli"
   schemas={[medicalBusinessSchema]}
 >
-  <ArticoliIsland client:load pathname="/articoli" />
+  <ArticoliIsland client:load pathname="/articoli" articles={articoli} />
 </Platform>

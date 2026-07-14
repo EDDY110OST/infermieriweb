@@ -22,9 +22,15 @@ export async function GET() {
     JOIN professionals p ON p.id = z.professional_id AND p.status = 'active'
     WHERE z.region <> '' AND z.city <> ''`;
 
+  const articoli = await sql`
+    SELECT slug FROM articles WHERE status = 'published'`;
+
   const urls = [];
   for (const p of professionisti) {
     urls.push({ loc: `${SITE_URL}/p/${p.slug}`, priority: "0.9" });
+  }
+  for (const a of articoli) {
+    urls.push({ loc: `${SITE_URL}/articoli/${a.slug}`, priority: "0.7" });
   }
 
   const regioni = new Set(), province = new Set(), citta = new Set();

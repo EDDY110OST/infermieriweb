@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { getArticleImage } from "../utils/articleImageFallback";
-import { articles } from "../data/articles";
 
 const categories = [
   "Tutti",
@@ -17,7 +16,7 @@ const categories = [
   "Stomie",
 ];
 
-export default function Articoli() {
+export default function Articoli({ articles = [] }) {
   const { t } = useAppSettings();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tutti");

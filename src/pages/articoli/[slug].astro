@@ -1,17 +1,31 @@
 ---
+export const prerender = false;
+
 import Platform from "../../layouts/Platform.astro";
 import ArticoloIsland from "../../islands/ArticoloIsland.jsx";
-import { articles } from "../../data/articles.js";
 import { articleSeo } from "../../data/seo.js";
 import { getArticleImage } from "../../utils/articleImageFallback.js";
 import { medicalBusinessSchema, articleSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
-
-export function getStaticPaths() {
-  return articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
-}
+import { sql } from "../../lib/db.js";
+import { mapArticolo } from "../../lib/blog.js";
 
 const { slug } = Astro.params;
-const { article } = Astro.props;
+
+const [riga] = await sql`
+  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
+  FROM articles WHERE slug = ${slug} AND status = 'published'`;
+
+if (!riga) {
+  return new Response(null, { status: 404 });
+}
+const article = mapArticolo(riga);
+
+const correlateRighe = await sql`
+  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
+  FROM articles WHERE status = 'published' AND slug <> ${slug}
+  ORDER BY published_at DESC, id DESC LIMIT 3`;
+const related = correlateRighe.map(mapArticolo);
+
 const seo = articleSeo(article);
 const path = `/articoli/${slug}`;
 
@@ -30,5 +44,5 @@ const schemas = [
 ---
 
 <Platform title={seo.title} description={seo.description} path={path} ogType="article" ogImage={ogImage} ogImageAlt={article.title} schemas={schemas}>
-  <ArticoloIsland client:load pathname={path} params={{ slug }} />
+  <ArticoloIsland client:load pathname={path} params={{ slug }} article={article} related={related} />
 </Platform>

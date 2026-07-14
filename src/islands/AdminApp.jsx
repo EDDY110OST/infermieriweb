@@ -3,6 +3,115 @@ import React, { useCallback, useEffect, useState } from "react";
 const dataIt = (iso) =>
   new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
+
+function BlogAdmin() {
+  const [articoli, setArticoli] = useState(null);
+  const [editor, setEditor] = useState(null);
+  const [salvo, setSalvo] = useState(false);
+  const [messaggio, setMessaggio] = useState(null);
+
+  const carica = useCallback(() => {
+    fetch("/api/admin/blog").then((r) => r.json()).then((d) => setArticoli(d.articoli || []));
+  }, []);
+  useEffect(carica, [carica]);
+
+  const avvisa = (tipo, testo) => {
+    setMessaggio({ tipo, testo });
+    setTimeout(() => setMessaggio(null), 5000);
+  };
+
+  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "" });
+
+  const salva = async (publish) => {
+    setSalvo(true);
+    const metodo = editor.id ? "PATCH" : "POST";
+    const r = await fetch("/api/admin/blog", {
+      method: metodo,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...editor, publish }),
+    });
+    const d = await r.json();
+    setSalvo(false);
+    if (!r.ok) return avvisa("err", d.error);
+    setEditor(null);
+    avvisa("ok", publish ? "Articolo pubblicato ✅ È già online." : "Bozza salvata ✅");
+    carica();
+  };
+
+  const cambiaStato = async (art) => {
+    const publish = art.status !== "published";
+    const r = await fetch("/api/admin/blog", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: art.id, [publish ? "publish" : "unpublish"]: true }),
+    });
+    if (r.ok) { avvisa("ok", publish ? "Pubblicato ✅" : "Riportato in bozza."); carica(); }
+  };
+
+  const elimina = async (art) => {
+    if (!window.confirm(`Elimino definitivamente "${art.title}"?`)) return;
+    await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE" });
+    carica();
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, margin: "30px 0 18px" }}>
+        <h2 style={{ color: "var(--iw-navy)", margin: 0 }}>📝 Blog</h2>
+        {!editor && <button className="pf-btn" onClick={nuovo}>+ Nuovo articolo</button>}
+      </div>
+
+      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+
+      {editor && (
+        <div className="pf-panel pf-book" style={{ marginBottom: 18 }}>
+          <h2>{editor.id ? "Modifica articolo" : "Nuovo articolo"}</h2>
+          <label>Titolo *</label>
+          <input value={editor.title} onChange={(e) => setEditor({ ...editor, title: e.target.value })} placeholder="es. Come prepararsi a un prelievo a domicilio" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label>Categoria</label>
+              <input value={editor.category} onChange={(e) => setEditor({ ...editor, category: e.target.value })} placeholder="es. Prelievi" />
+            </div>
+            <div>
+              <label>Copertina (URL, facoltativa)</label>
+              <input value={editor.image} onChange={(e) => setEditor({ ...editor, image: e.target.value })} placeholder="vuota = copertina automatica" />
+            </div>
+          </div>
+          <label>Sommario * <span style={{ fontWeight: 400 }}>(1-2 frasi: compare in elenco e su Google)</span></label>
+          <textarea rows={2} maxLength={300} value={editor.excerpt} onChange={(e) => setEditor({ ...editor, excerpt: e.target.value })} />
+          <label>Testo * <span style={{ fontWeight: 400 }}>(riga con «## Titolo» = nuova sezione · riga vuota = nuovo paragrafo · «- » = elenco)</span></label>
+          <textarea rows={16} value={editor.body_raw} onChange={(e) => setEditor({ ...editor, body_raw: e.target.value })} style={{ fontFamily: "inherit" }} placeholder={"## Introduzione\n\nPrimo paragrafo...\n\n## Quando serve\n\n- primo punto\n- secondo punto"} />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button className="pf-btn" disabled={salvo} onClick={() => salva(true)}>{salvo ? "Salvo…" : "Pubblica"}</button>
+            <button className="pf-btn secondario" disabled={salvo} onClick={() => salva(false)}>Salva bozza</button>
+            <button className="pf-btn pericolo" type="button" onClick={() => setEditor(null)}>Annulla</button>
+          </div>
+        </div>
+      )}
+
+      {!articoli && <p className="pf-note">Caricamento…</p>}
+      {articoli && articoli.map((art) => (
+        <div className="pf-panel" key={art.id} style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <strong style={{ color: "var(--iw-navy)" }}>{art.title}</strong>
+            <div className="pf-note" style={{ margin: 0 }}>
+              {art.category} · {art.status === "published" ? `pubblicato il ${new Date(art.published_at).toLocaleDateString("it-IT")}` : "BOZZA"}
+              {art.status === "published" && <> · <a href={`/articoli/${art.slug}`} target="_blank" rel="noreferrer">vedi</a></>}
+            </div>
+          </div>
+          <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
+          <span style={{ display: "flex", gap: 6 }}>
+            <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw })}>Modifica</button>
+            <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
+            <button className="pf-btn pericolo compatto" onClick={() => elimina(art)}>Elimina</button>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminApp() {
   const [login, setLogin] = useState({ email: "", password: "" });
   const [autorizzato, setAutorizzato] = useState(null); // null=verifica, false=login, true=dentro
@@ -137,6 +246,8 @@ export default function AdminApp() {
           </div>
         </div>
       ))}
+
+      <BlogAdmin />
     </div>
   );
 }
