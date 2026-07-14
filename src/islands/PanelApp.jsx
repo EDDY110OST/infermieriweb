@@ -608,6 +608,7 @@ function Delta({ ora, prima }) {
 
 function TabStatistiche() {
   const [dati, setDati] = useState(null);
+  const [meseCsv, setMeseCsv] = useState(() => new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     fetch("/api/panel/statistiche").then((r) => r.json()).then(setDati);
@@ -642,6 +643,18 @@ function TabStatistiche() {
           <span className="etichetta">Prestazioni completate (totale)</span>
           <span className="numero">{dati.prenotazioni.completateTotali}</span>
           <span className="pf-delta pari">da quando sei sulla piattaforma</span>
+        </div>
+      </div>
+
+      <div className="pf-panel" style={{ marginTop: 18 }}>
+        <h2>📄 Riepilogo per il commercialista</h2>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Scarica l'elenco delle prestazioni del mese (CSV, si apre con Excel): comodo per la tua contabilità.
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <input type="month" value={meseCsv} onChange={(e) => setMeseCsv(e.target.value)}
+            style={{ border: "1px solid var(--iw-line)", borderRadius: 10, padding: "9px 12px", fontFamily: "inherit", fontSize: 14.5 }} />
+          <a className="pf-btn secondario" href={`/api/panel/riepilogo?mese=${meseCsv}`}>⬇️ Scarica CSV</a>
         </div>
       </div>
 

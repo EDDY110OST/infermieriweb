@@ -1,15 +1,123 @@
 ---
 import Platform from "../layouts/Platform.astro";
-import ChiSiamoIsland from "../islands/ChiSiamoIsland.jsx";
-import { pageSeo } from "../data/seo.js";
 import { medicalBusinessSchema } from "../data/schema.js";
+
+const valori = [
+  {
+    ic: "🤝",
+    titolo: "I pazienti restano del professionista",
+    testo: "Non ci mettiamo in mezzo al rapporto di cura. Chi ti trova qui, poi è tuo: nessuna commissione, nessun vincolo, nessun intermediario che si prende il cliente.",
+  },
+  {
+    ic: "⭐",
+    titolo: "Solo recensioni vere",
+    testo: "Può recensire soltanto chi ha davvero completato una prenotazione. Preferiamo poche recensioni autentiche a mille numeri gonfiati.",
+  },
+  {
+    ic: "🎓",
+    titolo: "Verifichiamo chi entra",
+    testo: "Ogni professionista è iscritto al proprio albo e viene verificato da noi, uno per uno, prima di comparire online.",
+  },
+  {
+    ic: "💶",
+    titolo: "Prezzi alla luce del sole",
+    testo: "I prezzi si vedono prima di prenotare. Il compenso lo concordi direttamente col professionista: da noi non passa un euro.",
+  },
+];
 ---
 
 <Platform
-  title={pageSeo.chiSiamo.title}
-  description={pageSeo.chiSiamo.description}
+  title="Chi siamo | InfermieriWeb"
+  description="InfermieriWeb è la piattaforma che mette in contatto pazienti e infermieri liberi professionisti a domicilio: professionisti verificati, recensioni vere, zero commissioni."
   path="/chi-siamo"
   schemas={[medicalBusinessSchema]}
 >
-  <ChiSiamoIsland client:load pathname="/chi-siamo" />
+  <section class="pf-hero" style="text-align: center; padding: clamp(50px, 7vw, 90px) 20px;">
+    <span class="pf-hero-occhiello">Chi siamo</span>
+    <h1 style="max-width: 780px; margin: 0 auto 16px; font-size: clamp(30px, 4.4vw, 48px); font-weight: 800; position: relative;">
+      Rendiamo semplice trovare un infermiere di cui fidarsi
+    </h1>
+    <p class="sottotitolo" style="max-width: 640px; margin: 0 auto;">
+      Perché quando serve assistenza a casa, la cosa più difficile non dovrebbe essere trovare
+      la persona giusta.
+    </p>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 760px;">
+      <span class="pf-kicker">Il nostro obiettivo</span>
+      <h2 style="color: var(--iw-navy); margin-bottom: 18px;">Da una parte chi ha bisogno di cure, dall'altra chi sa darle</h2>
+      <p style="font-size: 17px; color: var(--iw-slate); line-height: 1.75;">
+        Ogni giorno, in tutta Italia, migliaia di famiglie cercano un infermiere per un genitore
+        anziano, per una medicazione dopo un intervento, per un prelievo che non si riesce a fare
+        in ambulatorio. E lo cercano come si faceva vent'anni fa: chiedendo in farmacia, sperando
+        nel passaparola, telefonando a numeri trovati per caso.
+      </p>
+      <p style="font-size: 17px; color: var(--iw-slate); line-height: 1.75;">
+        Dall'altra parte ci sono infermieri liberi professionisti bravissimi — iscritti all'albo,
+        con anni di corsia alle spalle — che passano le sere a rincorrere appuntamenti su WhatsApp
+        e che, per farsi trovare, non hanno molto più di un passaparola o di una vetrina che si
+        prende una commissione su ogni paziente.
+      </p>
+      <p style="font-size: 17px; color: var(--iw-navy); line-height: 1.75; font-weight: 600;">
+        InfermieriWeb esiste per far incontrare queste due persone in un minuto, senza mettersi
+        in mezzo. Il paziente trova un professionista verificato nella sua zona, con prezzi chiari
+        e recensioni vere, e prenota online come farebbe per qualsiasi altra cosa. Il professionista
+        ottiene la sua agenda, la sua vetrina e le sue recensioni — e i pazienti restano suoi.
+      </p>
+    </div>
+  </section>
+
+  <section class="pf-section alt">
+    <div class="pf-container pf-center" style="margin-bottom: 40px;">
+      <span class="pf-kicker">Come lo facciamo</span>
+      <h2>Quattro promesse, non trattabili</h2>
+    </div>
+    <div class="pf-perche" style="max-width: 900px;">
+      {valori.map((v) => (
+        <div class="pf-perche-card">
+          <div class="ic">{v.ic}</div>
+          <h3>{v.titolo}</h3>
+          <p>{v.testo}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 760px;">
+      <span class="pf-kicker">Chi c'è dietro</span>
+      <h2 style="color: var(--iw-navy); margin-bottom: 18px;">Un infermiere e un imprenditore digitale</h2>
+      <p style="font-size: 17px; color: var(--iw-slate); line-height: 1.75;">
+        InfermieriWeb nasce dall'incontro di due mondi. Da una parte <strong>Eduard</strong>,
+        infermiere libero professionista specializzato in Wound Care: da anni porta l'assistenza
+        a casa dei pazienti a Lucca e provincia, e conosce sulla propria pelle tutto quello che
+        non funziona — le telefonate a cui rispondere mentre sei da un paziente, gli appuntamenti
+        gestiti a memoria, la fatica di farsi trovare da chi ha davvero bisogno di te.
+      </p>
+      <p style="font-size: 17px; color: var(--iw-slate); line-height: 1.75;">
+        Dall'altra <strong>Bruno</strong>, che di mestiere costruisce e gestisce piattaforme
+        digitali, e che ha messo la tecnologia al servizio di quel problema concreto.
+      </p>
+      <p style="font-size: 17px; color: var(--iw-slate); line-height: 1.75;">
+        Siamo un progetto giovane e non lo nascondiamo: la rete è appena partita e cresce una
+        città alla volta, un professionista alla volta, verificandoli uno per uno. Preferiamo
+        andare piano e far trovare a chi cerca <em>davvero</em> qualcuno di cui fidarsi, piuttosto
+        che riempire una mappa di nomi che non conosciamo.
+      </p>
+    </div>
+  </section>
+
+  <section class="pf-section alt">
+    <div class="pf-band">
+      <div>
+        <h2>Vuoi far parte della rete?</h2>
+        <p>
+          Se sei un infermiere libero professionista, qui trovi la tua agenda online, la tua scheda
+          su Google e le tue recensioni verificate. <strong>Gratis in fase di lancio, zero commissioni.</strong>
+        </p>
+      </div>
+      <a class="pf-btn" href="/lavora-con-noi">Unisciti a noi</a>
+    </div>
+  </section>
 </Platform>

@@ -28,6 +28,8 @@ export default function BookingWidget({ professionalId, services }) {
   const [slot, setSlot] = useState(null);
   const [caricamento, setCaricamento] = useState(false);
   const [dati, setDati] = useState({ name: "", phone: "", email: "", address: "", city: "", privacy: false });
+  const [perAltri, setPerAltri] = useState(false);
+  const [paziente, setPaziente] = useState("");
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
   const [fatto, setFatto] = useState(null);
@@ -43,6 +45,8 @@ export default function BookingWidget({ professionalId, services }) {
       .finally(() => setCaricamento(false));
   }, [professionalId, servizio, giorno]);
 
+  const servizioSel = services.find((s) => s.id === Number(servizio));
+
   const prenota = async (e) => {
     e.preventDefault();
     setErrore("");
@@ -53,10 +57,22 @@ export default function BookingWidget({ professionalId, services }) {
       const r = await fetch("/api/prenota", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ professional_id: professionalId, service_id: servizio, start: slot.start, ...dati }),
+        body: JSON.stringify({
+          professional_id: professionalId, service_id: servizio, start: slot.start, ...dati,
+          name: perAltri && paziente.trim() ? `${paziente.trim()} (prenotato da ${dati.name})` : dati.name,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Errore imprevisto");
+      // Conversione: la misura che conta (GA4)
+      if (typeof window !== "undefined" && typeof window.gtag === "function") {
+        window.gtag("event", "prenotazione_completata", {
+          professionista: professionalId,
+          prestazione: servizioSel?.name,
+          valore_da: servizioSel ? servizioSel.price_cents / 100 : undefined,
+          currency: "EUR",
+        });
+      }
       setFatto(d);
     } catch (err) {
       setErrore(err.message);
@@ -93,8 +109,6 @@ export default function BookingWidget({ professionalId, services }) {
       </div>
     );
   }
-
-  const servizioSel = services.find((s) => s.id === Number(servizio));
 
   return (
     <form className="pf-book" onSubmit={prenota}>
@@ -147,16 +161,29 @@ export default function BookingWidget({ professionalId, services }) {
 
       {slot && (
         <>
-          <label htmlFor="bw-nome">Nome e cognome *</label>
+          <label>Per chi è la prestazione?</label>
+          <div className="pf-scelta">
+            <button type="button" className={`pf-scelta-btn${!perAltri ? " sel" : ""}`} onClick={() => setPerAltri(false)}>Per me</button>
+            <button type="button" className={`pf-scelta-btn${perAltri ? " sel" : ""}`} onClick={() => setPerAltri(true)}>Per un familiare</button>
+          </div>
+
+          {perAltri && (
+            <>
+              <label htmlFor="bw-paziente">Nome del paziente *</label>
+              <input id="bw-paziente" required={perAltri} minLength={2} value={paziente} onChange={(e) => setPaziente(e.target.value)} placeholder="es. Maria Rossi" />
+            </>
+          )}
+
+          <label htmlFor="bw-nome">{perAltri ? "Il tuo nome e cognome *" : "Nome e cognome *"}</label>
           <input id="bw-nome" required minLength={2} value={dati.name} onChange={(e) => setDati({ ...dati, name: e.target.value })} autoComplete="name" />
 
-          <label htmlFor="bw-tel">Telefono *</label>
+          <label htmlFor="bw-tel">{perAltri ? "Il tuo telefono *" : "Telefono *"}</label>
           <input id="bw-tel" required type="tel" minLength={6} value={dati.phone} onChange={(e) => setDati({ ...dati, phone: e.target.value })} autoComplete="tel" />
 
           <label htmlFor="bw-email">Email * <span style={{ fontWeight: 400 }}>(riceverai conferma e link per disdire)</span></label>
           <input id="bw-email" type="email" required value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />
 
-          <label htmlFor="bw-indirizzo">Indirizzo della visita (per prestazioni a domicilio)</label>
+          <label htmlFor="bw-indirizzo">{perAltri ? "Indirizzo dove ricevere la visita" : "Indirizzo della visita (per prestazioni a domicilio)"}</label>
           <input id="bw-indirizzo" value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via, numero civico" />
 
           <label htmlFor="bw-citta">Città</label>

@@ -525,3 +525,13 @@
 }
 .pf-hero-split h1 .nowrap-desktop { white-space: nowrap; }
 @media (max-width: 520px) { .pf-hero-split h1 .nowrap-desktop { white-space: normal; } }
+
+/* Scelta "per me / per un familiare" nel widget prenotazione */
+.pf-scelta { display: flex; gap: 8px; margin-bottom: 14px; }
+.pf-scelta-btn {
+  flex: 1; border: 1px solid var(--iw-line); background: #fff; border-radius: 12px;
+  padding: 11px 8px; font-family: inherit; font-size: 14.5px; font-weight: 600;
+  color: var(--iw-slate); cursor: pointer; transition: all 0.15s ease;
+}
+.pf-scelta-btn.sel { border-color: var(--iw-primary); background: var(--iw-primary-soft); color: var(--iw-primary-deep); }
+.pf-scelta-btn:hover:not(.sel) { border-color: var(--iw-primary); }

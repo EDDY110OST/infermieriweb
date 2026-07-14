@@ -37,8 +37,10 @@ export default function SearchApp() {
   const risultati = useMemo(() => {
     const testo = q.trim().toLowerCase();
     if (!testo) return tutti;
+    // cerca per nome, zona E prestazione offerta ("chi fa l'ECG vicino a me?")
     return tutti.filter((p) =>
-      [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || [])].join(" ").toLowerCase().includes(testo)
+      [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
+        .join(" ").toLowerCase().includes(testo)
     );
   }, [q, tutti]);
 
@@ -84,7 +86,7 @@ export default function SearchApp() {
         <form className="pf-searchbar" onSubmit={(e) => e.preventDefault()} role="search">
           <input
             type="search"
-            placeholder="Città, zona o prestazione (es. Lucca, medicazioni…)"
+            placeholder="Città o prestazione (es. Lucca, ECG, medicazioni…)"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             aria-label="Cerca un professionista per città o prestazione"

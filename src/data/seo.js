@@ -17,9 +17,9 @@ export const pageSeo = {
       "Prestazioni infermieristiche anche in ambulatorio a Lucca: Eurofins Lamm, Centro Medico D33 e Farmacia Comunale 24h. Indirizzi, contatti e come raggiungerli.",
   },
   chiSiamo: {
-    title: "Chi siamo | Infermieri Web - Assistenza infermieristica a Lucca",
+    title: "Chi siamo | InfermieriWeb",
     description:
-      "Infermieri Web è la rete di infermieri professionali a domicilio di Lucca e provincia: professionisti iscritti all'OPI, puntualità e attenzione alla persona.",
+      "InfermieriWeb mette in contatto pazienti e infermieri liberi professionisti a domicilio: professionisti verificati, recensioni vere, zero commissioni.",
   },
   recensioni: {
     title: "Recensioni dei pazienti | Infermieri Web Lucca",
