@@ -230,7 +230,8 @@
 .pf-btn {
   display: inline-block; background: var(--iw-primary-deep); color: #fff !important; font-weight: 700;
   padding: 13px 26px; border-radius: var(--iw-r-ctrl); text-decoration: none; border: none; cursor: pointer;
-  font-size: 15px; transition: background 0.2s ease, transform 0.15s ease; white-space: nowrap;
+  font-size: 15px; transition: background 0.2s ease, transform 0.15s ease;
+  max-width: 100%; text-align: center;
 }
 .pf-btn:hover { background: var(--iw-primary); transform: translateY(-1px); }
 .pf-btn.secondario { background: var(--iw-primary-soft); color: var(--iw-primary-deep) !important; box-shadow: none; }
@@ -271,7 +272,7 @@
 .pf-profile-card .prof { font-size: 17px; opacity: 0.92; margin: 4px 0 10px; }
 .pf-profile-card .badge-albo {
   display: inline-block; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35);
-  font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; margin-right: 8px;
+  font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: var(--iw-r-chip); margin-right: 8px;
 }
 
 .pf-profile-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; max-width: var(--iw-max); margin: 0 auto; align-items: start; }
