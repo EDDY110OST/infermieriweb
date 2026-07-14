@@ -161,7 +161,9 @@
 
 /* ---------- Griglia categorie ---------- */
 
-.pf-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
+.pf-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
+@media (max-width: 1100px) { .pf-cats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 860px) { .pf-cats { grid-template-columns: repeat(2, 1fr); } }
 
 .pf-cat {
   background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: var(--iw-radius);
