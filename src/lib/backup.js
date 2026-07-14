@@ -51,7 +51,7 @@ export async function eseguiBackup() {
     attachmentBase64: compresso.toString("base64"),
   });
 
-  return { ok: inviata, dimensioneKB: Math.round(compresso.length / 1024), conteggi };
+  return { ok: inviata, dimensioneKB: Math.round(compresso.length / 1024), conteggi, brevoErr: globalThis.__brevoErr };
 }
 
 // Variante di sendEmail con allegato (API Brevo)
@@ -72,6 +72,10 @@ async function sendEmailConAllegato({ to, subject, html, attachmentName, attachm
       attachment: [{ name: attachmentName, content: attachmentBase64 }],
     }),
   });
-  if (!r.ok) console.error("[backup] Brevo:", r.status, await r.text());
+  if (!r.ok) {
+    const testo = await r.text();
+    console.error("[backup] Brevo:", r.status, testo);
+    globalThis.__brevoErr = `${r.status}: ${testo}`.slice(0, 300);
+  }
   return r.ok;
 }
