@@ -10,7 +10,7 @@ const { slug } = Astro.params;
 
 const [pro] = await sql`
   SELECT id, slug, name, profession, albo_number, bio, photo_url, region, province, city,
-         google_rating, google_reviews_url, cancel_hours
+         phone, google_rating, google_reviews_url, cancel_hours
   FROM professionals WHERE slug = ${slug} AND status = 'active'`;
 
 if (!pro) {
@@ -152,7 +152,14 @@ const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", y
 
       <div class="pf-panel" style="position: sticky; top: 90px;">
         <h2>Prenota online</h2>
-        <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} />
+        {services.length > 0 ? (
+          <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} />
+        ) : (
+          <p class="pf-note">
+            Questo professionista sta completando il suo profilo: le prenotazioni online
+            saranno disponibili a breve. {pro.phone && <>Nel frattempo puoi chiamarlo: <a href={`tel:${pro.phone}`}>{pro.phone}</a></>}
+          </p>
+        )}
       </div>
     </div>
   </section>

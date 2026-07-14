@@ -4,6 +4,8 @@ import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
 import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
 import { romeDateTime } from "../../../lib/slots.js";
+import { tokenRecensione } from "../../../lib/recensioni.js";
+import { emailRichiestaRecensione } from "../../../lib/mailer.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -84,8 +86,19 @@ export async function PATCH({ request }) {
               s.name AS service_name, p.name AS professional_name, p.email AS professional_email, p.slug`;
   if (!updated.length) return json({ error: "Prenotazione non trovata" }, 404);
 
-  // Se il professionista disdice, il paziente viene avvisato via email
+  // Se completata, il paziente riceve l'invito alla recensione verificata
   const b = updated[0];
+  if (status === "done" && b.customer_email) {
+    const invito = emailRichiestaRecensione({
+      booking: { name: b.customer_name },
+      professional: { name: b.professional_name },
+      service: { name: b.service_name },
+      reviewUrl: `https://infermieriweb.it/recensione?token=${tokenRecensione(id)}`,
+    });
+    await sendEmail({ to: b.customer_email, toName: b.customer_name, replyTo: b.professional_email || undefined, ...invito });
+  }
+
+  // Se il professionista disdice, il paziente viene avvisato via email
   if (status === "cancelled" && b.customer_email) {
     const avviso = emailDisdettaPaziente({
       booking: { name: b.customer_name, start: b.start_dt },

@@ -126,3 +126,43 @@ export function emailDisdettaPaziente({ booking, professional, service }) {
     `),
   };
 }
+
+export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug }) {
+  return {
+    subject: "Benvenuto su InfermieriWeb: la tua agenda è pronta 🎉",
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Benvenuto nella rete, ${name}!</h2>
+      <p>La tua candidatura è stata approvata: la tua scheda e la tua agenda sono pronte.</p>
+      <table style="width: 100%; font-size: 15px; margin: 14px 0; background: #f6f9f9; border-radius: 10px;">
+        <tr><td style="padding: 10px 14px; color: #7b909b;">Accesso</td><td style="padding: 10px 0; font-weight: bold;">${SITE}/area-professionisti</td></tr>
+        <tr><td style="padding: 10px 14px; color: #7b909b;">Email</td><td style="padding: 10px 0; font-weight: bold;">${email}</td></tr>
+        <tr><td style="padding: 10px 14px; color: #7b909b;">Password temporanea</td><td style="padding: 10px 0; font-weight: bold;">${passwordTemporanea}</td></tr>
+      </table>
+      <p><strong>I tuoi primi 4 passi (10 minuti):</strong></p>
+      <p style="margin: 4px 0;">1️⃣ Entra e <strong>cambia subito la password</strong> (scheda Profilo)</p>
+      <p style="margin: 4px 0;">2️⃣ Carica la tua <strong>foto</strong> e il tuo <strong>indirizzo</strong> (il segnaposto sulla mappa si posiziona da solo)</p>
+      <p style="margin: 4px 0;">3️⃣ Inserisci le tue <strong>prestazioni con i prezzi</strong> (scheda Servizi)</p>
+      <p style="margin: 4px 0;">4️⃣ Imposta i tuoi <strong>orari settimanali</strong> (scheda Orari)</p>
+      <p style="text-align: center; margin: 22px 0;">
+        <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Entra nella tua agenda</a>
+      </p>
+      <p>La tua scheda pubblica: <a href="${SITE}/p/${slug}">${SITE}/p/${slug}</a> — condividila su WhatsApp, Google e i social: è tua, e le prenotazioni che porta sono tue al 100%. Zero commissioni.</p>
+    `),
+  };
+}
+
+export function emailRichiestaRecensione({ booking, professional, service, reviewUrl }) {
+  return {
+    subject: `Com'è andata con ${professional.name}? Lascia una recensione`,
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Com'è andata? ⭐</h2>
+      <p>Ciao ${booking.name},</p>
+      <p>la tua prestazione (<strong>${service.name}</strong> con <strong>${professional.name}</strong>) risulta completata.
+      La tua opinione aiuta altre famiglie a scegliere con fiducia — e richiede meno di un minuto.</p>
+      <p style="text-align: center; margin: 22px 0;">
+        <a href="${reviewUrl}" style="background: #f5a623; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Lascia la tua recensione</a>
+      </p>
+      <p style="color: #7b909b; font-size: 13px;">Solo chi ha davvero prenotato può recensire: per questo le recensioni su InfermieriWeb sono verificate.</p>
+    `),
+  };
+}

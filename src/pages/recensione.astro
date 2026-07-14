@@ -1,0 +1,20 @@
+---
+import Platform from "../layouts/Platform.astro";
+import RecensioneApp from "../islands/RecensioneApp.jsx";
+---
+
+<Platform
+  title="Lascia la tua recensione | InfermieriWeb"
+  description="Racconta com'è andata la tua prestazione: le recensioni verificate di InfermieriWeb aiutano altre famiglie a scegliere con fiducia."
+  path="/recensione"
+>
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 560px;">
+      <span class="pf-kicker">Recensione verificata</span>
+      <h2 style="color: var(--iw-navy); margin-bottom: 20px;">La tua esperienza conta</h2>
+      <div class="pf-panel">
+        <RecensioneApp client:only="react" />
+      </div>
+    </div>
+  </section>
+</Platform>

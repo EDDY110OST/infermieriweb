@@ -33,7 +33,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   const [agenda, setAgenda] = useState(null);
   const [errore, setErrore] = useState("");
   const [mostraBlocco, setMostraBlocco] = useState(false);
-  const [blocco, setBlocco] = useState({ data: "", dalle: "", alle: "", reason: "" });
+  const [blocco, setBlocco] = useState({ data: "", dataFine: "", dalle: "", alle: "", reason: "" });
   const [mostraManuale, setMostraManuale] = useState(false);
   const [servizi, setServizi] = useState(null);
   const [manuale, setManuale] = useState({ service_id: "", date: "", time: "", customer_name: "", customer_phone: "", address: "", city: "" });
@@ -90,13 +90,13 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         start: `${blocco.data}T${blocco.dalle}:00+02:00`,
-        end: `${blocco.data}T${blocco.alle}:00+02:00`,
+        end: `${blocco.dataFine || blocco.data}T${blocco.alle}:00+02:00`,
         reason: blocco.reason,
       }),
     });
     if (r.ok) {
       setMostraBlocco(false);
-      setBlocco({ data: "", dalle: "", alle: "", reason: "" });
+      setBlocco({ data: "", dataFine: "", dalle: "", alle: "", reason: "" });
       carica();
     }
   };
@@ -174,8 +174,16 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       {mostraBlocco && (
         <form className="pf-panel pf-book" onSubmit={creaBlocco} style={{ marginBottom: 18 }}>
           <h2>🔒 Blocca uno spazio (ferie, pausa, impegno)</h2>
-          <label>Giorno</label>
-          <input type="date" required value={blocco.data} onChange={(e) => setBlocco({ ...blocco, data: e.target.value })} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label>Dal giorno *</label>
+              <input type="date" required value={blocco.data} onChange={(e) => setBlocco({ ...blocco, data: e.target.value })} />
+            </div>
+            <div>
+              <label>Al giorno <span style={{ fontWeight: 400 }}>(per le ferie)</span></label>
+              <input type="date" min={blocco.data} value={blocco.dataFine} onChange={(e) => setBlocco({ ...blocco, dataFine: e.target.value })} />
+            </div>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <label>Dalle</label>

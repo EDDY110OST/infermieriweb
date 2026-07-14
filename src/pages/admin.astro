@@ -1,0 +1,17 @@
+---
+import Platform from "../layouts/Platform.astro";
+import AdminApp from "../islands/AdminApp.jsx";
+---
+
+<Platform
+  title="Amministrazione | InfermieriWeb"
+  description="Area riservata agli amministratori della piattaforma."
+  path="/admin"
+>
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 760px;">
+      <span class="pf-kicker">Riservato</span>
+      <AdminApp client:only="react" />
+    </div>
+  </section>
+</Platform>
