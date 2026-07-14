@@ -514,3 +514,14 @@
 }
 .pf-perche-card h3 { font-size: 17px; color: var(--iw-navy); margin: 0 0 6px; }
 .pf-perche-card p { font-size: 14.5px; color: var(--iw-slate); margin: 0; }
+
+/* Hero mobile: niente overflow, ricerca in colonna */
+@media (max-width: 860px) {
+  .pf-hero-split h1 { font-size: clamp(27px, 7.5vw, 38px); }
+  .pf-hero-split .pf-search { flex-direction: column; gap: 8px; padding: 10px; }
+  .pf-hero-split .pf-search input { text-align: center; }
+  .pf-hero-split .pf-search button { width: 100%; }
+  .pf-hero-media img { max-height: 220px; }
+}
+.pf-hero-split h1 .nowrap-desktop { white-space: nowrap; }
+@media (max-width: 520px) { .pf-hero-split h1 .nowrap-desktop { white-space: normal; } }
