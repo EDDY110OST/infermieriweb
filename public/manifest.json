@@ -1,7 +1,7 @@
 {
   "name": "InfermieriWeb",
   "short_name": "InfermieriWeb",
-  "description": "Assistenza infermieristica a domicilio a Lucca e provincia.",
+  "description": "Trova un infermiere a domicilio nella tua zona e prenota online.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,7 +9,17 @@
   "theme_color": "#00897b",
   "lang": "it",
   "icons": [
-    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

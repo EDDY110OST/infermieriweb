@@ -28,14 +28,18 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
     <link rel="canonical" href={canonicalUrl} />
     <meta name="robots" content="index, follow" />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Favicon: è l'icona che Google mostra accanto al risultato di ricerca
+         (la vuole quadrata e multipla di 48px) e che si vede nelle schede del browser -->
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href={manifest} />
     <meta name="theme-color" content="#00897b" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="InfermieriWeb" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" href="/logo-512.png" />
 
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />

@@ -30,7 +30,7 @@
   --iw-shadow: 0 6px 24px rgba(11, 57, 84, 0.08);
   --iw-shadow-lg: 0 18px 48px rgba(11, 57, 84, 0.14);
   --iw-shadow-hero: 0 24px 60px rgba(11, 57, 84, 0.32);
-  --iw-max: 1200px;
+  --iw-max: 1320px;
 }
 
 .pf {
@@ -70,7 +70,7 @@
   display: flex; align-items: center; gap: 24px;
 }
 
-.pf-logo img { height: 54px; width: auto; display: block; }
+.pf-logo img { height: 68px; width: auto; display: block; }
 
 .pf-nav { display: flex; align-items: center; gap: 26px; margin-left: auto; }
 
@@ -479,8 +479,11 @@
 /* ---------- Hero split (foto + fiducia) ---------- */
 .pf-hero-split {
   display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center;
-  text-align: left; padding: clamp(44px, 6vw, 80px) 20px;
-  max-width: var(--iw-max); margin: 0 auto;
+  text-align: left;
+  /* il gradiente arriva ai bordi dello schermo, il contenuto resta centrato */
+  max-width: none; margin: 0;
+  padding-block: clamp(44px, 6vw, 80px);
+  padding-inline: max(20px, calc((100% - var(--iw-max)) / 2));
 }
 .pf-hero-split::after { display: none; }
 .pf-hero-testo { position: relative; z-index: 1; }
