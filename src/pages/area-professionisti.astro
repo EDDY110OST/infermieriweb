@@ -1,0 +1,16 @@
+---
+import Platform from "../layouts/Platform.astro";
+import PanelApp from "../islands/PanelApp.jsx";
+---
+
+<Platform
+  title="Area professionisti | InfermieriWeb"
+  description="Accedi alla tua agenda InfermieriWeb: prenotazioni, blocchi orari e gestione degli appuntamenti dal telefono."
+  path="/area-professionisti"
+>
+  <section class="pf-section">
+    <div class="pf-container">
+      <PanelApp client:only="react" />
+    </div>
+  </section>
+</Platform>

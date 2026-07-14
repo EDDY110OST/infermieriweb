@@ -1,18 +1,143 @@
 ---
-import Base from "../layouts/Base.astro";
-import HomeIsland from "../islands/HomeIsland.jsx";
-import { pageSeo } from "../data/seo.js";
+import Platform from "../layouts/Platform.astro";
+import HomeMap from "../components/HomeMap.astro";
+import { articles } from "../data/articles.js";
+import { getArticleImage } from "../utils/articleImageFallback.js";
 import { medicalBusinessSchema, faqSchema } from "../data/schema.js";
-import translations from "../translations.js";
 
-const faqItems = translations.it.faq.items;
+const ultimiArticoli = articles
+  .slice()
+  .sort((a, b) => new Date(b.date) - new Date(a.date))
+  .slice(0, 3);
+
+const categorie = [
+  { emoji: "🩹", nome: "Medicazioni", da: "da 30 €", href: "/servizio/medicazioni" },
+  { emoji: "🫀", nome: "ECG a domicilio", da: "da 50 €", href: "/servizio/ecg" },
+  { emoji: "🩸", nome: "Prelievi del sangue", da: "da 20 €", href: "/servizio/prelievi" },
+  { emoji: "💉", nome: "Iniezioni", da: "da 20 €", href: "/servizio/iniezioni" },
+  { emoji: "🩺", nome: "Holter cardiaco", da: "da 100 €", href: "/servizio/holter-cardiaci" },
+  { emoji: "📈", nome: "Holter pressorio", da: "da 80 €", href: "/servizio/holter-pressori" },
+  { emoji: "🧴", nome: "Flebo e terapie", da: "da 35 €", href: "/servizio/flebo" },
+  { emoji: "🏥", nome: "Cateteri e stomie", da: "da 40 €", href: "/servizio/cateteri-vescicali" },
+];
+
+const faqItems = [
+  { question: "Quanto costa prenotare su InfermieriWeb?", answer: "Nulla: la prenotazione è gratuita per il paziente. Il compenso della prestazione si regola direttamente con il professionista, ai prezzi indicati nella sua scheda." },
+  { question: "I professionisti sono verificati?", answer: "Sì: pubblichiamo solo professionisti iscritti al proprio albo (es. OPI per gli infermieri), verificati al momento dell'iscrizione." },
+  { question: "Come funzionano le recensioni?", answer: "Solo chi ha completato una prenotazione riceve il link per lasciare una recensione: niente recensioni false, solo esperienze reali." },
+  { question: "Posso disdire una prenotazione?", answer: "Sì, direttamente online dal link ricevuto alla conferma, fino a poche ore prima dell'appuntamento." },
+];
 ---
 
-<Base
-  title={pageSeo.home.title}
-  description={pageSeo.home.description}
+<Platform
+  title="InfermieriWeb — Prenota un infermiere a domicilio nella tua città"
+  description="Cerca l'infermiere a domicilio nella tua zona, guarda recensioni e prezzi e prenota online in un minuto. Gratis per il paziente, professionisti verificati iscritti all'albo."
   path="/"
   schemas={[medicalBusinessSchema, faqSchema(faqItems)]}
 >
-  <HomeIsland client:load pathname="/" />
-</Base>
+  <section class="pf-hero">
+    <h1>L'assistenza sanitaria a domicilio, <br />a portata di click</h1>
+    <p class="sottotitolo">
+      Trova il professionista nella tua zona, guarda prezzi e recensioni e prenota online.
+      Senza registrazione, senza costi per te.
+    </p>
+    <form class="pf-search" action="/cerca" method="get" role="search">
+      <input type="search" name="q" placeholder="In quale città ti serve assistenza? (es. Lucca)" aria-label="Cerca per città" />
+      <button type="submit">Cerca</button>
+    </form>
+    <div class="badges">
+      <span>✓ Professionisti iscritti all'albo</span>
+      <span>✓ Recensioni verificate</span>
+      <span>✓ Prezzi chiari</span>
+      <span>✓ Gratis per il paziente</span>
+    </div>
+  </section>
+
+  <section class="pf-section pf-center">
+    <span class="pf-kicker">Prestazioni</span>
+    <h2>Di cosa hai bisogno?</h2>
+    <p class="pf-sub">Prestazioni infermieristiche a casa tua, 7 giorni su 7, con prezzi indicati in anticipo.</p>
+    <div class="pf-cats">
+      {categorie.map((c) => (
+        <a class="pf-cat" href={c.href}>
+          <span class="emoji">{c.emoji}</span>
+          <span>
+            <span class="nome">{c.nome}</span><br />
+            <span class="da">{c.da}</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="pf-section alt pf-center">
+    <span class="pf-kicker">La rete</span>
+    <h2>I professionisti sulla mappa</h2>
+    <p class="pf-sub">La rete cresce in tutta Italia. Trova chi copre la tua zona o esplora la mappa.</p>
+    <HomeMap />
+    <p style="margin-top: 26px;">
+      <a class="pf-btn" href="/cerca">Cerca nella tua zona</a>
+    </p>
+  </section>
+
+  <section class="pf-section pf-center" id="come-funziona">
+    <span class="pf-kicker">Come funziona</span>
+    <h2>Prenoti in un minuto, senza account</h2>
+    <div class="pf-steps" style="margin-top: 36px;">
+      <div class="pf-step">
+        <div class="num">1</div>
+        <h3>Cerca nella tua zona</h3>
+        <p>Scrivi la tua città e scopri i professionisti che coprono la tua zona, con foto, prezzi e recensioni.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">2</div>
+        <h3>Scegli prestazione e orario</h3>
+        <p>Guarda il calendario con i soli orari realmente liberi e scegli quello comodo per te.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">3</div>
+        <h3>Conferma con nome e telefono</h3>
+        <p>Niente registrazione e niente pagamenti online: il compenso si regola col professionista.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">4</div>
+        <h3>Ricevi la visita a casa</h3>
+        <p>Il professionista arriva a domicilio. Dopo la prestazione potrai lasciare la tua recensione verificata.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section alt pf-center">
+    <span class="pf-kicker">Blog salute</span>
+    <h2>Guide e consigli dei professionisti</h2>
+    <p class="pf-sub">Articoli informativi scritti con i professionisti della rete, per pazienti e famiglie.</p>
+    <div class="pf-blog-grid">
+      {ultimiArticoli.map((articolo) => (
+        <a class="pf-blog-card" href={`/articoli/${articolo.slug}`}>
+          <img src={getArticleImage(articolo)} alt="" width="900" height="540" loading="lazy" />
+          <span class="corpo">
+            <span class="cat">{articolo.category}</span>
+            <h3>{articolo.title}</h3>
+            <p>{articolo.excerpt}</p>
+          </span>
+        </a>
+      ))}
+    </div>
+    <p style="margin-top: 26px;">
+      <a class="pf-btn secondario" href="/articoli">Tutti gli articoli</a>
+    </p>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-band">
+      <div>
+        <h2>Sei un professionista sanitario?</h2>
+        <p>
+          Scheda personale, agenda online, prenotazioni e recensioni verificate: la tua presenza
+          digitale, pronta in un giorno. <strong>Gratis in fase di lancio.</strong>
+        </p>
+      </div>
+      <a class="pf-btn" href="/lavora-con-noi">Unisciti alla rete</a>
+    </div>
+  </section>
+</Platform>

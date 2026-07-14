@@ -1,0 +1,18 @@
+---
+import Platform from "../layouts/Platform.astro";
+import DisdettaApp from "../islands/DisdettaApp.jsx";
+---
+
+<Platform
+  title="Gestisci la tua prenotazione | InfermieriWeb"
+  description="Controlla o disdici la tua prenotazione su InfermieriWeb con il link ricevuto alla conferma."
+  path="/prenotazione"
+>
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 560px;">
+      <span class="pf-kicker">Prenotazione</span>
+      <h2 style="color: var(--iw-navy); margin-bottom: 20px;">Gestisci la tua prenotazione</h2>
+      <DisdettaApp client:only="react" />
+    </div>
+  </section>
+</Platform>

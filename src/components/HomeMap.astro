@@ -1,0 +1,44 @@
+<div class="pf-map-wrap">
+  <div class="pf-map" id="home-map" aria-label="Mappa dei professionisti disponibili in Italia"></div>
+</div>
+
+<script>
+  import L from "leaflet";
+  import "leaflet/dist/leaflet.css";
+
+  const map = L.map("home-map", { scrollWheelZoom: false }).setView([42.3, 12.3], 6);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+
+  const icona = L.divIcon({
+    html: '<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#00897b;border:3px solid #fff;box-shadow:0 4px 12px rgba(11,57,84,.4);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:15px;">🩺</span></div>',
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+  });
+
+  fetch("/api/professionisti")
+    .then((r) => r.json())
+    .then(({ professionisti }) => {
+      const pins = (professionisti || []).filter((p) => p.lat && p.lng);
+      for (const p of pins) {
+        const stelle = p.review_count > 0 ? `⭐ ${String(p.avg_rating).replace(".", ",")} (${p.review_count})` : (p.google_rating ? `⭐ ${p.google_rating}` : "");
+        L.marker([p.lat, p.lng], { icon: icona })
+          .addTo(map)
+          .bindPopup(
+            `<div class="pf-pin-popup">
+              <img src="${p.photo_url}" alt="" />
+              <div>
+                <div class="nome">${p.name}</div>
+                <div class="prof">${p.profession.charAt(0).toUpperCase() + p.profession.slice(1)} · ${p.city}</div>
+                <div style="font-size:12px">${stelle}</div>
+                <a href="/p/${p.slug}">Vedi scheda e prenota →</a>
+              </div>
+            </div>`
+          );
+      }
+      if (pins.length === 1) map.setView([pins[0].lat, pins[0].lng], 9);
+    })
+    .catch(() => {});
+</script>

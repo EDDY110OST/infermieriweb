@@ -1,0 +1,165 @@
+---
+export const prerender = false;
+
+import Platform from "../../layouts/Platform.astro";
+import { sql } from "../../lib/db.js";
+import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
+
+const slugify = (s) =>
+  s.toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/['\s]+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+const segmenti = (Astro.params.area || "").split("/").filter(Boolean);
+if (segmenti.length > 3) return new Response(null, { status: 404 });
+
+// zone = unione tra sede del professionista e comuni coperti a domicilio
+const zone = await sql`
+  SELECT DISTINCT z.region, z.province, z.city, p.id AS professional_id
+  FROM (
+    SELECT region, province, city, professional_id FROM coverage_areas
+    UNION
+    SELECT region, province, city, id FROM professionals WHERE status = 'active'
+  ) z
+  JOIN professionals p ON p.id = z.professional_id AND p.status = 'active'
+  WHERE z.region <> '' AND z.city <> ''`;
+
+const [regioneSlug, provinciaSlug, cittaSlug] = segmenti;
+const regione = regioneSlug ? [...new Set(zone.map((z) => z.region))].find((r) => slugify(r) === regioneSlug) : null;
+const provincia = provinciaSlug && regione
+  ? [...new Set(zone.filter((z) => z.region === regione).map((z) => z.province))].find((p) => slugify(p) === provinciaSlug)
+  : null;
+const citta = cittaSlug && provincia
+  ? [...new Set(zone.filter((z) => z.province === provincia).map((z) => z.city))].find((c) => slugify(c) === cittaSlug)
+  : null;
+
+if ((regioneSlug && !regione) || (provinciaSlug && !provincia) || (cittaSlug && !citta)) {
+  return new Response(null, { status: 404 });
+}
+
+const conta = (filtro) => new Set(zone.filter(filtro).map((z) => z.professional_id)).size;
+
+let livello, titolo, descrizione, voci = [], professionisti = [];
+
+if (!regione) {
+  livello = "italia";
+  titolo = "Professionisti sanitari a domicilio in Italia | InfermieriWeb";
+  descrizione = "Scegli la tua regione e trova infermieri e professionisti sanitari a domicilio: recensioni verificate, prezzi chiari e prenotazione online gratuita.";
+  voci = [...new Set(zone.map((z) => z.region))].sort().map((r) => ({
+    nome: r, href: `/professionisti/${slugify(r)}`, n: conta((z) => z.region === r),
+  }));
+} else if (!provincia) {
+  livello = "regione";
+  titolo = `Infermieri a domicilio in ${regione} | InfermieriWeb`;
+  descrizione = `Professionisti sanitari a domicilio in ${regione}: scegli la provincia, guarda recensioni e prezzi e prenota online gratuitamente.`;
+  voci = [...new Set(zone.filter((z) => z.region === regione).map((z) => z.province))].sort().map((p) => ({
+    nome: `Provincia di ${p}`, href: `/professionisti/${slugify(regione)}/${slugify(p)}`, n: conta((z) => z.province === p),
+  }));
+} else if (!citta) {
+  livello = "provincia";
+  titolo = `Infermieri a domicilio in provincia di ${provincia} | InfermieriWeb`;
+  descrizione = `Professionisti sanitari a domicilio in provincia di ${provincia}: scegli la città e prenota online, gratis per il paziente.`;
+  voci = [...new Set(zone.filter((z) => z.province === provincia).map((z) => z.city))].sort().map((c) => ({
+    nome: c, href: `/professionisti/${slugify(regione)}/${slugify(provincia)}/${slugify(c)}`, n: conta((z) => z.city === c),
+  }));
+} else {
+  livello = "citta";
+  titolo = `Infermiere a domicilio a ${citta}: prenota online | InfermieriWeb`;
+  descrizione = `Trova l'infermiere a domicilio a ${citta}: foto, recensioni verificate, prezzi chiari e prenotazione online gratuita, 7 giorni su 7.`;
+  const ids = [...new Set(zone.filter((z) => z.city === citta).map((z) => z.professional_id))];
+  professionisti = ids.length
+    ? await sql`
+        SELECT p.slug, p.name, p.profession, p.city, p.province, p.photo_url, p.google_rating,
+               COALESCE(r.media, 0) AS media, COALESCE(r.totale, 0) AS totale,
+               COALESCE(s.min_price, 0) AS min_price
+        FROM professionals p
+        LEFT JOIN LATERAL (
+          SELECT ROUND(AVG(rating)::numeric, 1) AS media, COUNT(*) AS totale
+          FROM reviews WHERE professional_id = p.id AND status = 'published'
+        ) r ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT MIN(price_cents) AS min_price FROM services WHERE professional_id = p.id AND active
+        ) s ON TRUE
+        WHERE p.id = ANY(${ids}) ORDER BY p.name`
+    : [];
+}
+
+const path = `/professionisti${segmenti.length ? "/" + segmenti.join("/") : ""}`;
+const briciole = [
+  { name: "Home", url: `${SITE_URL}/` },
+  { name: "Professionisti", url: `${SITE_URL}/professionisti` },
+  ...(regione ? [{ name: regione, url: `${SITE_URL}/professionisti/${slugify(regione)}` }] : []),
+  ...(provincia ? [{ name: provincia, url: `${SITE_URL}/professionisti/${slugify(regione)}/${slugify(provincia)}` }] : []),
+  ...(citta ? [{ name: citta, url: `${SITE_URL}${path}` }] : []),
+];
+
+const capitalizza = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+const intestazioni = {
+  italia: "Scegli la tua regione",
+  regione: `Province coperte in ${regione}`,
+  provincia: `Città coperte in provincia di ${provincia}`,
+  citta: `Professionisti a ${citta}`,
+};
+---
+
+<Platform title={titolo} description={descrizione} path={path} schemas={[breadcrumbSchema(briciole)]}>
+  <section class="pf-section" style="padding-top: 40px;">
+    <div class="pf-container">
+      <nav style="font-size: 14px; color: var(--iw-muted); margin-bottom: 16px;" aria-label="Percorso">
+        <a href="/professionisti" style="color: var(--iw-primary-deep);">Italia</a>
+        {regione && <> / <a href={`/professionisti/${slugify(regione)}`} style="color: var(--iw-primary-deep);">{regione}</a></>}
+        {provincia && <> / <a href={`/professionisti/${slugify(regione)}/${slugify(provincia)}`} style="color: var(--iw-primary-deep);">{provincia}</a></>}
+        {citta && <> / {citta}</>}
+      </nav>
+
+      <span class="pf-kicker">Zone coperte</span>
+      <h2 style="color: var(--iw-navy); margin-bottom: 26px;">{intestazioni[livello]}</h2>
+
+      {livello !== "citta" && voci.length > 0 && (
+        <div class="pf-cats">
+          {voci.map((v) => (
+            <a class="pf-cat" href={v.href}>
+              <span class="emoji">📍</span>
+              <span>
+                <span class="nome">{v.nome}</span><br />
+                <span class="da">{v.n} professionist{v.n === 1 ? "a/o" : "i"}</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {livello !== "citta" && voci.length === 0 && (
+        <div class="pf-panel">
+          <p style="margin: 0 0 14px; color: var(--iw-slate);">
+            La rete sta crescendo: in questa zona non ci sono ancora professionisti attivi.
+          </p>
+          <a class="pf-btn" href="/lavora-con-noi">Sei un professionista? Unisciti gratis</a>
+        </div>
+      )}
+
+      {livello === "citta" && (
+        <div class="pf-pro-list" style="max-width: 780px;">
+          {professionisti.map((p) => (
+            <div class="pf-pro-card">
+              <img class="foto" src={p.photo_url} alt={`Foto di ${p.name}`} loading="lazy" />
+              <div class="info">
+                <a class="nome" href={`/p/${p.slug}`}>{p.name}</a>
+                <div class="prof">{capitalizza(p.profession)}</div>
+                {Number(p.totale) > 0 ? (
+                  <span class="pf-stars">{"★".repeat(Math.round(Number(p.media)))}{"☆".repeat(5 - Math.round(Number(p.media)))}<span class="n">{String(p.media).replace(".", ",")} ({p.totale})</span></span>
+                ) : p.google_rating ? (
+                  <span class="pf-stars">★★★★★<span class="n">{p.google_rating}</span></span>
+                ) : null}
+                <div class="zona">📍 {p.city} ({p.province})</div>
+                {Number(p.min_price) > 0 && <div class="prezzo">Prestazioni da {euro(p.min_price)}</div>}
+              </div>
+              <a class="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+</Platform>

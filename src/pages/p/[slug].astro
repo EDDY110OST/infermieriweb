@@ -1,0 +1,159 @@
+---
+export const prerender = false;
+
+import Platform from "../../layouts/Platform.astro";
+import BookingWidget from "../../islands/BookingWidget.jsx";
+import { sql } from "../../lib/db.js";
+import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
+
+const { slug } = Astro.params;
+
+const [pro] = await sql`
+  SELECT id, slug, name, profession, albo_number, bio, photo_url, region, province, city,
+         google_rating, google_reviews_url, cancel_hours
+  FROM professionals WHERE slug = ${slug} AND status = 'active'`;
+
+if (!pro) {
+  return new Response(null, { status: 404 });
+}
+
+const services = await sql`
+  SELECT id, name, duration_min, price_cents FROM services
+  WHERE professional_id = ${pro.id} AND active ORDER BY sort`;
+
+const coverage = await sql`
+  SELECT city FROM coverage_areas WHERE professional_id = ${pro.id} ORDER BY city`;
+
+const reviews = await sql`
+  SELECT rating, text, author_name, created_at FROM reviews
+  WHERE professional_id = ${pro.id} AND status = 'published'
+  ORDER BY created_at DESC LIMIT 20`;
+
+const [ratingAgg] = await sql`
+  SELECT ROUND(AVG(rating)::numeric, 1) AS media, COUNT(*) AS totale
+  FROM reviews WHERE professional_id = ${pro.id} AND status = 'published'`;
+
+const professione = pro.profession.charAt(0).toUpperCase() + pro.profession.slice(1);
+const zone = coverage.map((c) => c.city);
+const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+const path = `/p/${pro.slug}`;
+const titolo = `${pro.name} — ${professione} a domicilio a ${pro.city} | InfermieriWeb`;
+const descrizione = `Prenota online ${pro.name}, ${pro.profession} a domicilio a ${zone.join(", ")}. Prezzi chiari, recensioni verificate, disdetta gratuita.`;
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "MedicalBusiness",
+  name: pro.name,
+  url: `${SITE_URL}${path}`,
+  image: new URL(pro.photo_url, SITE_URL).href,
+  medicalSpecialty: "Nursing",
+  areaServed: zone.map((city) => ({ "@type": "City", name: city })),
+  address: { "@type": "PostalAddress", addressLocality: pro.city, addressCountry: "IT" },
+  ...(Number(ratingAgg?.totale) > 0 && {
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: String(ratingAgg.media),
+      reviewCount: String(ratingAgg.totale),
+    },
+  }),
+};
+
+const schemas = [
+  schema,
+  breadcrumbSchema([
+    { name: "Home", url: `${SITE_URL}/` },
+    { name: "Professionisti", url: `${SITE_URL}/cerca` },
+    { name: pro.name, url: `${SITE_URL}${path}` },
+  ]),
+];
+
+const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+---
+
+<Platform title={titolo} description={descrizione} path={path} ogImage={new URL(pro.photo_url, SITE_URL).href} ogImageAlt={`Foto di ${pro.name}`} schemas={schemas}>
+  <section class="pf-profile-hero">
+    <div class="pf-profile-card">
+      <img class="foto" src={pro.photo_url} alt={`Foto di ${pro.name}`} width="132" height="132" />
+      <div>
+        <h1>{pro.name}</h1>
+        <p class="prof">{professione} · {pro.city} ({pro.province})</p>
+        <span class="badge-albo">✓ {pro.albo_number || "Iscritto all'albo professionale"}</span>
+        {Number(ratingAgg?.totale) > 0 ? (
+          <span class="badge-albo">⭐ {String(ratingAgg.media).replace(".", ",")} · {ratingAgg.totale} recensioni verificate</span>
+        ) : pro.google_rating ? (
+          <a class="badge-albo" href={pro.google_reviews_url} target="_blank" rel="noopener" style="text-decoration:none;">⭐ {pro.google_rating}</a>
+        ) : null}
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section" style="padding-top: 34px;">
+    <div class="pf-profile-grid">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="pf-panel">
+          <h2>Chi è {pro.name.split(" ")[0] === "Dott." ? pro.name : pro.name.split(" ")[0]}</h2>
+          <p style="color: var(--iw-slate); margin: 0;">{pro.bio}</p>
+        </div>
+
+        <div class="pf-panel">
+          <h2>Zone coperte a domicilio</h2>
+          <p style="color: var(--iw-slate); margin: 0;">
+            {zone.map((city, i) => (
+              <span>📍 {city}{i < zone.length - 1 ? "  " : ""}</span>
+            ))}
+          </p>
+        </div>
+
+        <div class="pf-panel">
+          <h2>Prestazioni e prezzi</h2>
+          {services.map((s) => (
+            <div class="pf-servizio-row">
+              <div>
+                <div class="nome">{s.name}</div>
+                <div class="durata">{s.duration_min} minuti</div>
+              </div>
+              <div class="prezzo">da {euro(s.price_cents)}</div>
+            </div>
+          ))}
+          <p class="pf-note" style="margin-top: 12px;">
+            Prezzi indicativi "a partire da": possono variare in base alla complessità e alla distanza.
+            Il compenso si regola direttamente con il professionista.
+          </p>
+        </div>
+
+        <div class="pf-panel" id="recensioni">
+          <h2>Recensioni dei pazienti</h2>
+          {reviews.length === 0 ? (
+            <div>
+              <p style="color: var(--iw-slate);">
+                Le recensioni su InfermieriWeb possono essere lasciate solo da chi ha completato una
+                prenotazione: appena arriveranno le prime, le vedrai qui.
+              </p>
+              {pro.google_reviews_url && (
+                <a class="pf-btn secondario" href={pro.google_reviews_url} target="_blank" rel="noopener">
+                  ⭐ Guarda le recensioni Google ({pro.google_rating})
+                </a>
+              )}
+            </div>
+          ) : (
+            reviews.map((r) => (
+              <div class="pf-recensione">
+                <div class="testa">
+                  <span class="autore">{r.author_name || "Paziente"} <span class="verificata">✓ verificata</span></span>
+                  <span class="data">{dataIt(r.created_at)}</span>
+                </div>
+                <div class="pf-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
+                {r.text && <p>{r.text}</p>}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div class="pf-panel" style="position: sticky; top: 90px;">
+        <h2>Prenota online</h2>
+        <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} />
+      </div>
+    </div>
+  </section>
+</Platform>

@@ -1,0 +1,20 @@
+---
+import Platform from "../layouts/Platform.astro";
+import SearchApp from "../islands/SearchApp.jsx";
+import { medicalBusinessSchema } from "../data/schema.js";
+---
+
+<Platform
+  title="Cerca un professionista sanitario a domicilio | InfermieriWeb"
+  description="Trova infermieri e professionisti sanitari a domicilio nella tua città: mappa, recensioni verificate, prezzi chiari e prenotazione online gratuita."
+  path="/cerca"
+  schemas={[medicalBusinessSchema]}
+>
+  <section class="pf-section" style="padding-top: 40px;">
+    <div class="pf-container" style="margin-bottom: 24px;">
+      <span class="pf-kicker">Ricerca</span>
+      <h2 style="color: var(--iw-navy);">Trova il professionista nella tua zona</h2>
+    </div>
+    <SearchApp client:only="react" />
+  </section>
+</Platform>
