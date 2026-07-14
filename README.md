@@ -47,7 +47,7 @@ npx astro build        # build di verifica
 
 - **Automatico**: ogni notte alle 03:00 UTC la funzione `backup-notturno` spedisce
   l'intero database (JSON) via email. Backup manuale: `/admin` → Manutenzione.
-- **Ripristino**: aprire l'allegato `.json`; contiene
+- **Ripristino**: rinominare l'allegato `.txt` in `.json`; contiene
   `{ tabelle: { nome: [righe…] } }`. Reinserire con uno script Node usando
   `sql.query('INSERT INTO … VALUES …')` tabella per tabella (rispettare l'ordine:
   professionals → professional_users/services/coverage_areas/opening_hours →

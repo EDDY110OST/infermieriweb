@@ -46,7 +46,7 @@ export async function eseguiBackup() {
   <table style="font-size:14px;">${righeTabella}</table>
   <p style="color:#7b909b;font-size:12px;">Contiene dati personali e credenziali cifrate: non inoltrare. Ripristino: vedi README nel repository.</p>
 </div>`,
-    attachmentName: `infermieriweb-backup-${data}.json`,
+    attachmentName: `infermieriweb-backup-${data}.txt`,
     attachmentBase64: contenuto.toString("base64"),
   });
 
