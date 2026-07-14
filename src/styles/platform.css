@@ -456,3 +456,61 @@
 .pf-delta.su { color: #15803d; }
 .pf-delta.giu { color: var(--iw-danger); }
 .pf-delta.pari { color: var(--iw-muted); font-weight: 600; }
+
+
+/* ---------- Hero split (foto + fiducia) ---------- */
+.pf-hero-split {
+  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center;
+  text-align: left; padding: clamp(44px, 6vw, 80px) 20px;
+  max-width: var(--iw-max); margin: 0 auto;
+}
+.pf-hero-split::after { display: none; }
+.pf-hero-testo { position: relative; z-index: 1; }
+.pf-hero-occhiello {
+  display: inline-block; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; font-size: 13.5px; font-weight: 700; letter-spacing: 0.4px;
+  padding: 6px 14px; border-radius: 999px; margin-bottom: 18px;
+}
+.pf-hero-split h1 { font-size: clamp(30px, 4.4vw, 50px); font-weight: 800; margin: 0 0 16px; }
+.pf-hero-split .sottotitolo { margin: 0 0 28px; max-width: 520px; }
+.pf-hero-split .pf-search { margin: 0 0 22px; box-shadow: 0 18px 46px rgba(4, 26, 39, 0.3); }
+
+.pf-trust { display: flex; gap: 10px 18px; flex-wrap: wrap; }
+.pf-trust-item {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
+  color: #fff; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.16);
+  padding: 7px 13px; border-radius: 12px;
+}
+.pf-trust-item .i { font-size: 15px; }
+
+.pf-hero-media { position: relative; }
+.pf-hero-media img {
+  width: 100%; height: 100%; max-height: 440px; object-fit: cover;
+  border-radius: 22px; box-shadow: 0 30px 70px rgba(4, 26, 39, 0.45);
+}
+.pf-hero-badge {
+  position: absolute; left: 18px; bottom: 18px;
+  background: #fff; color: var(--iw-primary-deep); font-weight: 800; font-size: 14px;
+  padding: 10px 16px; border-radius: 999px; box-shadow: 0 10px 26px rgba(4,26,39,0.28);
+}
+
+@media (max-width: 860px) {
+  .pf-hero-split { grid-template-columns: 1fr; gap: 26px; text-align: center; }
+  .pf-hero-split h1, .pf-hero-split .sottotitolo { margin-left: auto; margin-right: auto; }
+  .pf-trust { justify-content: center; }
+  .pf-hero-media { order: -1; }
+  .pf-hero-media img { max-height: 260px; }
+}
+
+/* ---------- Card fiducia (sezione "perché sceglierci") ---------- */
+.pf-perche { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
+.pf-perche-card {
+  background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: var(--iw-radius);
+  padding: 26px 22px; text-align: left;
+}
+.pf-perche-card .ic {
+  width: 48px; height: 48px; border-radius: 14px; background: var(--iw-primary-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 14px;
+}
+.pf-perche-card h3 { font-size: 17px; color: var(--iw-navy); margin: 0 0 6px; }
+.pf-perche-card p { font-size: 14.5px; color: var(--iw-slate); margin: 0; }
