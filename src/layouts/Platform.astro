@@ -3,7 +3,7 @@ import Base from "./Base.astro";
 import "../styles/platform.css";
 import logo from "../assets/logo.jpeg";
 
-const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [] } = Astro.props;
+const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
 const nav = [
   { href: "/cerca", label: "Trova un professionista" },
@@ -13,7 +13,7 @@ const nav = [
 ];
 ---
 
-<Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas}>
+<Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas} {manifest}>
   <div class="pf">
     <header class="pf-header">
       <div class="pf-header-inner">

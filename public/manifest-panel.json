@@ -1,0 +1,15 @@
+{
+  "name": "InfermieriWeb Pro — La tua agenda",
+  "short_name": "IW Pro",
+  "description": "Agenda e prenotazioni per i professionisti di InfermieriWeb.",
+  "start_url": "/area-professionisti",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3954",
+  "lang": "it",
+  "icons": [
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

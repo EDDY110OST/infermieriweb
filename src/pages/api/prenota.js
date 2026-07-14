@@ -3,6 +3,7 @@ export const prerender = false;
 import { randomBytes } from "node:crypto";
 import { sql } from "../../lib/db.js";
 import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista } from "../../lib/mailer.js";
+import { pushToProfessional } from "../../lib/push.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -83,6 +84,16 @@ export async function POST({ request }) {
     const notifica = emailNotificaProfessionista({ booking, service: svc });
     await sendEmail({ to: professional.email, toName: professional.name, replyTo: email, ...notifica });
   }
+
+  // Notifica push al pannello (stile Prenotazioni Sbarba)
+  const quando = start.toLocaleString("it-IT", {
+    timeZone: "Europe/Rome", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+  });
+  await pushToProfessional(professionalId, {
+    title: "📅 Nuova prenotazione",
+    body: `${service.service_name} · ${quando} — ${name}`,
+    tag: `booking-${inserted[0].id}`,
+  });
 
   return json({
     ok: true,

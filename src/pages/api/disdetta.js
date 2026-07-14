@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../lib/db.js";
 import { sendEmail, emailDisdettaProfessionista } from "../../lib/mailer.js";
+import { pushToProfessional } from "../../lib/push.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -59,6 +60,13 @@ export async function POST({ request }) {
 
   // Avvisa il professionista (risposte -> paziente)
   const b = updated[0];
+  const quando = new Date(b.start_dt).toLocaleString("it-IT", {
+    timeZone: "Europe/Rome", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+  });
+  await pushToProfessional(
+    (await sql`SELECT professional_id FROM bookings WHERE cancel_token = ${token}`)[0].professional_id,
+    { title: "❌ Disdetta paziente", body: `${b.service_name} · ${quando} — ${b.customer_name}. Lo slot è tornato libero.` }
+  );
   if (b.professional_email) {
     const avviso = emailDisdettaProfessionista({
       booking: { name: b.customer_name, start: b.start_dt },

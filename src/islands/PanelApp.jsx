@@ -7,6 +7,17 @@ const giornoRoma = (iso) =>
 
 const STATI = { active: "Attiva", cancelled: "Annullata", done: "Completata", noshow: "Non presentato" };
 
+const VAPID_PUBLIC = import.meta.env.PUBLIC_VAPID_PUBLIC_KEY || "";
+
+const base64ToUint8 = (base64) => {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+};
+
+const isIphoneNonInstallata = () =>
+  /iP(hone|ad|od)/.test(navigator.userAgent) && !window.navigator.standalone;
+
 export default function PanelApp() {
   const [login, setLogin] = useState({ email: "", password: "" });
   const [utente, setUtente] = useState(null);
@@ -14,6 +25,49 @@ export default function PanelApp() {
   const [agenda, setAgenda] = useState(null);
   const [blocco, setBlocco] = useState({ data: "", dalle: "", alle: "", reason: "" });
   const [mostraBlocco, setMostraBlocco] = useState(false);
+  const [statoPush, setStatoPush] = useState("idle");
+
+  // Notifiche push (modello Prenotazioni Sbarba): stato del dispositivo
+  useEffect(() => {
+    if (!utente) return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !VAPID_PUBLIC) {
+      setStatoPush(isIphoneNonInstallata() ? "ios-install" : "unsupported");
+      return;
+    }
+    navigator.serviceWorker.register("/sw-app.js").then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await fetch("/api/panel/push", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub.toJSON() }),
+        });
+        setStatoPush("attive");
+      } else {
+        setStatoPush(Notification.permission === "denied" ? "negate" : "pronte");
+      }
+    }).catch(() => setStatoPush("unsupported"));
+  }, [utente]);
+
+  const attivaNotifiche = async () => {
+    try {
+      const permesso = await Notification.requestPermission();
+      if (permesso !== "granted") return setStatoPush("negate");
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64ToUint8(VAPID_PUBLIC),
+      });
+      const r = await fetch("/api/panel/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON() }),
+      });
+      setStatoPush(r.ok ? "attive" : "errore");
+    } catch {
+      setStatoPush("errore");
+    }
+  };
 
   const caricaAgenda = useCallback(() => {
     fetch("/api/panel/agenda?days=14")
@@ -124,11 +178,30 @@ export default function PanelApp() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <h2 style={{ color: "var(--iw-navy)" }}>La tua agenda — prossimi 14 giorni</h2>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          {statoPush === "pronte" && (
+            <button className="pf-btn secondario" onClick={attivaNotifiche}>🔔 Attiva notifiche</button>
+          )}
+          {statoPush === "attive" && (
+            <span style={{ fontSize: 13.5, color: "var(--iw-primary-deep)", fontWeight: 700 }}>🔔 Notifiche attive</span>
+          )}
           <button className="pf-btn secondario" onClick={() => setMostraBlocco(!mostraBlocco)}>+ Blocca orario</button>
           <button className="pf-btn pericolo" onClick={esci}>Esci</button>
         </div>
       </div>
+
+      {statoPush === "ios-install" && (
+        <div className="pf-panel" style={{ marginBottom: 16, fontSize: 14.5 }}>
+          📲 <strong>Per ricevere le notifiche su iPhone</strong>: apri questa pagina in Safari, tocca
+          <strong> Condividi</strong> (□↑) → <strong>"Aggiungi alla schermata Home"</strong>, poi apri
+          l'app "IW Pro" dalla home e attiva le notifiche da lì.
+        </div>
+      )}
+      {statoPush === "negate" && (
+        <div className="pf-panel" style={{ marginBottom: 16, fontSize: 14.5 }}>
+          🔕 Le notifiche sono bloccate nelle impostazioni del browser per questo sito: riattivale da lì.
+        </div>
+      )}
 
       {mostraBlocco && (
         <form className="pf-panel pf-book" onSubmit={creaBlocco} style={{ marginBottom: 18 }}>

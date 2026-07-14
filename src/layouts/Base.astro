@@ -11,6 +11,7 @@ const {
   ogImage = "https://infermieriweb.it/logo.jpeg",
   ogImageAlt = "Logo Infermieri Web",
   schemas = [],
+  manifest = "/manifest.json",
 } = Astro.props;
 
 const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path, Astro.site).href.replace(/\/$/, "");
@@ -28,7 +29,7 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
     <meta name="robots" content="index, follow" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href={manifest} />
     <meta name="theme-color" content="#00897b" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
