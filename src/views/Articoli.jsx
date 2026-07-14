@@ -63,23 +63,7 @@ export default function Articoli({ articles = [] }) {
 
   return (
     <>
-      <section className="hero articles-hero">
-        <div className="hero-text">
-          <span className="badge">Articoli</span>
-          <h1>Guide e Consigli Infermieristici</h1>
-          <p>
-            Articoli informativi realizzati da professionisti sanitari per aiutarti a comprendere meglio la tua salute e le principali prestazioni infermieristiche disponibili a Lucca e provincia.
-          </p>
-          <div className="hero-buttons">
-            <a
-              href="https://wa.me/393313139220?text=Salve%2C%20vorrei%20richiedere%20assistenza%20infermieristica.%20"
-              className="btn-primary"
-            >
-              Richiedi Assistenza
-            </a>
-          </div>
-        </div>
-      </section>
+
 
       <section className="section white articles-listing">
         <div className="article-toolbar">

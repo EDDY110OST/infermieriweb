@@ -104,6 +104,16 @@ const intestazioni = {
 ---
 
 <Platform title={titolo} description={descrizione} path={path} schemas={[breadcrumbSchema(briciole)]}>
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Zone coperte</span>
+    <h1>{intestazioni[livello]}</h1>
+    <p class="sottotitolo">
+      {livello === "citta"
+        ? `Gli infermieri che vengono a domicilio a ${citta}: prezzi chiari, recensioni verificate, prenoti online.`
+        : "La rete cresce una città alla volta. Apri la tua zona e scopri chi copre il tuo comune."}
+    </p>
+  </section>
+
   <section class="pf-section" style="padding-top: 40px;">
     <div class="pf-container">
       <nav style="font-size: 14px; color: var(--iw-muted); margin-bottom: 16px;" aria-label="Percorso">
@@ -113,8 +123,9 @@ const intestazioni = {
         {citta && <> / {citta}</>}
       </nav>
 
-      <span class="pf-kicker">Zone coperte</span>
-      <h2 style="color: var(--iw-navy); margin-bottom: 26px;">{intestazioni[livello]}</h2>
+      <h2 style="color: var(--iw-navy); margin-bottom: 26px; font-size: 22px;">
+        {livello === "citta" ? "Scegli il professionista" : "Scegli la zona"}
+      </h2>
 
       {livello !== "citta" && voci.length > 0 && (
         <div class="pf-cats">

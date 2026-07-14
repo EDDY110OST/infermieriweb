@@ -10,11 +10,15 @@ import { medicalBusinessSchema } from "../data/schema.js";
   path="/cerca"
   schemas={[medicalBusinessSchema]}
 >
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Ricerca</span>
+    <h1>Trova un infermiere a domicilio nella tua zona</h1>
+    <p class="sottotitolo">
+      Scrivi la tua città o la prestazione che ti serve: vedi prezzi, recensioni verificate e orari liberi.
+    </p>
+  </section>
+
   <section class="pf-section" style="padding-top: 40px;">
-    <div class="pf-container" style="margin-bottom: 24px;">
-      <span class="pf-kicker">Ricerca</span>
-      <h1 style="color: var(--iw-navy); font-size: clamp(26px, 3.6vw, 38px); font-weight: 800;">Trova un infermiere a domicilio nella tua zona</h1>
-    </div>
     <SearchApp client:only="react" />
   </section>
 </Platform>

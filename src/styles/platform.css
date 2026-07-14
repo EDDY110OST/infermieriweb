@@ -598,3 +598,15 @@
 }
 /* i bottoni ereditati devono poter andare a capo come quelli nuovi */
 .pf .btn-primary, .pf .btn-secondary { white-space: normal; max-width: 100%; }
+
+/* Fascia verde delle pagine interne: stessa larghezza piena dell'hero della home */
+.pf-hero-centro {
+  text-align: center;
+  padding-block: clamp(40px, 5vw, 70px);
+  padding-inline: max(20px, calc((100% - var(--iw-max)) / 2));
+}
+.pf-hero-centro h1 {
+  font-size: clamp(28px, 4vw, 44px); font-weight: 800;
+  max-width: 820px; margin: 0 auto 14px; position: relative;
+}
+.pf-hero-centro .sottotitolo { max-width: 620px; margin: 0 auto; position: relative; }

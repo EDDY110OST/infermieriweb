@@ -21,5 +21,14 @@ const articoli = righe.map(mapArticolo);
   path="/articoli"
   schemas={[medicalBusinessSchema]}
 >
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Blog salute</span>
+    <h1>Guide e consigli dei professionisti</h1>
+    <p class="sottotitolo">
+      Come funziona un ECG a domicilio, quanto costa un infermiere, come gestire un catetere:
+      guide chiare, scritte con i professionisti della rete.
+    </p>
+  </section>
+
   <ArticoliIsland pathname="/articoli" articles={articoli} />
 </Platform>
