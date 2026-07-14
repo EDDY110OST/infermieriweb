@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
+import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -24,11 +25,27 @@ export async function PATCH({ request }) {
   }
 
   const updated = await sql`
-    UPDATE bookings SET status = ${status}
-    WHERE id = ${id} AND professional_id = ${session.pid}
-    RETURNING id`;
+    UPDATE bookings b SET status = ${status}
+    FROM professionals p, services s
+    WHERE b.professional_id = p.id AND s.id = b.service_id
+      AND b.id = ${id} AND b.professional_id = ${session.pid}
+    RETURNING b.customer_name, b.customer_email, b.start_dt,
+              s.name AS service_name, p.name AS professional_name, p.email AS professional_email, p.slug`;
   if (!updated.length) return json({ error: "Prenotazione non trovata" }, 404);
 
-  // TODO: avvisare il paziente via email quando il professionista disdice
+  // Se il professionista disdice, il paziente viene avvisato via email
+  const b = updated[0];
+  if (status === "cancelled" && b.customer_email) {
+    const avviso = emailDisdettaPaziente({
+      booking: { name: b.customer_name, start: b.start_dt },
+      professional: { name: b.professional_name, slug: b.slug },
+      service: { name: b.service_name },
+    });
+    await sendEmail({
+      to: b.customer_email, toName: b.customer_name,
+      replyTo: b.professional_email || undefined, ...avviso,
+    });
+  }
+
   return json({ ok: true });
 }

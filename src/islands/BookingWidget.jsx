@@ -79,10 +79,17 @@ export default function BookingWidget({ professionalId, services }) {
           {fatto.service} con {fatto.professional}<br />
           <strong>{quando}</strong>
         </p>
-        <p style={{ margin: "8px 0", fontSize: 14 }}>
-          Il professionista è stato avvisato. Se devi disdire,{" "}
-          <a href={`/prenotazione?token=${fatto.cancel_token}`}>usa questa pagina</a> (salvala tra i preferiti).
-        </p>
+        {fatto.emailed ? (
+          <p style={{ margin: "8px 0", fontSize: 14 }}>
+            Il professionista è stato avvisato. Ti abbiamo inviato una <strong>email di conferma</strong> con
+            il riepilogo e il link per disdire (controlla anche lo spam). Riceverai un promemoria 24 ore prima.
+          </p>
+        ) : (
+          <p style={{ margin: "8px 0", fontSize: 14 }}>
+            Il professionista è stato avvisato. Se devi disdire,{" "}
+            <a href={`/prenotazione?token=${fatto.cancel_token}`}>usa questa pagina</a> (salvala tra i preferiti).
+          </p>
+        )}
       </div>
     );
   }
@@ -146,8 +153,8 @@ export default function BookingWidget({ professionalId, services }) {
           <label htmlFor="bw-tel">Telefono *</label>
           <input id="bw-tel" required type="tel" minLength={6} value={dati.phone} onChange={(e) => setDati({ ...dati, phone: e.target.value })} autoComplete="tel" />
 
-          <label htmlFor="bw-email">Email</label>
-          <input id="bw-email" type="email" value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />
+          <label htmlFor="bw-email">Email * <span style={{ fontWeight: 400 }}>(riceverai conferma e link per disdire)</span></label>
+          <input id="bw-email" type="email" required value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />
 
           <label htmlFor="bw-indirizzo">Indirizzo della visita (per prestazioni a domicilio)</label>
           <input id="bw-indirizzo" value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via, numero civico" />

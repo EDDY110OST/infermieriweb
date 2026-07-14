@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../lib/db.js";
+import { sendEmail, emailDisdettaProfessionista } from "../../lib/mailer.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -46,13 +47,28 @@ export async function POST({ request }) {
   const updated = await sql`
     UPDATE bookings b
     SET status = 'cancelled'
-    FROM professionals p
-    WHERE b.professional_id = p.id
+    FROM professionals p, services s
+    WHERE b.professional_id = p.id AND s.id = b.service_id
       AND b.cancel_token = ${token}
       AND b.status = 'active'
       AND b.start_dt > now() + (p.cancel_hours || ' hours')::interval
-    RETURNING b.id`;
+    RETURNING b.customer_name, b.customer_email, b.start_dt,
+              s.name AS service_name, p.name AS professional_name, p.email AS professional_email`;
 
   if (!updated.length) return json({ error: "Disdetta non più possibile online: contatta direttamente il professionista." }, 409);
+
+  // Avvisa il professionista (risposte -> paziente)
+  const b = updated[0];
+  if (b.professional_email) {
+    const avviso = emailDisdettaProfessionista({
+      booking: { name: b.customer_name, start: b.start_dt },
+      service: { name: b.service_name },
+    });
+    await sendEmail({
+      to: b.professional_email, toName: b.professional_name,
+      replyTo: b.customer_email || undefined, ...avviso,
+    });
+  }
+
   return json({ ok: true });
 }
