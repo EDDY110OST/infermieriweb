@@ -42,7 +42,7 @@ function ListaAttesa({ zona }) {
       <input
         type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
         placeholder="La tua email" aria-label="La tua email per la lista d'attesa"
-        style={{ flex: 1, minWidth: 200, border: "1px solid var(--iw-line)", borderRadius: "var(--iw-r-ctrl)", padding: "12px 14px", fontSize: 15, fontFamily: "inherit" }}
+        style={{ flex: 1, minWidth: 200, border: "1px solid var(--iw-line)", borderRadius: "var(--iw-r-ctrl)", padding: "12px 14px", fontSize: 18, fontFamily: "inherit" }}
       />
       <button className="pf-btn">Avvisatemi</button>
       {errore && <div className="pf-errore" style={{ width: "100%" }}>{errore}</div>}

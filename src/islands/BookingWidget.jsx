@@ -130,12 +130,12 @@ export default function BookingWidget({ professionalId, services, servizioInizia
           <strong>{quando}</strong>
         </p>
         {fatto.emailed ? (
-          <p style={{ margin: "8px 0", fontSize: 14 }}>
+          <p style={{ margin: "8px 0", fontSize: 17 }}>
             Il professionista è stato avvisato. Ti abbiamo inviato una <strong>email di conferma</strong> con
             il riepilogo e il link per disdire (controlla anche lo spam). Riceverai un promemoria 24 ore prima.
           </p>
         ) : (
-          <p style={{ margin: "8px 0", fontSize: 14 }}>
+          <p style={{ margin: "8px 0", fontSize: 17 }}>
             Il professionista è stato avvisato. Se devi disdire,{" "}
             <a href={`/prenotazione?token=${fatto.cancel_token}`}>usa questa pagina</a> (salvala tra i preferiti).
           </p>

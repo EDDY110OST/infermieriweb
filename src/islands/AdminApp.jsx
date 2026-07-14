@@ -198,14 +198,14 @@ export default function AdminApp() {
       {candidature.map((c) => (
         <div className="pf-panel" key={c.id} style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <strong style={{ fontSize: 17, color: "var(--iw-navy)" }}>{c.name}</strong>
+            <strong style={{ fontSize: 20, color: "var(--iw-navy)" }}>{c.name}</strong>
             <span className="pf-note">{dataIt(c.created_at)}</span>
           </div>
-          <p style={{ margin: "6px 0", fontSize: 14.5, color: "var(--iw-slate)" }}>
+          <p style={{ margin: "6px 0", fontSize: 17, color: "var(--iw-slate)" }}>
             {c.profession} · {c.albo_name} n. {c.albo_number} (dal {c.albo_date}) · P.IVA {c.vat_number}<br />
             📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ {c.email}
           </p>
-          {c.message && <p style={{ fontSize: 14.5, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
+          {c.message && <p style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
           <p className="pf-note">
             ✔️ Prima di approvare: verifica l'iscrizione su <a href="https://portale.fnopi.it/ricerca-iscritti" target="_blank" rel="noreferrer">portale FNOPI</a> e chiedi la polizza RC (videochiamata da checklist).
           </p>
@@ -238,7 +238,7 @@ export default function AdminApp() {
             <span className="pf-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)} <span className="n">per {r.professional_name}</span></span>
             <span className="pf-note">{dataIt(r.created_at)}</span>
           </div>
-          {r.text && <p style={{ margin: "8px 0", fontSize: 15 }}>{r.text}</p>}
+          {r.text && <p style={{ margin: "8px 0", fontSize: 18 }}>{r.text}</p>}
           <p className="pf-note" style={{ margin: "0 0 10px" }}>— {r.author_name || "Anonimo"}</p>
           <div style={{ display: "flex", gap: 10 }}>
             <button className="pf-btn" onClick={() => modera(r.id, "publish")}>Pubblica</button>
@@ -251,7 +251,7 @@ export default function AdminApp() {
 
       <h2 style={{ color: "var(--iw-navy)", margin: "30px 0 12px" }}>🛡️ Manutenzione</h2>
       <div className="pf-panel">
-        <p style={{ margin: "0 0 10px", fontSize: 14.5, color: "var(--iw-slate)" }}>
+        <p style={{ margin: "0 0 10px", fontSize: 17, color: "var(--iw-slate)" }}>
           Ogni notte il database viene spedito via email come copia di sicurezza. Puoi anche farlo adesso:
         </p>
         <BackupOra />

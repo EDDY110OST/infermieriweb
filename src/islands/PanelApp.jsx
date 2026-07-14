@@ -121,7 +121,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
   return (
     <div>
-      <h2 style={{ color: "var(--iw-navy)", fontSize: 22, margin: "0 0 14px" }}>La tua agenda — prossimi 14 giorni</h2>
+      <h2 style={{ color: "var(--iw-navy)", fontSize: 26, margin: "0 0 14px" }}>La tua agenda — prossimi 14 giorni</h2>
       <div className="pf-panel-toolbar">
         {statoPush === "pronte" && <button className="pf-btn secondario" onClick={attivaNotifiche}>🔔 Attiva notifiche</button>}
         {statoPush === "attive" && <span className="pf-push-ok">🔔 Notifiche attive</span>}
@@ -130,14 +130,14 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       </div>
 
       {statoPush === "ios-install" && (
-        <div className="pf-panel" style={{ marginBottom: 16, fontSize: 14.5 }}>
+        <div className="pf-panel" style={{ marginBottom: 16, fontSize: 17 }}>
           📲 <strong>Per ricevere le notifiche su iPhone</strong>: apri questa pagina in Safari, tocca
           <strong> Condividi</strong> (□↑) → <strong>"Aggiungi alla schermata Home"</strong>, poi apri
           l'app "IW Pro" dalla home e attiva le notifiche da lì.
         </div>
       )}
       {statoPush === "negate" && (
-        <div className="pf-panel" style={{ marginBottom: 16, fontSize: 14.5 }}>
+        <div className="pf-panel" style={{ marginBottom: 16, fontSize: 17 }}>
           🔕 Le notifiche sono bloccate nelle impostazioni del browser per questo sito: riattivale da lì.
         </div>
       )}
@@ -621,7 +621,7 @@ function TabStatistiche() {
 
   return (
     <div>
-      <h2 style={{ color: "var(--iw-navy)", fontSize: 22, margin: "0 0 4px", textTransform: "capitalize" }}>{mese}</h2>
+      <h2 style={{ color: "var(--iw-navy)", fontSize: 26, margin: "0 0 4px", textTransform: "capitalize" }}>{mese}</h2>
       <p className="pf-note" style={{ marginTop: 0 }}>Il valore che la piattaforma ti sta portando, in numeri.</p>
 
       <div className="pf-tiles">
@@ -654,7 +654,7 @@ function TabStatistiche() {
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <input type="month" value={meseCsv} onChange={(e) => setMeseCsv(e.target.value)}
-            style={{ border: "1px solid var(--iw-line)", borderRadius: 10, padding: "9px 12px", fontFamily: "inherit", fontSize: 14.5 }} />
+            style={{ border: "1px solid var(--iw-line)", borderRadius: 10, padding: "9px 12px", fontFamily: "inherit", fontSize: 17 }} />
           <a className="pf-btn secondario" href={`/api/panel/riepilogo?mese=${meseCsv}`}>⬇️ Scarica CSV</a>
         </div>
       </div>

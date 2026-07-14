@@ -116,14 +116,14 @@ const intestazioni = {
 
   <section class="pf-section" style="padding-top: 40px;">
     <div class="pf-container">
-      <nav style="font-size: 14px; color: var(--iw-muted); margin-bottom: 16px;" aria-label="Percorso">
+      <nav style="font-size: 17px; color: var(--iw-muted); margin-bottom: 16px;" aria-label="Percorso">
         <a href="/professionisti" style="color: var(--iw-primary-deep);">Italia</a>
         {regione && <> / <a href={`/professionisti/${slugify(regione)}`} style="color: var(--iw-primary-deep);">{regione}</a></>}
         {provincia && <> / <a href={`/professionisti/${slugify(regione)}/${slugify(provincia)}`} style="color: var(--iw-primary-deep);">{provincia}</a></>}
         {citta && <> / {citta}</>}
       </nav>
 
-      <h2 style="color: var(--iw-navy); margin-bottom: 26px; font-size: 22px;">
+      <h2 style="color: var(--iw-navy); margin-bottom: 26px; font-size: 26px;">
         {livello === "citta" ? "Scegli il professionista" : "Scegli la zona"}
       </h2>
 
