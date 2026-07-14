@@ -1,5 +1,5 @@
 ---
-import Base from "../../layouts/Base.astro";
+import Platform from "../../layouts/Platform.astro";
 import StructureDetailIsland from "../../islands/StructureDetailIsland.jsx";
 import { structuresData } from "../../data/structures.js";
 import { structureSeo } from "../../data/seo.js";
@@ -24,6 +24,6 @@ const schemas = [
 ];
 ---
 
-<Base title={seo.title} description={seo.description} path={path} schemas={schemas}>
+<Platform title={seo.title} description={seo.description} path={path} schemas={schemas}>
   <StructureDetailIsland client:load pathname={path} params={{ structureId }} />
-</Base>
+</Platform>

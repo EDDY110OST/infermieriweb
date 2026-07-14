@@ -1,5 +1,5 @@
 ---
-import Base from "../../layouts/Base.astro";
+import Platform from "../../layouts/Platform.astro";
 import ArticoloIsland from "../../islands/ArticoloIsland.jsx";
 import { articles } from "../../data/articles.js";
 import { articleSeo } from "../../data/seo.js";
@@ -29,6 +29,6 @@ const schemas = [
 ];
 ---
 
-<Base title={seo.title} description={seo.description} path={path} ogType="article" ogImage={ogImage} ogImageAlt={article.title} schemas={schemas}>
+<Platform title={seo.title} description={seo.description} path={path} ogType="article" ogImage={ogImage} ogImageAlt={article.title} schemas={schemas}>
   <ArticoloIsland client:load pathname={path} params={{ slug }} />
-</Base>
+</Platform>

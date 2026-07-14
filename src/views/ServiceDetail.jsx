@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MdMonitorHeart, MdHealing, MdBloodtype, MdLocalHospital, MdMedication, MdShowChart, MdPeople, MdMedicalServices } from "react-icons/md";
 import { FaSyringe } from "react-icons/fa";
-import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { servicesData } from "../data/services.js";
 
@@ -62,7 +61,7 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <Layout>
+      <>
         <section className="section white">
           <h2>{t("pages.serviceDetail.serviceNotFound")}</h2>
           <p>{t("pages.serviceDetail.notFoundHome")}</p>
@@ -73,12 +72,12 @@ export default function ServiceDetail() {
             </Link>
           </div>
         </section>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
       <section className="section white service-detail">
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "40px 20px" }}>
           <div className="page-cta" style={{ marginBottom: "20px" }}>
@@ -250,6 +249,6 @@ export default function ServiceDetail() {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

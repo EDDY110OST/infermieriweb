@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { structuresData } from "../data/structures.js";
 import "../styles/StructureDetail.css";
@@ -24,17 +23,17 @@ export default function StructureDetail() {
 
   if (!structure) {
     return (
-      <Layout>
+      <>
         <section className="not-found">
           <h2>{t("pages.structureDetail.notFoundTitle")}</h2>
           <Link to="/strutture" className="btn-primary">{t("pages.structureDetail.backToStructures")}</Link>
         </section>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
       <section className="structure-detail">
         <div className="structure-header">
           <Link to="/strutture" className="back-link">{t("pages.structureDetail.backToStructures")}</Link>
@@ -81,6 +80,6 @@ export default function StructureDetail() {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

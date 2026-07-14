@@ -422,6 +422,13 @@ function TabOrari() {
 
 function TabProfilo() {
   const [profilo, setProfilo] = useState(null);
+  const [qr, setQr] = useState(null);
+
+  const generaQr = async () => {
+    const { default: QRCode } = await import("qrcode");
+    const url = `https://infermieriweb.it/p/${profilo.slug}`;
+    setQr(await QRCode.toDataURL(url, { width: 480, margin: 2, color: { dark: "#0b3954", light: "#ffffff" } }));
+  };
   const [esito, setEsito] = useState(null);
   const [salvo, setSalvo] = useState(false);
   const [password, setPassword] = useState({ attuale: "", nuova: "" });
@@ -557,6 +564,22 @@ function TabProfilo() {
         </p>
       </form>
 
+      <div className="pf-panel" style={{ marginBottom: 18 }}>
+        <h2>🔳 Il tuo QR personale</h2>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Punta alla tua scheda: stampalo su biglietti da visita, ricettario, vetrofania in farmacia.
+        </p>
+        {qr ? (
+          <div style={{ textAlign: "center" }}>
+            <img src={qr} alt={`QR code della tua scheda infermieriweb.it/p/${profilo.slug}`} style={{ width: 200, height: 200 }} />
+            <br />
+            <a className="pf-btn secondario" href={qr} download={`qr-infermieriweb-${profilo.slug}.png`}>⬇️ Scarica PNG</a>
+          </div>
+        ) : (
+          <button type="button" className="pf-btn secondario" onClick={generaQr}>Genera il mio QR</button>
+        )}
+      </div>
+
       <form className="pf-panel pf-book" onSubmit={cambiaPassword}>
         <h2>🔑 Cambia password</h2>
         <label htmlFor="pw-att">Password attuale</label>
@@ -566,6 +589,66 @@ function TabProfilo() {
         {esitoPassword && <div className={esitoPassword.tipo === "ok" ? "pf-successo" : "pf-errore"}>{esitoPassword.testo}</div>}
         <button className="pf-btn">Aggiorna password</button>
       </form>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- Statistiche
+
+function Delta({ ora, prima }) {
+  if (!prima && !ora) return null;
+  if (!prima) return <span className="pf-delta pari">— primo mese</span>;
+  const diff = ora - prima;
+  if (diff === 0) return <span className="pf-delta pari">= come il mese scorso</span>;
+  const perc = Math.round((diff / prima) * 100);
+  return diff > 0
+    ? <span className="pf-delta su">▲ +{perc}% sul mese scorso</span>
+    : <span className="pf-delta giu">▼ {perc}% sul mese scorso</span>;
+}
+
+function TabStatistiche() {
+  const [dati, setDati] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/panel/statistiche").then((r) => r.json()).then(setDati);
+  }, []);
+
+  if (!dati) return <p className="pf-note">Caricamento…</p>;
+
+  const mese = new Date().toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+
+  return (
+    <div>
+      <h2 style={{ color: "var(--iw-navy)", fontSize: 22, margin: "0 0 4px", textTransform: "capitalize" }}>{mese}</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>Il valore che la piattaforma ti sta portando, in numeri.</p>
+
+      <div className="pf-tiles">
+        <div className="pf-tile">
+          <span className="etichetta">Prenotazioni del mese</span>
+          <span className="numero">{dati.prenotazioni.mese}</span>
+          <Delta ora={dati.prenotazioni.mese} prima={dati.prenotazioni.mesePrec} />
+        </div>
+        <div className="pf-tile">
+          <span className="etichetta">Visite alla tua scheda</span>
+          <span className="numero">{dati.visite.mese}</span>
+          <Delta ora={dati.visite.mese} prima={dati.visite.mesePrec} />
+        </div>
+        <div className="pf-tile">
+          <span className="etichetta">Recensioni verificate</span>
+          <span className="numero">{dati.recensioni.media ? `★ ${String(dati.recensioni.media).replace(".", ",")}` : "—"}</span>
+          <span className="pf-delta pari">{dati.recensioni.totale > 0 ? `su ${dati.recensioni.totale} recensioni` : "ancora nessuna: arriveranno!"}</span>
+        </div>
+        <div className="pf-tile">
+          <span className="etichetta">Prestazioni completate (totale)</span>
+          <span className="numero">{dati.prenotazioni.completateTotali}</span>
+          <span className="pf-delta pari">da quando sei sulla piattaforma</span>
+        </div>
+      </div>
+
+      <p className="pf-note" style={{ marginTop: 18 }}>
+        💡 Vuoi più visite? Condividi il tuo link personale su WhatsApp e Google (scheda Profilo)
+        e scarica il tuo QR da esporre.
+      </p>
     </div>
   );
 }
@@ -670,6 +753,7 @@ export default function PanelApp() {
     { id: "agenda", label: "📅 Agenda" },
     { id: "servizi", label: "🩺 Servizi" },
     { id: "orari", label: "🕒 Orari" },
+    { id: "stats", label: "📊 Statistiche" },
     { id: "profilo", label: "👤 Profilo" },
   ];
 
@@ -687,6 +771,7 @@ export default function PanelApp() {
       {tab === "agenda" && <TabAgenda statoPush={statoPush} attivaNotifiche={attivaNotifiche} />}
       {tab === "servizi" && <TabServizi />}
       {tab === "orari" && <TabOrari />}
+      {tab === "stats" && <TabStatistiche />}
       {tab === "profilo" && <TabProfilo />}
     </div>
   );

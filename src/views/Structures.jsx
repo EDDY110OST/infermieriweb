@@ -2,7 +2,6 @@ import React from "react";
 import { MdLocalHospital, MdHealthAndSafety, MdLocalPharmacy } from "react-icons/md";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { Link } from "react-router-dom";
-import Layout from "../components/Layout";
 import "../styles/Structures.css";
 
 const structures = [
@@ -33,7 +32,7 @@ export default function Structures() {
   const { t } = useAppSettings();
 
   return (
-    <Layout>
+    <>
       <section className="structures-page">
         <div className="structures-header">
           <h1>{t("pages.structures.title")}</h1>
@@ -64,6 +63,6 @@ export default function Structures() {
           ))}
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

@@ -443,3 +443,16 @@
   display: inline-block; background: var(--iw-danger); color: #fff; font-size: 13px;
   font-weight: 800; border-radius: 999px; padding: 2px 10px; vertical-align: middle; margin-left: 6px;
 }
+
+/* Stat tiles (pannello) — numeri in inchiostro, trend con freccia+testo */
+.pf-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.pf-tile {
+  background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: var(--iw-radius);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 4px;
+}
+.pf-tile .etichetta { font-size: 13px; font-weight: 600; color: var(--iw-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.pf-tile .numero { font-size: 34px; font-weight: 800; color: var(--iw-navy); line-height: 1.1; }
+.pf-delta { font-size: 12.5px; font-weight: 700; }
+.pf-delta.su { color: #15803d; }
+.pf-delta.giu { color: var(--iw-danger); }
+.pf-delta.pari { color: var(--iw-muted); font-weight: 600; }

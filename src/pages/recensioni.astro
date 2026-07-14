@@ -1,15 +1,15 @@
 ---
-import Base from "../layouts/Base.astro";
+import Platform from "../layouts/Platform.astro";
 import RecensioniIsland from "../islands/RecensioniIsland.jsx";
 import { pageSeo } from "../data/seo.js";
 import { medicalBusinessSchema } from "../data/schema.js";
 ---
 
-<Base
+<Platform
   title={pageSeo.recensioni.title}
   description={pageSeo.recensioni.description}
   path="/recensioni"
   schemas={[medicalBusinessSchema]}
 >
   <RecensioniIsland client:load pathname="/recensioni" />
-</Base>
+</Platform>

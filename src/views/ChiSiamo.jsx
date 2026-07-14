@@ -1,6 +1,5 @@
 import React from "react";
 import { useAppSettings } from "../contexts/AppContext.jsx";
-import Layout from "../components/Layout";
 import { Link } from "react-router-dom";
 
 export default function ChiSiamo() {
@@ -13,7 +12,7 @@ export default function ChiSiamo() {
   const whyItems = t("pages.about.whyItems");
 
   return (
-    <Layout>
+    <>
       <section className="section white" style={{ paddingTop: "60px" }}>
         <Link to="/" style={{ color: "#0066cc", textDecoration: "none", marginBottom: "20px", display: "inline-block" }}>
           {t("pages.about.backToHome")}
@@ -125,6 +124,6 @@ export default function ChiSiamo() {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

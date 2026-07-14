@@ -1,12 +1,11 @@
 import React from "react";
-import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 
 export default function Recensioni() {
   const { t } = useAppSettings();
 
   return (
-    <Layout>
+    <>
       <section className="section white">
         <span className="section-label">{t("pages.reviews.label")}</span>
         <h1>{t("pages.reviews.title")}</h1>
@@ -66,6 +65,6 @@ export default function Recensioni() {
           </a>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

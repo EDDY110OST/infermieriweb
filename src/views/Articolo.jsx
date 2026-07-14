@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import Layout from "../components/Layout";
 import { getArticleImage } from "../utils/articleImageFallback";
 import { articles } from "../data/articles";
 
@@ -122,7 +121,7 @@ export default function Articolo() {
 
   if (!article) {
     return (
-      <Layout>
+      <>
         <section className="section white">
           <span className="section-label">Articolo</span>
           <h2>Articolo non trovato</h2>
@@ -131,14 +130,14 @@ export default function Articolo() {
             Torna agli articoli
           </Link>
         </section>
-      </Layout>
+      </>
     );
   }
 
   const related = articles.filter((item) => item.slug !== article.slug).slice(0, 3);
 
   return (
-    <Layout>
+    <>
       <section className="section white article-page">
         <nav className="breadcrumb" aria-label="Breadcrumb">
           <Link to="/">Home</Link>
@@ -234,6 +233,6 @@ export default function Articolo() {
           </article>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

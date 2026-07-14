@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 import { getArticleImage } from "../utils/articleImageFallback";
 import { articles } from "../data/articles";
@@ -64,7 +63,7 @@ export default function Articoli() {
   }, [category, search]);
 
   return (
-    <Layout>
+    <>
       <section className="hero articles-hero">
         <div className="hero-text">
           <span className="badge">Articoli</span>
@@ -144,6 +143,6 @@ export default function Articoli() {
           )}
         </div>
       </section>
-    </Layout>
+    </>
   );
 }

@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Layout from "../components/Layout";
 import { useAppSettings } from "../contexts/AppContext.jsx";
 
 export default function Domicilio() {
@@ -9,7 +8,7 @@ export default function Domicilio() {
   const pesciaZones = t("pages.domicile.zonesPescia");
 
   return (
-    <Layout>
+    <>
       <section className="section white" style={{ maxWidth: "900px", margin: "0 auto" }}>
         <span className="section-label">{t("pages.domicile.label")}</span>
         <h1>{t("pages.domicile.title")}</h1>
@@ -77,6 +76,6 @@ export default function Domicilio() {
           </Link>
         </div>
       </section>
-    </Layout>
+    </>
   );
 }
