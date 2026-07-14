@@ -162,7 +162,6 @@
 /* ---------- Griglia categorie ---------- */
 
 .pf-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
-@media (max-width: 1100px) { .pf-cats { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 860px) { .pf-cats { grid-template-columns: repeat(2, 1fr); } }
 
 .pf-cat {
@@ -615,3 +614,9 @@
   max-width: 820px; margin: 0 auto 14px; position: relative;
 }
 .pf-hero-centro .sottotitolo { max-width: 620px; margin: 0 auto; position: relative; }
+
+
+/* Griglia a 3 colonne (i 6 vantaggi della pagina professionisti): 3+3 */
+.pf-griglia-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .pf-griglia-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .pf-griglia-3 { grid-template-columns: 1fr; } }
