@@ -248,6 +248,30 @@ export default function AdminApp() {
       ))}
 
       <BlogAdmin />
+
+      <h2 style={{ color: "var(--iw-navy)", margin: "30px 0 12px" }}>🛡️ Manutenzione</h2>
+      <div className="pf-panel">
+        <p style={{ margin: "0 0 10px", fontSize: 14.5, color: "var(--iw-slate)" }}>
+          Ogni notte il database viene spedito via email come copia di sicurezza. Puoi anche farlo adesso:
+        </p>
+        <BackupOra />
+      </div>
+    </div>
+  );
+}
+
+function BackupOra() {
+  const [stato, setStato] = useState(null);
+  const esegui = async () => {
+    setStato("in corso…");
+    const r = await fetch("/api/admin/backup", { method: "POST" });
+    const d = await r.json();
+    setStato(r.ok ? `✅ Backup spedito via email (${d.dimensioneKB} KB)` : `Errore: ${d.error || "invio non riuscito"}`);
+  };
+  return (
+    <div>
+      <button className="pf-btn secondario" onClick={esegui} disabled={stato === "in corso…"}>🗄️ Backup adesso</button>
+      {stato && <p className="pf-note" style={{ marginTop: 8 }}>{stato}</p>}
     </div>
   );
 }

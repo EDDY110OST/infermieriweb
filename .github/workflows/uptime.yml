@@ -1,0 +1,19 @@
+# Sentinella: ogni 15 minuti controlla che infermieriweb.it risponda.
+# Se il controllo fallisce, GitHub manda l'email di "workflow fallito"
+# al proprietario del repository (Eduard): zero servizi esterni.
+name: Sentinella uptime
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  controlla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Home page
+        run: curl -sf --max-time 20 -o /dev/null https://infermieriweb.it/
+      - name: Motore prenotazioni (API)
+        run: |
+          RISPOSTA=$(curl -sf --max-time 20 https://infermieriweb.it/api/professionisti)
+          echo "$RISPOSTA" | grep -q '"professionisti"' || { echo "API senza dati validi"; exit 1; }

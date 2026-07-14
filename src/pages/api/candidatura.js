@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../lib/db.js";
+import { consenti, ipDa } from "../../lib/ratelimit.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -37,6 +38,10 @@ export async function POST({ request }) {
     return json({ error: "La partita IVA deve avere 11 cifre" }, 400);
   }
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
+
+  if (!(await consenti(`candidatura:${ipDa(request)}`, 3, 60))) {
+    return json({ error: "Troppe richieste ravvicinate: riprova più tardi" }, 429);
+  }
 
   const recente = await sql`
     SELECT id FROM applications WHERE email = ${email} AND created_at > now() - interval '1 day'`;

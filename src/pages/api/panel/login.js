@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { verifyPassword, createSession, sessionCookie } from "../../../lib/auth.js";
+import { consenti, ipDa } from "../../../lib/ratelimit.js";
 
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...headers } });
@@ -17,6 +18,10 @@ export async function POST({ request }) {
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
   if (!email || !password) return json({ error: "Email e password obbligatorie" }, 400);
+
+  if (!(await consenti(`login:${email}:${ipDa(request)}`, 5, 15))) {
+    return json({ error: "Troppi tentativi: riprova tra 15 minuti" }, 429);
+  }
 
   const [user] = await sql`
     SELECT u.id, u.email, u.pass_hash, u.name, u.role, u.professional_id, p.slug, p.name AS professional_name

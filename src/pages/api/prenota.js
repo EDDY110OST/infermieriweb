@@ -3,6 +3,7 @@ export const prerender = false;
 import { randomBytes } from "node:crypto";
 import { sql } from "../../lib/db.js";
 import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista } from "../../lib/mailer.js";
+import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { pushToProfessional } from "../../lib/push.js";
 
 const json = (data, status = 200) =>
@@ -30,6 +31,17 @@ export async function POST({ request }) {
   if (name.length < 2 || phone.length < 6) return json({ error: "Nome e telefono sono obbligatori" }, 400);
   if (!email.includes("@") || email.length < 6) return json({ error: "Serve una email valida: riceverai lì la conferma e il link per disdire" }, 400);
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
+
+  if (!(await consenti(`prenota:${ipDa(request)}`, 10, 60))) {
+    return json({ error: "Troppe prenotazioni ravvicinate: riprova più tardi o chiama il professionista" }, 429);
+  }
+  const [{ n: futureAttive }] = await sql`
+    SELECT COUNT(*) AS n FROM bookings
+    WHERE professional_id = ${professionalId} AND customer_phone = ${phone}
+      AND status = 'active' AND start_dt > now()`;
+  if (Number(futureAttive) >= 3) {
+    return json({ error: "Hai già 3 prenotazioni future con questo professionista: gestiscile dai link ricevuti via email" }, 429);
+  }
 
   const [service] = await sql`
     SELECT s.duration_min, s.name AS service_name, s.price_cents,
