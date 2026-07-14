@@ -3,9 +3,60 @@ export const prerender = false;
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
 import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
+import { romeDateTime } from "../../../lib/slots.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
+
+// POST /api/panel/prenotazioni — prenotazione MANUALE (presa al telefono)
+// body: {service_id, date "YYYY-MM-DD", time "HH:MM", customer_name, customer_phone, address?, city?}
+export async function POST({ request }) {
+  const session = sessionFromRequest(request);
+  if (!session) return json({ error: "Non autenticato" }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
+
+  const serviceId = Number(body.service_id);
+  const date = String(body.date || "");
+  const time = String(body.time || "");
+  const nome = String(body.customer_name || "").trim();
+  const telefono = String(body.customer_phone || "").trim();
+  const indirizzo = String(body.address || "").trim();
+  const citta = String(body.city || "").trim();
+
+  if (!serviceId || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
+    return json({ error: "Servizio, giorno e ora sono obbligatori" }, 400);
+  }
+  if (nome.length < 2) return json({ error: "Il nome del paziente è obbligatorio" }, 400);
+
+  const [service] = await sql`
+    SELECT duration_min FROM services
+    WHERE id = ${serviceId} AND professional_id = ${session.pid}`;
+  if (!service) return json({ error: "Prestazione non trovata" }, 404);
+
+  const [h, m] = time.split(":").map(Number);
+  const start = romeDateTime(date, h * 60 + m);
+  const end = new Date(start.getTime() + service.duration_min * 60000);
+
+  const inserted = await sql`
+    INSERT INTO bookings (professional_id, service_id, start_dt, end_dt, customer_name, customer_phone, customer_email, address, city, status, source, cancel_token)
+    SELECT ${session.pid}, ${serviceId}, ${start.toISOString()}, ${end.toISOString()},
+           ${nome}, ${telefono}, '', ${indirizzo}, ${citta}, 'active', 'manual', ''
+    WHERE NOT EXISTS (
+      SELECT 1 FROM bookings
+      WHERE professional_id = ${session.pid} AND status = 'active'
+        AND start_dt < ${end.toISOString()} AND end_dt > ${start.toISOString()}
+    ) AND NOT EXISTS (
+      SELECT 1 FROM blocks
+      WHERE professional_id = ${session.pid}
+        AND start_dt < ${end.toISOString()} AND end_dt > ${start.toISOString()}
+    )
+    RETURNING id`;
+
+  if (!inserted.length) return json({ error: "In quell'orario hai già un impegno in agenda" }, 409);
+  return json({ ok: true, id: inserted[0].id });
+}
 
 // PATCH /api/panel/prenotazioni {id, status} — annulla / segna esito
 export async function PATCH({ request }) {
