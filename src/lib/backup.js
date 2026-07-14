@@ -1,4 +1,3 @@
-import { gzipSync } from "node:zlib";
 import { sql } from "./db.js";
 import { sendEmail } from "./mailer.js";
 
@@ -30,7 +29,7 @@ export async function eseguiBackup() {
   }
 
   const json = JSON.stringify(dump);
-  const compresso = gzipSync(Buffer.from(json));
+  const contenuto = Buffer.from(json);
   const data = new Date().toISOString().slice(0, 10);
 
   const righeTabella = Object.entries(conteggi)
@@ -39,7 +38,7 @@ export async function eseguiBackup() {
 
   const inviata = await sendEmailConAllegato({
     to: EMAIL_BACKUP,
-    subject: `Backup InfermieriWeb — ${data} (${Math.round(compresso.length / 1024)} KB)`,
+    subject: `Backup InfermieriWeb — ${data} (${Math.round(contenuto.length / 1024)} KB)`,
     html: `
 <div style="font-family: Arial, sans-serif; max-width: 520px;">
   <h2 style="color:#0b3954;">Backup giornaliero del database 🗄️</h2>
@@ -47,11 +46,11 @@ export async function eseguiBackup() {
   <table style="font-size:14px;">${righeTabella}</table>
   <p style="color:#7b909b;font-size:12px;">Contiene dati personali e credenziali cifrate: non inoltrare. Ripristino: vedi README nel repository.</p>
 </div>`,
-    attachmentName: `infermieriweb-backup-${data}.json.gz`,
-    attachmentBase64: compresso.toString("base64"),
+    attachmentName: `infermieriweb-backup-${data}.json`,
+    attachmentBase64: contenuto.toString("base64"),
   });
 
-  return { ok: inviata, dimensioneKB: Math.round(compresso.length / 1024), conteggi, brevoErr: globalThis.__brevoErr };
+  return { ok: inviata, dimensioneKB: Math.round(contenuto.length / 1024), conteggi };
 }
 
 // Variante di sendEmail con allegato (API Brevo)
@@ -72,10 +71,6 @@ async function sendEmailConAllegato({ to, subject, html, attachmentName, attachm
       attachment: [{ name: attachmentName, content: attachmentBase64 }],
     }),
   });
-  if (!r.ok) {
-    const testo = await r.text();
-    console.error("[backup] Brevo:", r.status, testo);
-    globalThis.__brevoErr = `${r.status}: ${testo}`.slice(0, 300);
-  }
+  if (!r.ok) console.error("[backup] Brevo:", r.status, await r.text());
   return r.ok;
 }
