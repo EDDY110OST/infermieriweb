@@ -584,9 +584,12 @@
 .pf .review-card, .pf .info-box, .pf .structure-card, .pf .faq-item {
   border-radius: var(--iw-r-card) !important;
 }
-.pf .article-category, .pf .article-preview-category, .pf .section-label, .pf .badge {
+.pf .article-category, .pf .article-preview-category, .pf .section-label, .pf .badge,
+.pf .article-card-category, .pf .filter-pill {
   border-radius: var(--iw-r-chip) !important;
 }
+/* i filtri del blog: tocco pieno per il pubblico over 50 */
+.pf .filter-pill { min-height: 40px; }
 .pf .article-hero-image img, .pf .article-preview-card img, .pf .article-card img {
   border-radius: var(--iw-r-card) var(--iw-r-card) 0 0;
 }
