@@ -25,10 +25,12 @@ if (email) {
   passate = righe.filter((r) => new Date(r.start_dt) <= new Date() || r.status !== "active");
 }
 
-const quando = (iso) =>
-  new Date(iso).toLocaleString("it-IT", {
+const quando = (iso) => {
+  const t = new Date(iso).toLocaleString("it-IT", {
     timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
   });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
 const stato = (r) => (r.status === "cancelled" ? "Disdetta" : new Date(r.start_dt) <= new Date() ? "Completata" : "Confermata");
 ---
 
@@ -68,7 +70,7 @@ const stato = (r) => (r.status === "cancelled" ? "Disdetta" : new Date(r.start_d
               <div class="info">
                 <div class="nome">{r.service_name}</div>
                 <div class="zona">con {r.professional_name}</div>
-                <div class="prezzo" style="text-transform: capitalize;">🗓 {quando(r.start_dt)}</div>
+                <div class="prezzo">🗓 {quando(r.start_dt)}</div>
                 <div class="disponibilita">🟢 {stato(r)}</div>
               </div>
               <a class="pf-btn secondario" href={`/prenotazione?token=${r.cancel_token}`}>Gestisci</a>
@@ -83,7 +85,7 @@ const stato = (r) => (r.status === "cancelled" ? "Disdetta" : new Date(r.start_d
                   <img class="foto" src={r.photo_url} alt={`Foto di ${r.professional_name}`} loading="lazy" />
                   <div class="info">
                     <div class="nome">{r.service_name}</div>
-                    <div class="zona">con {r.professional_name} · <span style="text-transform: capitalize;">{quando(r.start_dt)}</span></div>
+                    <div class="zona">con {r.professional_name} · {quando(r.start_dt)}</div>
                     <div class="disponibilita" style={r.status === "cancelled" ? "color: var(--iw-muted);" : ""}>{stato(r)}</div>
                   </div>
                   <a class="pf-btn" href={`/p/${r.professional_slug}?servizio=${r.service_id}`}>Riprenota</a>
