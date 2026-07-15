@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Platform from "../../layouts/Platform.astro";
 import { sql } from "../../lib/db.js";
+import { nextAvailability } from "../../lib/slots.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 
 const slugify = (s) =>
@@ -69,7 +70,7 @@ if (!regione) {
   const ids = [...new Set(zone.filter((z) => z.city === citta).map((z) => z.professional_id))];
   professionisti = ids.length
     ? await sql`
-        SELECT p.slug, p.name, p.profession, p.city, p.province, p.photo_url, p.google_rating,
+        SELECT p.id, p.slug, p.name, p.profession, p.city, p.province, p.photo_url, p.google_rating,
                COALESCE(r.media, 0) AS media, COALESCE(r.totale, 0) AS totale,
                COALESCE(s.min_price, 0) AS min_price
         FROM professionals p
@@ -82,6 +83,13 @@ if (!regione) {
         ) s ON TRUE
         WHERE p.id = ANY(${ids}) ORDER BY p.name`
     : [];
+  professionisti = await Promise.all(
+    professionisti.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) }))
+  );
+}
+
+if (livello !== "citta" && voci.length === 1) {
+  return Astro.redirect(voci[0].href, 302);
 }
 
 const path = `/professionisti${segmenti.length ? "/" + segmenti.join("/") : ""}`;
@@ -165,6 +173,7 @@ const intestazioni = {
                 ) : null}
                 <div class="zona">📍 {p.city} ({p.province})</div>
                 {Number(p.min_price) > 0 && <div class="prezzo">Prestazioni da {euro(p.min_price)}</div>}
+                {p.prossima && <div class="disponibilita">🟢 Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
               </div>
               <a class="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
             </div>

@@ -5,6 +5,7 @@ import Platform from "../../layouts/Platform.astro";
 import BookingWidget from "../../islands/BookingWidget.jsx";
 import { sql } from "../../lib/db.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
+import { nextAvailability } from "../../lib/slots.js";
 
 const { slug } = Astro.params;
 const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
@@ -78,6 +79,7 @@ const schemas = [
 
 const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
 const prezzoMinimo = services.length ? Math.min(...services.map((s) => s.price_cents)) : 0;
+const prossima = services.length ? await nextAvailability(pro.id) : null;
 
 // Contatore visite (statistiche del pannello); mai bloccare la pagina se fallisce
 try {
@@ -112,6 +114,11 @@ try {
             </a>
           )}
         </div>
+        {prossima && (
+          <p style="margin: 12px 0 0; font-size: 16.5px; color: rgba(255,255,255,0.95);">
+            🟢 Prossima disponibilità: <strong>{prossima.testo}</strong> · conferma immediata online
+          </p>
+        )}
       </div>
     </div>
   </section>
@@ -187,7 +194,7 @@ try {
           </p>
         )}
         {services.length > 0 ? (
-          <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} telefono={pro.phone} />
+          <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} telefono={pro.phone} />
         ) : (
           <p class="pf-note">
             Questo professionista sta completando il suo profilo: le prenotazioni online
