@@ -4,15 +4,15 @@ export const pageSeo = {
   home: {
     title: "Infermiere a domicilio a Lucca | Medicazioni, ECG e prelievi",
     description:
-      "Servizi infermieristici a domicilio a Lucca e provincia: medicazioni, ECG e prelievi a casa. Contatta Infermieri Web per informazioni o per fissare un intervento.",
+      "Servizi infermieristici a domicilio a Lucca e provincia: medicazioni, ECG e prelievi a casa. Contatta InfermieriWeb per informazioni o per fissare un intervento.",
   },
   domicilio: {
-    title: "Servizi infermieristici a domicilio a Lucca | Infermieri Web",
+    title: "Servizi infermieristici a domicilio a Lucca | InfermieriWeb",
     description:
       "Assistenza infermieristica domiciliare a Lucca, Capannori, Porcari e Altopascio: medicazioni, prelievi, iniezioni, flebo e monitoraggi direttamente a casa tua, 7 giorni su 7.",
   },
   strutture: {
-    title: "Servizi ambulatoriali a Lucca | Infermieri Web",
+    title: "Servizi ambulatoriali a Lucca | InfermieriWeb",
     description:
       "Prestazioni infermieristiche anche in ambulatorio a Lucca: Eurofins Lamm, Centro Medico D33 e Farmacia Comunale 24h. Indirizzi, contatti e come raggiungerli.",
   },
@@ -32,7 +32,7 @@ export const pageSeo = {
       "Come funziona un ECG a domicilio, quanto costa un infermiere, come gestire un catetere: guide chiare scritte con i professionisti della rete.",
   },
   lavoraConNoi: {
-    title: "Lavora con noi: infermieri a domicilio a Lucca | Infermieri Web",
+    title: "Lavora con noi: infermieri a domicilio a Lucca | InfermieriWeb",
     description:
       "Sei un infermiere libero professionista? Entra nella rete InfermieriWeb: richieste già filtrate nella tua zona, libertà di disponibilità e zero costi di iscrizione.",
   },
@@ -40,17 +40,15 @@ export const pageSeo = {
 
 const clip = (text, max = 158) => (text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`);
 
+import { NOMI_COLLOQUIALI } from "./servizi-extra.js";
+
 export function serviceSeo(serviceId, service) {
-  if (serviceId === "medicazioni") {
-    return {
-      title: "Medicazioni a domicilio a Lucca | Infermieri Web",
-      description:
-        "Servizio di medicazioni semplici e complesse a domicilio a Lucca e provincia. Informazioni e contatti per richiedere assistenza infermieristica.",
-    };
-  }
+  const nome = NOMI_COLLOQUIALI[serviceId] || `${service.title} a domicilio`;
   return {
-    title: `${service.title} a domicilio a Lucca | Infermieri Web`,
-    description: clip(`${service.fullDescription} Servizio disponibile a Lucca e provincia, ${service.price}.`),
+    title: `${nome} a Lucca: prezzi e prenotazione online | InfermieriWeb`,
+    description: clip(
+      `${nome} a Lucca e provincia con infermieri iscritti all'albo: ${service.price.toLowerCase()}, prenoti online l'orario che preferisci e paghi dopo la prestazione.`
+    ),
   };
 }
 
@@ -63,9 +61,9 @@ export function articleSeo(article) {
 
 export function structureSeo(structure) {
   return {
-    title: `${structure.name} - Lucca | Infermieri Web`,
+    title: `${structure.name} - Lucca | InfermieriWeb`,
     description: clip(
-      `Prestazioni infermieristiche presso ${structure.name}, ${structure.address}. Telefono ${structure.phone}. Prenota la tua prestazione con Infermieri Web.`
+      `Prestazioni infermieristiche presso ${structure.name}, ${structure.address}. Telefono ${structure.phone}. Prenota la tua prestazione con InfermieriWeb.`
     ),
   };
 }

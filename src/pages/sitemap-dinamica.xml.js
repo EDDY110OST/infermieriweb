@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../lib/db.js";
 import { SITE_URL } from "../data/schema.js";
+import { servicesData } from "../data/services.js";
 
 const slugify = (s) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/['\s]+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -31,6 +32,9 @@ export async function GET() {
   }
   for (const a of articoli) {
     urls.push({ loc: `${SITE_URL}/articoli/${a.slug}`, priority: "0.7" });
+  }
+  for (const serviceId of Object.keys(servicesData)) {
+    urls.push({ loc: `${SITE_URL}/servizio/${serviceId}`, priority: "0.8" });
   }
 
   const regioni = new Set(), province = new Set(), citta = new Set();

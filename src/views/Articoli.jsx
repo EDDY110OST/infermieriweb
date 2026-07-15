@@ -16,6 +16,11 @@ const categories = [
   "Stomie",
 ];
 
+const formatData = (iso) => {
+  const d = new Date(iso);
+  return isNaN(d) ? iso || "" : d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+};
+
 export default function Articoli({ articles = [] }) {
   const { t } = useAppSettings();
   const [search, setSearch] = useState("");
@@ -112,8 +117,7 @@ export default function Articoli({ articles = [] }) {
                   <h3>{article.title}</h3>
                   <p>{article.excerpt}</p>
                   <div className="article-card-meta">
-                    <span>{article.date}</span>
-                    <span>{article.readingTime}</span>
+                    <span>{[formatData(article.date), article.readingTime].filter(Boolean).join(" · ")}</span>
                   </div>
                   <span className="article-card-link">Leggi articolo</span>
                 </div>

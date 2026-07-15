@@ -14,22 +14,30 @@ function encodeSvg(svg) {
 
 function buildPlaceholder(category, title) {
   const key = String(category || '').toLowerCase();
-  const bg = '#f0fdfa';
   const accent = colorMap[key] || '#00897b';
-  const label = category || 'Articolo';
-  const safeTitle = String(title || 'Articolo').slice(0, 40);
+  const label = (category || 'Guida').toUpperCase();
+  const safeTitle = String(title || 'Articolo').slice(0, 46);
 
+  // Copertina brand: gradiente della piattaforma + croce sanitaria, niente finti scheletri
   const svg = `
-<svg width="900" height="540" viewBox="0 0 900 540" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="900" height="540" rx="32" fill="${bg}" />
-  <rect x="40" y="40" width="220" height="220" rx="32" fill="${accent}" fill-opacity="0.15" />
-  <rect x="40" y="292" width="140" height="16" rx="8" fill="${accent}" fill-opacity="0.35" />
-  <rect x="40" y="324" width="250" height="16" rx="8" fill="${accent}" fill-opacity="0.25" />
-  <rect x="40" y="358" width="180" height="16" rx="8" fill="${accent}" fill-opacity="0.2" />
-  <circle cx="740" cy="180" r="100" fill="${accent}" fill-opacity="0.12" />
-  <circle cx="760" cy="360" r="62" fill="${accent}" fill-opacity="0.18" />
-  <text x="460" y="160" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="700">${label}</text>
-  <text x="460" y="220" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="24">${safeTitle}</text>
+<svg width="900" height="540" viewBox="0 0 900 540" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${accent}" />
+      <stop offset="1" stop-color="#065f52" />
+    </linearGradient>
+  </defs>
+  <rect width="900" height="540" fill="url(#g)" />
+  <circle cx="780" cy="90" r="220" fill="#ffffff" fill-opacity="0.06" />
+  <circle cx="120" cy="470" r="180" fill="#ffffff" fill-opacity="0.05" />
+  <g transform="translate(660, 300)" fill="#ffffff" fill-opacity="0.16">
+    <rect x="-36" y="-110" width="72" height="220" rx="20" />
+    <rect x="-110" y="-36" width="220" height="72" rx="20" />
+  </g>
+  <rect x="56" y="60" rx="999" width="${44 + label.length * 15}" height="46" fill="#ffffff" fill-opacity="0.18" />
+  <text x="78" y="91" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="1">${label}</text>
+  <text x="56" y="300" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">${safeTitle}</text>
+  <text x="56" y="470" fill="#ffffff" fill-opacity="0.85" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600">InfermieriWeb · guide per pazienti e famiglie</text>
 </svg>`;
 
   return encodeSvg(svg);

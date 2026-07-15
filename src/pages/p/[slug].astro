@@ -44,11 +44,19 @@ const descrizione = `Prenota online ${pro.name}, ${pro.profession} a domicilio a
 const schema = {
   "@context": "https://schema.org",
   "@type": "MedicalBusiness",
+  "@id": `${SITE_URL}${path}#professionista`,
   name: pro.name,
   url: `${SITE_URL}${path}`,
   image: new URL(pro.photo_url, SITE_URL).href,
+  ...(pro.phone && { telephone: pro.phone }),
   medicalSpecialty: "Nursing",
   areaServed: zone.map((city) => ({ "@type": "City", name: city })),
+  makesOffer: services.map((s) => ({
+    "@type": "Offer",
+    itemOffered: { "@type": "Service", name: s.name },
+    price: (s.price_cents / 100).toFixed(2),
+    priceCurrency: "EUR",
+  })),
   address: { "@type": "PostalAddress", addressLocality: pro.city, addressCountry: "IT" },
   ...(Number(ratingAgg?.totale) > 0 && {
     aggregateRating: {

@@ -1,10 +1,17 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getArticleImage } from "../utils/articleImageFallback";
+import { SERVIZIO_PER_ARTICOLO, NOMI_COLLOQUIALI } from "../data/servizi-extra.js";
+
+const formatData = (iso) => {
+  const d = new Date(iso);
+  return isNaN(d) ? iso || "" : d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+};
 
 export default function Articolo({ article, related = [] }) {
   const safeCategory = article?.category || "Articolo";
-  const safeDate = article?.date || "";
+  const safeDate = formatData(article?.date);
+  const servizioAbbinato = SERVIZIO_PER_ARTICOLO[article?.slug];
   const safeReadingTime = article?.readingTime || "";
   const articleSections = Array.isArray(article?.sections) && article.sections.length
     ? article.sections
@@ -147,8 +154,7 @@ export default function Articolo({ article, related = [] }) {
           <span className="article-category">{safeCategory}</span>
           <h1>{article.title}</h1>
           <div className="article-meta">
-            {safeDate && <span>{safeDate}</span>}
-            {safeReadingTime && <span>{safeReadingTime}</span>}
+            <span>{[safeDate, safeReadingTime].filter(Boolean).join(" · ")}</span>
           </div>
         </div>
 
@@ -189,6 +195,19 @@ export default function Articolo({ article, related = [] }) {
                 )}
               </section>
             ))}
+
+            {servizioAbbinato && (
+              <div className="article-cta-card">
+                <h3>Ti serve questa prestazione?</h3>
+                <p>
+                  Guarda la guida completa con prezzi, domande frequenti e i professionisti
+                  che la offrono nella tua zona.
+                </p>
+                <a href={`/servizio/${servizioAbbinato}`} className="btn-primary">
+                  {NOMI_COLLOQUIALI[servizioAbbinato] || "Vedi la prestazione"}
+                </a>
+              </div>
+            )}
 
             <div className="article-bottom-actions">
               <div className="share-box">

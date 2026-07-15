@@ -134,7 +134,7 @@ const intestazioni = {
               <span class="emoji">📍</span>
               <span>
                 <span class="nome">{v.nome}</span><br />
-                <span class="da">{v.n} professionist{v.n === 1 ? "a/o" : "i"}</span>
+                <span class="da">{v.n} {v.n === 1 ? "professionista" : "professionisti"}</span>
               </span>
             </a>
           ))}
@@ -169,6 +169,20 @@ const intestazioni = {
               <a class="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
             </div>
           ))}
+        </div>
+      )}
+
+      {livello === "citta" && (
+        <div style="margin-top: 34px;">
+          <h2 style="color: var(--iw-navy); font-size: 22px; margin-bottom: 14px;">Prestazioni più richieste</h2>
+          <div class="pf-link-pills">
+            <a href="/servizio/prelievi">Prelievo del sangue</a>
+            <a href="/servizio/medicazioni">Medicazioni</a>
+            <a href="/servizio/iniezioni">Iniezioni</a>
+            <a href="/servizio/ecg">ECG a domicilio</a>
+            <a href="/servizio/cateteri-vescicali">Catetere vescicale</a>
+            <a href="/servizio/flebo">Flebo</a>
+          </div>
         </div>
       )}
     </div>

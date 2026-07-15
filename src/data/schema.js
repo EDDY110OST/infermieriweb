@@ -41,11 +41,8 @@ export const medicalBusinessSchema = {
     opens: "07:00",
     closes: "22:00",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "5.0",
-    reviewCount: "35",
-  },
+  // aggregateRating solo dove le recensioni sono davvero visibili (scheda del
+  // professionista), mai nello schema globale: Google penalizza i rating "orfani".
 };
 
 export function articleSchema(article, imageUrl) {

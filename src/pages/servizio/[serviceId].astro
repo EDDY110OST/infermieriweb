@@ -1,47 +1,116 @@
 ---
+export const prerender = false;
+
 import Platform from "../../layouts/Platform.astro";
-import ServiceDetailIsland from "../../islands/ServiceDetailIsland.jsx";
 import { servicesData } from "../../data/services.js";
 import { sql } from "../../lib/db.js";
 import { serviceSeo } from "../../data/seo.js";
-import { medicalBusinessSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
-
-export const prerender = false;
-
-export function getStaticPathsNonUsato() {
-  return Object.keys(servicesData).map((serviceId) => ({ params: { serviceId } }));
-}
+import { medicalBusinessSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
+import { NOMI_COLLOQUIALI, ARTICOLO_PER_SERVIZIO, faqServizio } from "../../data/servizi-extra.js";
 
 const { serviceId } = Astro.params;
 const service = servicesData[serviceId];
 if (!service) return new Response(null, { status: 404 });
 
-// Chi offre DAVVERO questa prestazione: la guida deve portare a una prenotazione,
-// non rimandare alla ricerca da capo
+// Chi offre DAVVERO questa prestazione: la guida deve portare a una prenotazione
 const professionisti = await sql`
   SELECT DISTINCT p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents
   FROM professionals p
   JOIN services s ON s.professional_id = p.id AND s.active
   WHERE p.status = 'active' AND lower(s.name) LIKE ${"%" + service.title.split(" ")[0].toLowerCase() + "%"}
   ORDER BY p.name LIMIT 6`;
+
+// Articolo del blog abbinato (approfondimento informativo)
+const slugArticolo = ARTICOLO_PER_SERVIZIO[serviceId];
+const [articolo] = slugArticolo
+  ? await sql`SELECT slug, title, excerpt FROM articles WHERE slug = ${slugArticolo} AND status = 'published'`
+  : [];
+
 const euro = (c) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
+const nomeColloquiale = NOMI_COLLOQUIALI[serviceId] || service.title;
+const prezzoDa = professionisti.length
+  ? euro(Math.min(...professionisti.map((p) => p.price_cents)))
+  : service.price.replace("Da € ", "").trim() + " €";
+const faq = faqServizio(nomeColloquiale, prezzoDa);
 const seo = serviceSeo(serviceId, service);
 const path = `/servizio/${serviceId}`;
 
 const schemas = [
   medicalBusinessSchema,
+  faqSchema(faq),
   breadcrumbSchema([
     { name: "Home", url: `${SITE_URL}/` },
-    { name: "Servizi", url: `${SITE_URL}/domicilio` },
-    { name: service.title, url: `${SITE_URL}${path}` },
+    { name: "Prestazioni", url: `${SITE_URL}/` },
+    { name: nomeColloquiale, url: `${SITE_URL}${path}` },
   ]),
 ];
 ---
 
 <Platform title={seo.title} description={seo.description} path={path} schemas={schemas}>
-  <ServiceDetailIsland pathname={path} params={{ serviceId }} />
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Prestazioni a domicilio</span>
+    <h1>{nomeColloquiale}</h1>
+    <p class="sottotitolo">{service.shortDescription}. Prezzi chiari, professionisti iscritti all'albo, prenotazione online gratuita.</p>
+  </section>
 
-  {professionisti.length > 0 && (
+  <section class="pf-section" style="padding-top: 40px;">
+    <div class="pf-container" style="max-width: 880px;">
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Che cos'è e come funziona</h2>
+        <p style="color: var(--iw-slate); margin: 0;">{service.fullDescription}</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin-bottom: 18px;">
+        <div class="pf-panel">
+          <h2 style="margin-top: 0;">Cosa comprende</h2>
+          <ul class="pf-lista">
+            {service.details.map((d) => <li>{d}</li>)}
+          </ul>
+        </div>
+        <div class="pf-panel">
+          <h2 style="margin-top: 0;">Quando è indicata</h2>
+          <ul class="pf-lista">
+            {service.indications.map((i) => <li>{i}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Quanto costa</h2>
+        <p style="color: var(--iw-slate);">
+          <strong style="color: var(--iw-navy); font-size: 22px;">da {prezzoDa}</strong> — il prezzo esatto è nella
+          scheda di ogni professionista e può variare in base alla complessità e alla distanza.
+        </p>
+        <p class="pf-note" style="margin: 0;">
+          Nessun pagamento online e nessuna carta richiesta: il compenso si regola direttamente
+          con l'infermiere, dopo la prestazione.
+        </p>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Domande frequenti</h2>
+        {faq.map((f) => (
+          <details class="pf-faq">
+            <summary>{f.question}</summary>
+            <p>{f.answer}</p>
+          </details>
+        ))}
+      </div>
+
+      {articolo && (
+        <div class="pf-panel" style="margin-bottom: 18px; border-left: 4px solid var(--iw-primary);">
+          <h2 style="margin-top: 0;">Vuoi approfondire?</h2>
+          <p style="color: var(--iw-slate);">
+            <a href={`/articoli/${articolo.slug}`} style="color: var(--iw-primary-deep); font-weight: 700;">{articolo.title}</a>
+            — {articolo.excerpt}
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  {professionisti.length > 0 ? (
     <section class="pf-section alt">
       <div class="pf-container pf-center" style="margin-bottom: 28px;">
         <span class="pf-kicker">Prenota</span>
@@ -56,9 +125,17 @@ const schemas = [
               <div class="zona">📍 {p.city} ({p.province})</div>
               <div class="prezzo">Da {euro(p.price_cents)}</div>
             </div>
-            <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}`}>Prenota</a>
+            <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}`}>Vedi orari e prenota</a>
           </div>
         ))}
+      </div>
+    </section>
+  ) : (
+    <section class="pf-section alt pf-center">
+      <div class="pf-container" style="max-width: 620px;">
+        <h2>Cerca il professionista nella tua zona</h2>
+        <p class="pf-sub">La rete cresce una città alla volta: guarda chi copre il tuo comune.</p>
+        <a class="pf-btn" href="/cerca">Trova un infermiere</a>
       </div>
     </section>
   )}

@@ -324,10 +324,10 @@ const translations = {
       reviews: {
         label: "Recensioni",
         title: "Cosa dicono di InfermieriWeb",
-        description: "Le recensioni dei pazienti sono importanti per raccontare la qualità, la puntualità e l'attenzione del nostro servizio infermieristico a domicilio.",
-        rating: "5,0 su Google",
+        description: "Su InfermieriWeb ogni professionista ha le sue recensioni, e può lasciarle solo chi ha completato davvero una prenotazione: niente recensioni anonime o comprate.",
+        rating: "Eduard Fantolan — 5,0 su Google",
         reviewCount: "50 recensioni su Google. E su InfermieriWeb può recensire solo chi ha completato una prenotazione.",
-        prompt: "Se hai già usufruito dei nostri servizi, lasciare una recensione ci aiuta a far conoscere InfermieriWeb ad altre persone che cercano assistenza infermieristica a domicilio a Lucca e provincia.",
+        prompt: "Le stelle qui sotto sono le recensioni Google di Eduard Fantolan, il primo infermiere della rete. Se ti sei trovato bene con lui, una recensione aiuta altre famiglie di Lucca a scegliere con fiducia.",
         googleButton: "Lascia una recensione su Google"
       },
       structures: {
@@ -675,10 +675,10 @@ const translations = {
       reviews: {
         label: "Reviews",
         title: "What people say about InfermieriWeb",
-        description: "Patient reviews are important to tell the quality, punctuality and attention of our home nursing service.",
-        rating: "5.0 on Google",
+        description: "On InfermieriWeb every professional has their own reviews, and only patients who actually completed a booking can leave one: no anonymous or paid reviews.",
+        rating: "Eduard Fantolan — 5.0 on Google",
         reviewCount: "50 reviews on Google. And on InfermieriWeb only patients who completed a booking can leave a review.",
-        prompt: "If you have already used our services, leaving a review helps others find InfermieriWeb when they need home nursing care in Lucca and province.",
+        prompt: "The stars below are the Google reviews of Eduard Fantolan, the first nurse of the network. If he took good care of you, a review helps other families in Lucca choose with confidence.",
         googleButton: "Leave a review on Google"
       },
       structures: {
@@ -711,7 +711,7 @@ const translations = {
     },
     review: {
       title: "What our patients say",
-      description: "Read reviews left by our patients and leave your own opinion about our home nursing services.",
+      description: "Read verified patient reviews of the professionals on InfermieriWeb and leave your own after a completed booking.",
       formTitle: "Leave a review",
       name: "Name *",
       rating: "Rating",

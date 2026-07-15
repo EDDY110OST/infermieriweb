@@ -26,7 +26,7 @@ export const servicesData = {
     icon: "MdHealing",
     title: "Medicazioni",
     shortDescription: "Cure delle ferite a domicilio",
-    fullDescription: "Offriamo servizi di medicazione sia semplice che complessa, con utilizzo di materiali sterili e secondo i protocolli medici più aggiornati.",
+    fullDescription: "Medicazioni semplici e complesse eseguite a casa tua da infermieri iscritti all'albo, con materiali sterili e secondo i protocolli più aggiornati.",
     details: [
       "Medicazioni semplici e complesse",
       "Wound care specializzato",
@@ -47,7 +47,7 @@ export const servicesData = {
     icon: "MdBloodtype",
     title: "Prelievi Ematici",
     shortDescription: "Prelievi di sangue a domicilio",
-    fullDescription: "Eseguiamo prelievi ematici a domicilio con massima professionalità e igiene, garantendo risultati affidabili.",
+    fullDescription: "Il prelievo del sangue si fa comodamente a casa: l'infermiere arriva con tutto il necessario sterile e consegna i campioni al laboratorio indicato nella richiesta del medico.",
     details: [
       "Prelievi venosi per esami di laboratorio",
       "Personale qualificato e esperto",
@@ -68,7 +68,7 @@ export const servicesData = {
     icon: "FaSyringe",
     title: "Iniezioni",
     shortDescription: "Somministrazione farmaci per via iniettiva",
-    fullDescription: "Somministriamo farmaci per via intramuscolare, sottocutanea o endovenosa secondo prescrizione medica.",
+    fullDescription: "Somministrazione di farmaci per via intramuscolare, sottocutanea o endovenosa, sempre su prescrizione medica, da parte di un infermiere abilitato.",
     details: [
       "Iniezioni intramuscolari",
       "Iniezioni sottocutanee",
@@ -89,7 +89,7 @@ export const servicesData = {
     icon: "MdLocalHospital",
     title: "Flebo - Terapie Infusionali",
     shortDescription: "Somministrazione di terapie per via endovenosa",
-    fullDescription: "Eseguiamo posizionamento di accessi venosi periferici e somministrazione di terapie infusionali secondo prescrizione medica.",
+    fullDescription: "Posizionamento di accessi venosi periferici e somministrazione di terapie infusionali a domicilio, secondo prescrizione medica.",
     details: [
       "Posizionamento accesso venoso",
       "Somministrazione di soluzioni",
@@ -110,7 +110,7 @@ export const servicesData = {
     icon: "MdMedicalServices",
     title: "Desutura",
     shortDescription: "Rimozione punti di sutura a domicilio",
-    fullDescription: "Eseguiamo la rimozione dei punti di sutura direttamente a casa tua, con attenzione alla cicatrizzazione e rispetto delle indicazioni mediche.",
+    fullDescription: "La rimozione dei punti di sutura si fa direttamente a casa tua, con controllo della cicatrizzazione e rispetto delle indicazioni mediche.",
     details: [
       "Rimozione punti di sutura in modo delicato",
       "Valutazione della ferita e della guarigione",
@@ -130,7 +130,7 @@ export const servicesData = {
     icon: "MdHealing",
     title: "Cateteri vescicali",
     shortDescription: "Gestione e cambio cateteri vescicali a domicilio",
-    fullDescription: "Offriamo assistenza a domicilio per l'inserimento, il cambio e la gestione dei cateteri vescicali, garantendo comfort, igiene e controllo medico.",
+    fullDescription: "Inserimento, sostituzione e gestione del catetere vescicale a domicilio, con attenzione a comfort e igiene e in raccordo con il medico curante.",
     details: [
       "Cambio catetere vescicale sterile",
       "Controllo del posizionamento e del funzionamento",
@@ -170,7 +170,7 @@ export const servicesData = {
     icon: "MdMonitorHeart",
     title: "Holter cardiaci",
     shortDescription: "Registrazione ECG prolungata a domicilio",
-    fullDescription: "Forniamo il monitoraggio cardiaco continuativo con Holter ECG per rilevare aritmie e variazioni del ritmo cardiaco.",
+    fullDescription: "Monitoraggio cardiaco continuativo con Holter ECG per rilevare aritmie e variazioni del ritmo: montaggio e rimozione a casa tua, senza code in ambulatorio.",
     details: [
       "Installazione del dispositivo ECG",
       "Registrazione delle attività cardiache",
@@ -190,7 +190,7 @@ export const servicesData = {
     icon: "MdLocalHospital",
     title: "Sondini naso gastrici",
     shortDescription: "Posizionamento e gestione di sondini naso gastrici",
-    fullDescription: "Effettuiamo il posizionamento, la gestione e la verifica del sondino naso gastrico con attenzione all'igiene e al comfort del paziente.",
+    fullDescription: "Posizionamento, gestione e verifica del sondino naso-gastrico a domicilio, con la massima attenzione all'igiene e al comfort del paziente.",
     details: [
       "Posizionamento corretto del sondino",
       "Verifica della funzionalità e del fissaggio",
@@ -209,7 +209,7 @@ export const servicesData = {
     icon: "MdLocalHospital",
     title: "Gestione PEG",
     shortDescription: "Assistenza per nutrizione con gastrostomia endoscopica",
-    fullDescription: "Forniamo assistenza domiciliare per la cura, il cambio e la gestione della PEG, garantendo sicurezza e supporto nutrizionale.",
+    fullDescription: "Cura, cambio e gestione della PEG direttamente a domicilio, in sicurezza e con supporto sulla nutrizione.",
     details: [
       "Controllo e cura della stomia PEG",
       "Cambio del cerotto e pulizia del sito",
@@ -228,7 +228,7 @@ export const servicesData = {
     icon: "MdMedication",
     title: "Terapia orale",
     shortDescription: "Somministrazione di terapie orali a domicilio",
-    fullDescription: "Somministriamo terapie farmacologiche orali con attenzione alla posologia, allo stato del paziente e alle interazioni.",
+    fullDescription: "Somministrazione delle terapie orali con controllo di posologia, stato del paziente e possibili interazioni: utile quando in casa serve un occhio esperto.",
     details: [
       "Assunzione controllata dei farmaci",
       "Gestione di scadenze e dosaggi",
@@ -266,7 +266,7 @@ export const servicesData = {
     icon: "MdMedicalServices",
     title: "Clisteri evacuativi",
     shortDescription: "Somministrazione di clisteri e supporto evacuativo",
-    fullDescription: "Forniamo assistenza domiciliare per l'esecuzione di clisteri evacuativi in modo sicuro e rispettoso della privacy.",
+    fullDescription: "Esecuzione del clistere evacuativo a domicilio, in modo sicuro e nel pieno rispetto della privacy della persona.",
     details: [
       "Somministrazione di clisteri evacuativi",
       "Scelta del prodotto più adatto",
@@ -304,7 +304,7 @@ export const servicesData = {
     icon: "MdPeople",
     title: "Educazione terapeutica",
     shortDescription: "Formazione paziente/caregiver per la gestione della cura",
-    fullDescription: "Offriamo sessioni di educazione terapeutica per pazienti e caregiver su terapie, igiene e gestione domiciliare delle patologie.",
+    fullDescription: "Sessioni pratiche di educazione terapeutica per pazienti e familiari: come gestire terapie, igiene e patologie croniche a casa, senza improvvisare.",
     details: [
       "Supporto nella comprensione del piano terapeutico",
       "Istruzioni sull'uso dei dispositivi medici",
