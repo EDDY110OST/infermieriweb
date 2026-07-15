@@ -10,10 +10,10 @@ SELECT
   'Infermiere libero professionista specializzato in Wound Care. Assistenza infermieristica a domicilio a Lucca e provincia, 7 giorni su 7: medicazioni semplici e complesse, ECG, prelievi, terapie iniettive e infusionali, gestione cateteri e stomie.',
   '/professionisti-foto/eduard.webp',
   'Toscana', 'Lucca', 'Lucca',
-  '', 'infermieri.ef@gmail.com',
+  '3313139220', 'infermieri.ef@gmail.com',
   43.8429, 10.5027,
   'active',
-  '5,0 su Google · 50 recensioni',
+  '5,0 su Google · 35 recensioni',
   'https://g.page/r/CblrQcuM1y1GEBM/review'
 WHERE NOT EXISTS (SELECT 1 FROM professionals WHERE slug = 'eduard');
 
