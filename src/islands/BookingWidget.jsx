@@ -209,6 +209,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
           ))}
         </div>
       )}
+      </>}
 
       {slot && (
         <>
