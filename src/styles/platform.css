@@ -676,3 +676,19 @@
   .adm-sidebar.aperta { display: block; }
   .adm-menu-mobile { display: inline-block; }
 }
+
+/* Utente connesso in cima al menù admin */
+.adm-utente {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; margin: 2px 8px 6px;
+  background: linear-gradient(120deg, var(--iw-navy), #0e5e54);
+  border-radius: var(--iw-r-ctrl); color: #fff;
+}
+.adm-avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.18); border: 2px solid rgba(255,255,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 18px;
+}
+.adm-utente strong { display: block; font-size: 16px; line-height: 1.2; }
+.adm-utente small { display: block; font-size: 12px; opacity: 0.85; }

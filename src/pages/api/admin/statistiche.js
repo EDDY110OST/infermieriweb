@@ -11,6 +11,8 @@ export async function GET({ request }) {
   const session = sessionFromRequest(request);
   if (!session || session.role !== "admin") return json({ error: "Riservato agli amministratori" }, 403);
 
+  const utente = { nome: session.name || "Admin", ruolo: session.role };
+
   const [kpi] = await sql`
     SELECT
       (SELECT COUNT(*) FROM bookings WHERE created_at::date = (now() AT TIME ZONE 'Europe/Rome')::date) AS richieste_oggi,
@@ -41,5 +43,5 @@ export async function GET({ request }) {
   if (Number(kpi.candidature_in_attesa) > 0) task.push({ testo: `${kpi.candidature_in_attesa} candidatura/e da esaminare`, sezione: "inf-verifica" });
   if (Number(kpi.recensioni_da_moderare) > 0) task.push({ testo: `${kpi.recensioni_da_moderare} recensione/i da moderare`, sezione: "rec-moderazione" });
 
-  return json({ kpi, perStato, ultime, task });
+  return json({ utente, kpi, perStato, ultime, task });
 }

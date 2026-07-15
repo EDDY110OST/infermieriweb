@@ -1006,11 +1006,13 @@ export default function AdminApp() {
   const [sezione, setSezione] = useState("dashboard");
   const [badges, setBadges] = useState({ candidature: 0, recensioni: 0 });
   const [menuAperto, setMenuAperto] = useState(false);
+  const [utente, setUtente] = useState(null);
 
   const verificaAccesso = useCallback(async () => {
     const r = await fetch("/api/admin/statistiche");
     if (r.status === 401 || r.status === 403) return setAutorizzato(false);
     const d = await r.json();
+    setUtente(d.utente || null);
     setBadges({
       candidature: Number(d.kpi?.candidature_in_attesa || 0),
       recensioni: Number(d.kpi?.recensioni_da_moderare || 0),
@@ -1136,6 +1138,15 @@ export default function AdminApp() {
       </button>
 
       <aside className={`adm-sidebar${menuAperto ? " aperta" : ""}`}>
+        {utente && (
+          <div className="adm-utente">
+            <span className="adm-avatar">{utente.nome.charAt(0).toUpperCase()}</span>
+            <span>
+              <strong>{utente.nome}</strong>
+              <small>Connesso come amministratore</small>
+            </span>
+          </div>
+        )}
         {MENU.map((g) => (
           <div className="adm-gruppo" key={g.titolo}>
             <div className="adm-gruppo-titolo">{g.icona} {g.titolo}</div>
