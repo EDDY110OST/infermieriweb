@@ -1,25 +1,26 @@
 ---
 import Platform from "../layouts/Platform.astro";
+import Icona from "../components/Icona.astro";
 import { organizationSchema } from "../data/schema.js";
 
 const valori = [
   {
-    ic: "🤝",
+    ic: "cuore",
     titolo: "I pazienti restano del professionista",
     testo: "Non ci mettiamo in mezzo al rapporto di cura: paziente e infermiere si accordano direttamente, senza commissioni, senza vincoli e senza intermediari.",
   },
   {
-    ic: "⭐",
+    ic: "stella",
     titolo: "Solo recensioni vere",
     testo: "Può recensire soltanto chi ha davvero completato una prenotazione. Preferiamo poche recensioni autentiche a mille numeri gonfiati.",
   },
   {
-    ic: "🎓",
+    ic: "laurea",
     titolo: "Verifichiamo chi entra",
     testo: "Ogni professionista è iscritto al proprio albo e viene verificato da noi, uno per uno, prima di comparire online.",
   },
   {
-    ic: "💶",
+    ic: "etichetta",
     titolo: "Prezzi alla luce del sole",
     testo: "I prezzi si vedono prima di prenotare. Il compenso lo concordi direttamente col professionista: da noi non passa un euro.",
   },
@@ -76,7 +77,7 @@ const valori = [
     <div class="pf-perche" style="max-width: 900px;">
       {valori.map((v) => (
         <div class="pf-perche-card">
-          <div class="ic">{v.ic}</div>
+          <div class="ic"><Icona nome={v.ic} size={28} /></div>
           <h3>{v.titolo}</h3>
           <p>{v.testo}</p>
         </div>

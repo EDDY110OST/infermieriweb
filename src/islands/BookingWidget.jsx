@@ -20,7 +20,7 @@ function prossimiGiorni(n = 14) {
 
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 
-export default function BookingWidget({ professionalId, services, servizioIniziale }) {
+export default function BookingWidget({ professionalId, services, servizioIniziale, zone = [] }) {
   const giorni = useMemo(() => prossimiGiorni(14), []);
   // Nessuna prestazione preselezionata: un utente frettoloso confermerebbe
   // l'esame sbagliato (es. ECG da 50€ invece della medicazione che gli serve)
@@ -143,12 +143,12 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         )}
         {fatto.cancel_token && (
           <p style={{ margin: "8px 0", fontSize: 16 }}>
-            🔗 Se devi disdire: <a href={`/prenotazione?token=${fatto.cancel_token}`}>gestisci la prenotazione da qui</a>
+            Se devi disdire: <a href={`/prenotazione?token=${fatto.cancel_token}`}>gestisci la prenotazione da qui</a>
             {" "}(il link è anche nell'email — salvalo tra i preferiti).
           </p>
         )}
         <p style={{ margin: "8px 0", fontSize: 16 }}>
-          ✉️ Per qualsiasi problema dell'ultimo minuto rispondi all'email di conferma:
+          Per qualsiasi problema dell'ultimo minuto rispondi all'email di conferma:
           arriva direttamente al professionista.
         </p>
       </div>
@@ -237,14 +237,26 @@ export default function BookingWidget({ professionalId, services, servizioInizia
           <label htmlFor="bw-indirizzo">Dove deve venire l'infermiere? *</label>
           <input id="bw-indirizzo" required minLength={5} value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via e numero civico" />
 
-          <label htmlFor="bw-citta">Città *</label>
-          <input id="bw-citta" required minLength={2} value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} autoComplete="address-level2" />
+          <label htmlFor="bw-citta">Città * {zone.length > 0 && <span style={{ fontWeight: 400 }}>(zone coperte: {zone.join(", ")})</span>}</label>
+          <input id="bw-citta" required minLength={2} value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} autoComplete="address-level2" list="bw-zone" />
+          {zone.length > 0 && (
+            <datalist id="bw-zone">
+              {zone.map((z) => <option key={z} value={z} />)}
+            </datalist>
+          )}
+          {dati.city.trim().length >= 3 && zone.length > 0 && !zone.some((z) => z.toLowerCase() === dati.city.trim().toLowerCase()) && (
+            <p className="pf-note" style={{ marginTop: -6, color: "#b45309" }}>
+              ⚠︎ {dati.city.trim()} non risulta tra le zone coperte da questo professionista:
+              se sei in una frazione vicina va bene, altrimenti <a href="/cerca">cerca chi copre la tua città</a>.
+            </p>
+          )}
 
           <div className="pf-check">
             <input id="bw-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
             <label htmlFor="bw-privacy" style={{ margin: 0, fontWeight: 400 }}>
               Acconsento al trattamento dei miei dati (nome, telefono, email, indirizzo) al solo fine di gestire
-              la prenotazione. Nessun dato clinico viene richiesto o conservato. *
+              la prenotazione, come descritto nell'<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>.
+              Nessun dato clinico viene richiesto o conservato. *
             </label>
           </div>
 
@@ -252,13 +264,16 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {servizioSel && slot && (
             <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
-              📋 <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · da {euro(servizioSel.price_cents)}
+              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · da {euro(servizioSel.price_cents)}
             </div>
           )}
 
           <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
             {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? ` · da ${euro(servizioSel.price_cents)}` : ""}`}
           </button>
+          <p className="pf-note" style={{ marginTop: 10, textAlign: "center" }}>
+            Se cambi idea, la disdetta online è <strong>gratuita e senza penali</strong>.
+          </p>
           <p className="pf-note" style={{ marginTop: 8 }}>
             Non paghi nulla online, nessuna carta richiesta: paghi direttamente all'infermiere dopo la prestazione.
           </p>

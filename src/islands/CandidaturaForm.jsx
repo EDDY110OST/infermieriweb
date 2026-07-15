@@ -133,7 +133,7 @@ export default function CandidaturaForm() {
       <div className="pf-check">
         <input id="cf-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
         <label htmlFor="cf-privacy" style={{ margin: 0, fontWeight: 400 }}>
-          Acconsento al trattamento dei miei dati per la gestione della candidatura. *
+          Acconsento al trattamento dei miei dati per la gestione della candidatura (<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>). *
         </label>
       </div>
 

@@ -18,8 +18,7 @@ const escapeXml = (t) =>
 function buildPlaceholder(category, title) {
   const key = String(category || '').toLowerCase();
   const accent = colorMap[key] || '#00897b';
-  const label = escapeXml((category || 'Guida').toUpperCase());
-  const safeTitle = escapeXml(String(title || 'Articolo').slice(0, 38));
+  const label = escapeXml((category || 'Guida').toUpperCase().slice(0, 24));
 
   // Copertina brand: gradiente della piattaforma + croce sanitaria, niente finti scheletri
   const svg = `
@@ -37,10 +36,9 @@ function buildPlaceholder(category, title) {
     <rect x="-36" y="-110" width="72" height="220" rx="20" />
     <rect x="-110" y="-36" width="220" height="72" rx="20" />
   </g>
-  <rect x="56" y="60" rx="999" width="${44 + label.length * 15}" height="46" fill="#ffffff" fill-opacity="0.18" />
-  <text x="78" y="91" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="1">${label}</text>
-  <text x="56" y="300" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">${safeTitle}</text>
-  <text x="56" y="470" fill="#ffffff" fill-opacity="0.85" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600">InfermieriWeb · guide per pazienti e famiglie</text>
+  <rect x="56" y="60" rx="999" width="${48 + label.length * 15}" height="48" fill="#ffffff" fill-opacity="0.18" />
+  <text x="80" y="92" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="1">${label}</text>
+  <text x="56" y="472" fill="#ffffff" fill-opacity="0.85" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600">InfermieriWeb · guide per pazienti e famiglie</text>
 </svg>`;
 
   return encodeSvg(svg);

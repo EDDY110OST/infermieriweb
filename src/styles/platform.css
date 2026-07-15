@@ -750,3 +750,74 @@
   border-radius: 50%; font-size: 16px; font-weight: 800; line-height: 1; cursor: pointer;
 }
 .pf-zona button:hover { background: #fecaca; color: #b91c1c; }
+
+/* Suggerimenti della ricerca in home */
+.pf-suggerimenti {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60;
+  background: #fff; border: 1px solid var(--iw-line); border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(11, 57, 84, 0.18); overflow: hidden;
+}
+.pf-suggerimenti a {
+  display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+  color: var(--iw-navy); text-decoration: none; font-weight: 600; font-size: 17px;
+  border-bottom: 1px solid var(--iw-line);
+}
+.pf-suggerimenti a:last-child { border-bottom: none; }
+.pf-suggerimenti a:hover { background: var(--iw-primary-soft); }
+.pf-suggerimenti .da { margin-left: auto; color: var(--iw-primary-deep); font-weight: 700; font-size: 15px; }
+
+/* ================= Rifinitura estetica (verso il 10) ================= */
+
+/* Header solido: niente logo-rettangolo in trasparenza, sempre sopra la mappa */
+.pf-header { background: #fff; backdrop-filter: none; z-index: 1200; border-bottom: 1px solid var(--iw-line); }
+
+/* Icone SVG uniformi */
+.pf-ic { flex: none; }
+.pf-ic-inline { display: inline-block; vertical-align: -2px; margin-right: 2px; color: var(--iw-primary-deep); }
+.pf-cat .emoji, .pf-perche-card .ic, .pf-trust-item .i { color: var(--iw-primary-deep); display: inline-flex; align-items: center; }
+
+/* Pallino disponibilità (al posto di 🟢) */
+.pf-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: #16a34a; margin-right: 6px; vertical-align: 1px;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
+.pf-dot.chiaro { background: #4ade80; box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25); }
+
+/* Zone coperte in scheda: chip ordinati */
+.pf-zona-chip { display: inline-block; margin: 0 12px 6px 0; white-space: nowrap; }
+
+/* Hover e transizioni: la metà della sensazione di "curato" */
+.pf-cat, .pf-perche-card, .pf-step, .pf-pro-card, .article-card, .article-preview-card, .pf-panel {
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+.pf-cat:hover, .pf-pro-card:hover, .article-card:hover, .article-preview-card:hover {
+  transform: translateY(-3px); box-shadow: 0 14px 30px rgba(11, 57, 84, 0.13);
+}
+.pf-btn { transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease; }
+.pf-btn:hover { filter: brightness(1.08); box-shadow: 0 8px 20px rgba(0, 105, 92, 0.28); }
+.pf-btn:active { transform: scale(0.98); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 3px solid rgba(0, 137, 123, 0.5); outline-offset: 2px; border-radius: 6px;
+}
+
+/* Footer nella famiglia del petrolio (via il navy estraneo) */
+.pf-footer { background: #06302c; }
+
+/* Titoli mobile a misura */
+@media (max-width: 480px) {
+  .pf-hero h1 { font-size: clamp(26px, 7.5vw, 32px); }
+}
+
+/* Strip dei giorni nel widget: si capisce che scorre */
+.pf-days {
+  -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+  mask-image: linear-gradient(to right, #000 88%, transparent);
+  scroll-padding-right: 24px;
+}
+
+/* Griglia "perché" senza card orfane: 2x2 */
+.pf-perche { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 860px; }
+@media (max-width: 640px) { .pf-perche { grid-template-columns: 1fr; } }
+
+.pf-stars .n { display: inline-block; }

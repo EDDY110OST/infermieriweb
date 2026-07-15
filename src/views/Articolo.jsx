@@ -158,9 +158,11 @@ export default function Articolo({ article, related = [] }) {
           </div>
         </div>
 
-        <div className="article-hero-image">
-          <img src={getArticleImage(article)} alt={article.title} width="900" height="540" loading="lazy" />
-        </div>
+        {article?.image && (
+          <div className="article-hero-image">
+            <img src={article.image} alt={article.title} width="900" height="540" loading="lazy" />
+          </div>
+        )}
 
         <div className="article-content-wrap">
           <aside className="article-toc">

@@ -1,0 +1,100 @@
+---
+import Platform from "../layouts/Platform.astro";
+import { organizationSchema } from "../data/schema.js";
+---
+
+<Platform
+  title="Privacy e cookie | InfermieriWeb"
+  description="Come InfermieriWeb tratta i tuoi dati personali: quali dati raccogliamo, perché, per quanto tempo e quali sono i tuoi diritti. Informativa ai sensi del GDPR."
+  path="/privacy"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Trasparenza</span>
+    <h1>Privacy e cookie</h1>
+    <p class="sottotitolo">Come trattiamo i tuoi dati, spiegato in italiano semplice. Informativa ai sensi degli artt. 13-14 del Regolamento (UE) 2016/679 (GDPR).</p>
+  </section>
+
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 760px;">
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Chi tratta i tuoi dati (Titolare)</h2>
+        <p style="color: var(--iw-slate); margin: 0;">
+          Il titolare del trattamento è il gestore della piattaforma <strong>InfermieriWeb.it</strong>.
+          Per qualsiasi richiesta relativa ai tuoi dati puoi scrivere a
+          <a href="mailto:prenotazioni@infermieriweb.it" style="color: var(--iw-primary-deep); font-weight: 700;">prenotazioni@infermieriweb.it</a>:
+          rispondiamo entro 30 giorni, come previsto dal GDPR.
+        </p>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Una premessa importante</h2>
+        <p style="color: var(--iw-slate); margin: 0;">
+          InfermieriWeb <strong>non fornisce prestazioni sanitarie</strong> e <strong>non tratta dati sanitari</strong>:
+          mette in contatto pazienti e professionisti abilitati. Quando prenoti, ti chiediamo solo i dati
+          necessari a organizzare l'appuntamento. Ti invitiamo a <strong>non inserire informazioni cliniche</strong>
+          (diagnosi, terapie, condizioni di salute) nei campi liberi del sito: quelle le condividerai
+          direttamente con il professionista, che le tratta come titolare autonomo nell'ambito del
+          rapporto di cura, con i propri obblighi di segreto professionale.
+        </p>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Quali dati raccogliamo e perché</h2>
+        <ul class="pf-lista">
+          <li><strong>Prenotazione</strong> — nome, telefono, email, indirizzo della visita, prestazione scelta. Servono a fissare l'appuntamento, avvisare il professionista e mandarti conferma, promemoria e link di gestione. Base giuridica: esecuzione del servizio richiesto (art. 6.1.b GDPR).</li>
+          <li><strong>Area "Le mie prenotazioni"</strong> — la tua email, usata per mostrarti le tue prenotazioni tramite un link personale. Base giuridica: esecuzione del servizio.</li>
+          <li><strong>Recensioni</strong> — nome (o iniziali) e testo della recensione, pubblicati sulla scheda del professionista solo dopo una prenotazione completata. Base giuridica: consenso.</li>
+          <li><strong>Candidatura professionisti</strong> — dati anagrafici, di contatto, iscrizione all'albo e partita IVA. Servono a verificare l'abilitazione professionale prima dell'ingresso in rete. Base giuridica: misure precontrattuali su richiesta dell'interessato.</li>
+          <li><strong>Lista d'attesa</strong> — email e zona, per avvisarti quando la rete arriva nella tua città. Base giuridica: consenso (ti puoi cancellare in ogni momento).</li>
+          <li><strong>Notifiche push</strong> (solo professionisti) — un identificativo tecnico del dispositivo, per avvisarti delle nuove prenotazioni. Attivazione volontaria, revocabile dalle impostazioni del browser.</li>
+        </ul>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">A chi vengono comunicati</h2>
+        <ul class="pf-lista">
+          <li>Al <strong>professionista che prenoti</strong>: riceve nome, telefono, indirizzo e prestazione — gli servono per venire da te.</li>
+          <li>Ai <strong>fornitori tecnici</strong> che fanno funzionare la piattaforma: hosting e database (Netlify/Neon) e invio email (Brevo). Trattano i dati solo per nostro conto, come responsabili del trattamento. Alcuni server possono trovarsi fuori dall'Unione Europea: in tal caso il trasferimento è coperto dalle garanzie previste dal GDPR (clausole contrattuali standard); è in corso la migrazione dell'infrastruttura dati in UE.</li>
+          <li>A <strong>nessun altro</strong>: non vendiamo dati, non facciamo profilazione pubblicitaria, non usiamo i tuoi dati per finalità diverse da quelle qui descritte.</li>
+        </ul>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Per quanto li conserviamo</h2>
+        <ul class="pf-lista">
+          <li>Dati delle prenotazioni: per il tempo necessario alla gestione dell'appuntamento e per eventuali obblighi di legge, poi vengono eliminati o resi anonimi.</li>
+          <li>Candidature non andate a buon fine: fino a 12 mesi.</li>
+          <li>Lista d'attesa: finché non chiedi la cancellazione.</li>
+        </ul>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">I tuoi diritti</h2>
+        <p style="color: var(--iw-slate); margin: 0 0 10px;">
+          Puoi chiederci in ogni momento: accesso ai tuoi dati, correzione, cancellazione, limitazione
+          del trattamento, portabilità, opposizione. Basta un'email a
+          <a href="mailto:prenotazioni@infermieriweb.it" style="color: var(--iw-primary-deep); font-weight: 700;">prenotazioni@infermieriweb.it</a>.
+          Se ritieni che il trattamento violi la legge puoi presentare reclamo al
+          <strong>Garante per la protezione dei dati personali</strong> (garanteprivacy.it).
+        </p>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;" id="cookie">
+        <h2 style="margin-top: 0;">Cookie</h2>
+        <p style="color: var(--iw-slate); margin: 0;">
+          Questo sito usa <strong>solo cookie tecnici</strong>, indispensabili al funzionamento:
+          il cookie di sessione per l'accesso all'area professionisti/amministrazione e le preferenze
+          tecniche di navigazione. <strong>Niente cookie di profilazione, niente tracciamento
+          pubblicitario, niente statistiche di terze parti</strong>. Per questo non ti chiediamo
+          il banner dei cookie: per i soli cookie tecnici non è richiesto il consenso.
+          La mappa della pagina di ricerca usa OpenStreetMap per mostrare le tessere geografiche:
+          il tuo browser scarica le immagini della mappa dai loro server, senza cookie di profilazione.
+        </p>
+      </div>
+
+      <p class="pf-note">Ultimo aggiornamento: 15 luglio 2026. Eventuali modifiche a questa informativa saranno pubblicate su questa pagina.</p>
+    </div>
+  </section>
+</Platform>

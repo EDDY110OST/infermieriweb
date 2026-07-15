@@ -43,6 +43,10 @@ export default function AreaPazienteForm() {
         onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       {errore && <div className="pf-errore">{errore}</div>}
       <button className="pf-btn">Mandami il link</button>
+      <p className="pf-note" style={{ marginTop: 10 }}>
+        Usiamo la tua email solo per mostrarti le tue prenotazioni
+        (<a href="/privacy">informativa privacy</a>).
+      </p>
     </form>
   );
 }

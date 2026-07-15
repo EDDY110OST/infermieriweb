@@ -6,8 +6,12 @@ import logo from "../assets/logo.jpeg";
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
 const nav = [
+  { href: "/cerca", label: "Trova un infermiere" },
   { href: "/professionisti", label: "Zone coperte" },
+  { href: "/#come-funziona", label: "Come funziona" },
+  { href: "/le-mie-prenotazioni", label: "La mia prenotazione" },
   { href: "/articoli", label: "Blog salute" },
+  { href: "/chi-siamo", label: "Chi siamo" },
   { href: "/lavora-con-noi", label: "Per i professionisti" },
   { href: "/area-professionisti", label: "Area professionisti", spento: true },
 ];
@@ -71,6 +75,8 @@ const nav = [
           <h4>Informazioni</h4>
           <a href="/chi-siamo">Chi siamo</a>
           <a href="/recensioni">Recensioni</a>
+          <a href="/contatti">Contatti e assistenza</a>
+          <a href="/privacy">Privacy e cookie</a>
         </div>
       </div>
       <div class="legal">

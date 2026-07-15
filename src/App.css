@@ -1525,7 +1525,7 @@ textarea:focus-visible {
 
 .filter-pill.active,
 .filter-pill:hover {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: #00695c;
   color: white;
   border-color: transparent;
 }
@@ -2101,3 +2101,26 @@ summary:focus-visible {
     font-size: 16px;
   }
 }
+
+
+/* ===== Rifinitura blog (verso il 10) ===== */
+.article-card-body, .article-preview-card div { text-align: left; }
+.article-card-body p, .article-preview-card p {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+@media (min-width: 1000px) {
+  .article-grid, .article-preview-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Articolo: header e corpo nello stesso binario centrato */
+.article-page .breadcrumbs, .article-page .article-header, .article-page .article-hero-image {
+  max-width: 1080px; margin-left: auto; margin-right: auto; text-align: left;
+}
+.article-page .article-header { margin-bottom: 26px; }
+@media (max-width: 480px) {
+  .article-header h1 { font-size: clamp(26px, 7.5vw, 34px); line-height: 1.2; }
+}
+.article-card-category { font-size: 14px; letter-spacing: 0.4px; }
+
+/* niente sottolineatura sui link-card giù nel blog */
+.article-card, .article-preview-card { text-decoration: none; }

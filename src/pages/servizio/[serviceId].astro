@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Platform from "../../layouts/Platform.astro";
+import Icona from "../../components/Icona.astro";
 import { servicesData } from "../../data/services.js";
 import { sql } from "../../lib/db.js";
 import { serviceSeo } from "../../data/seo.js";
@@ -64,6 +65,37 @@ const schemas = [
     <p class="sottotitolo">{service.shortDescription}. Prezzi chiari, professionisti iscritti all'albo, prenotazione online gratuita.</p>
   </section>
 
+  {professionisti.length > 0 ? (
+    <section class="pf-section alt">
+      <div class="pf-container pf-center" style="margin-bottom: 28px;">
+        <span class="pf-kicker">Prenota</span>
+        <h2>Chi offre questa prestazione</h2>
+      </div>
+      <div class="pf-pro-list" style="max-width: 780px; margin: 0 auto;">
+        {conDisponibilita.map((p) => (
+          <div class="pf-pro-card">
+            <img class="foto" src={p.photo_url} alt={`Foto di ${p.name}`} loading="lazy" />
+            <div class="info">
+              <a class="nome" href={`/p/${p.slug}`}>{p.name}</a>
+              <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>
+              <div class="prezzo">Da {euro(p.price_cents)}</div>
+              {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
+            </div>
+            <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}#prenota`}>Vedi orari e prenota</a>
+          </div>
+        ))}
+      </div>
+    </section>
+  ) : (
+    <section class="pf-section alt pf-center">
+      <div class="pf-container" style="max-width: 620px;">
+        <h2>Cerca il professionista nella tua zona</h2>
+        <p class="pf-sub">La rete cresce una città alla volta: guarda chi copre il tuo comune.</p>
+        <a class="pf-btn" href="/cerca">Trova un infermiere</a>
+      </div>
+    </section>
+  )}
+
   <section class="pf-section" style="padding-top: 40px;">
     <div class="pf-container" style="max-width: 880px;">
 
@@ -121,34 +153,4 @@ const schemas = [
     </div>
   </section>
 
-  {professionisti.length > 0 ? (
-    <section class="pf-section alt">
-      <div class="pf-container pf-center" style="margin-bottom: 28px;">
-        <span class="pf-kicker">Prenota</span>
-        <h2>Chi offre questa prestazione</h2>
-      </div>
-      <div class="pf-pro-list" style="max-width: 780px; margin: 0 auto;">
-        {conDisponibilita.map((p) => (
-          <div class="pf-pro-card">
-            <img class="foto" src={p.photo_url} alt={`Foto di ${p.name}`} loading="lazy" />
-            <div class="info">
-              <a class="nome" href={`/p/${p.slug}`}>{p.name}</a>
-              <div class="zona">📍 {p.city} ({p.province})</div>
-              <div class="prezzo">Da {euro(p.price_cents)}</div>
-              {p.prossima && <div class="disponibilita">🟢 Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
-            </div>
-            <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}`}>Vedi orari e prenota</a>
-          </div>
-        ))}
-      </div>
-    </section>
-  ) : (
-    <section class="pf-section alt pf-center">
-      <div class="pf-container" style="max-width: 620px;">
-        <h2>Cerca il professionista nella tua zona</h2>
-        <p class="pf-sub">La rete cresce una città alla volta: guarda chi copre il tuo comune.</p>
-        <a class="pf-btn" href="/cerca">Trova un infermiere</a>
-      </div>
-    </section>
-  )}
 </Platform>

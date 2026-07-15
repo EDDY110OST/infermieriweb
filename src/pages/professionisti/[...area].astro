@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Platform from "../../layouts/Platform.astro";
+import Icona from "../../components/Icona.astro";
 import { sql } from "../../lib/db.js";
 import { nextAvailability } from "../../lib/slots.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
@@ -139,7 +140,7 @@ const intestazioni = {
         <div class="pf-cats">
           {voci.map((v) => (
             <a class="pf-cat" href={v.href}>
-              <span class="emoji">📍</span>
+              <span class="emoji"><Icona nome="posizione" size={26} /></span>
               <span>
                 <span class="nome">{v.nome}</span><br />
                 <span class="da">{v.n} {v.n === 1 ? "professionista" : "professionisti"}</span>
@@ -171,11 +172,11 @@ const intestazioni = {
                 ) : p.google_rating ? (
                   <span class="pf-stars">★★★★★<span class="n">{p.google_rating}</span></span>
                 ) : null}
-                <div class="zona">📍 {p.city} ({p.province})</div>
+                <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>
                 {Number(p.min_price) > 0 && <div class="prezzo">Prestazioni da {euro(p.min_price)}</div>}
-                {p.prossima && <div class="disponibilita">🟢 Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
+                {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
               </div>
-              <a class="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
+              <a class="pf-btn" href={`/p/${p.slug}#prenota`}>Prenota servizio</a>
             </div>
           ))}
         </div>

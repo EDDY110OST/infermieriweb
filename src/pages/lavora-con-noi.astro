@@ -1,15 +1,16 @@
 ---
 import Platform from "../layouts/Platform.astro";
 import CandidaturaForm from "../islands/CandidaturaForm.jsx";
+import Icona from "../components/Icona.astro";
 import { organizationSchema } from "../data/schema.js";
 
 const vantaggi = [
-  { emoji: "🗓️", titolo: "Agenda online dal telefono", testo: "Prenotazioni con i tuoi orari reali, blocchi ferie in un tocco, promemoria automatici ai pazienti." },
-  { emoji: "⭐", titolo: "Recensioni verificate", testo: "Solo chi ha completato una prenotazione può recensirti: la tua reputazione cresce su basi vere." },
-  { emoji: "📍", titolo: "Visibilità nella tua zona", testo: "Scheda personale indicizzata su Google e presenza sulla mappa: i pazienti della tua zona ti trovano." },
-  { emoji: "💶", titolo: "Zero commissioni", testo: "I pazienti sono tuoi e il compenso lo incassi tu, per intero. Noi non tocchiamo i tuoi soldi." },
-  { emoji: "🚀", titolo: "Gratis in fase di lancio", testo: "L'iscrizione è completamente gratuita per i primi professionisti della rete." },
-  { emoji: "🧾", titolo: "Niente vincoli", testo: "Decidi tu prestazioni, prezzi, zone e disponibilità. Puoi uscire quando vuoi." },
+  { icona: "calendario", titolo: "Agenda online dal telefono", testo: "Prenotazioni con i tuoi orari reali, blocchi ferie in un tocco, promemoria automatici ai pazienti." },
+  { icona: "stella", titolo: "Recensioni verificate", testo: "Solo chi ha completato una prenotazione può recensirti: la tua reputazione cresce su basi vere." },
+  { icona: "posizione", titolo: "Visibilità nella tua zona", testo: "Scheda personale indicizzata su Google e presenza sulla mappa: i pazienti della tua zona ti trovano." },
+  { icona: "etichetta", titolo: "Zero commissioni", testo: "I pazienti sono tuoi e il compenso lo incassi tu, per intero. Noi non tocchiamo i tuoi soldi." },
+  { icona: "attivita", titolo: "Gratis in fase di lancio", testo: "L'iscrizione è completamente gratuita per i primi professionisti della rete." },
+  { icona: "scudo", titolo: "Niente vincoli", testo: "Decidi tu prestazioni, prezzi, zone e disponibilità. Puoi uscire quando vuoi." },
 ];
 ---
 
@@ -41,7 +42,7 @@ const vantaggi = [
     <div class="pf-steps pf-griglia-3" style="margin-top: 36px;">
       {vantaggi.map((v) => (
         <div class="pf-step">
-          <div class="num" style="font-size: 26px; background: none;">{v.emoji}</div>
+          <div class="num" style="background: none; color: var(--iw-primary-deep);">{v.icona && <Icona nome={v.icona} size={30} />}</div>
           <h3>{v.titolo}</h3>
           <p>{v.testo}</p>
         </div>

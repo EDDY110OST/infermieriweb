@@ -1,0 +1,49 @@
+---
+import Platform from "../layouts/Platform.astro";
+import { organizationSchema } from "../data/schema.js";
+---
+
+<Platform
+  title="Contatti e assistenza | InfermieriWeb"
+  description="Come contattare InfermieriWeb: assistenza sulle prenotazioni, informazioni per i professionisti, richieste sulla privacy. Ti rispondiamo via email."
+  path="/contatti"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Assistenza</span>
+    <h1>Contatti</h1>
+    <p class="sottotitolo">Prima di scriverci, dai un'occhiata qui sotto: per le cose più comuni c'è già un percorso rapido.</p>
+  </section>
+
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 760px;">
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Le risposte rapide</h2>
+        <ul class="pf-lista">
+          <li><strong>Devi spostare o disdire una prenotazione?</strong> Usa il link nell'email di conferma, oppure <a href="/prenotazione" style="color: var(--iw-primary-deep); font-weight: 700;">fattelo rimandare qui</a>. La disdetta online è gratuita.</li>
+          <li><strong>Vuoi rivedere le tue prenotazioni?</strong> <a href="/le-mie-prenotazioni" style="color: var(--iw-primary-deep); font-weight: 700;">Le mie prenotazioni</a> — accedi con la tua email, senza password.</li>
+          <li><strong>Domande su una visita già prenotata?</strong> Rispondi all'email di conferma: arriva direttamente al professionista.</li>
+          <li><strong>Sei un infermiere e vuoi entrare in rete?</strong> <a href="/lavora-con-noi" style="color: var(--iw-primary-deep); font-weight: 700;">Lavora con noi</a> — gratis in fase di lancio.</li>
+        </ul>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Per tutto il resto</h2>
+        <p style="color: var(--iw-slate); margin: 0;">
+          Scrivici a <a href="mailto:prenotazioni@infermieriweb.it" style="color: var(--iw-primary-deep); font-weight: 700;">prenotazioni@infermieriweb.it</a>:
+          leggiamo tutto e rispondiamo appena possibile. Per le richieste sulla privacy e sui tuoi dati,
+          trovi tutti i dettagli nell'<a href="/privacy" style="color: var(--iw-primary-deep); font-weight: 700;">informativa privacy</a>.
+        </p>
+      </div>
+
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">Un'emergenza sanitaria?</h2>
+        <p style="color: var(--iw-slate); margin: 0;">
+          InfermieriWeb non gestisce urgenze né emergenze. In caso di emergenza chiama subito il
+          <strong>112</strong>; per la guardia medica (continuità assistenziale) il <strong>116117</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+</Platform>

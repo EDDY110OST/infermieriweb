@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Platform from "../layouts/Platform.astro";
+import Icona from "../components/Icona.astro";
 import { pageSeo } from "../data/seo.js";
 import { organizationSchema } from "../data/schema.js";
 import { sql } from "../lib/db.js";
@@ -12,6 +13,9 @@ const recensioni = await sql`
   FROM reviews r JOIN professionals p ON p.id = r.professional_id
   WHERE r.status = 'published' ORDER BY r.created_at DESC LIMIT 12`;
 const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+const [primo] = await sql`
+  SELECT name, google_rating FROM professionals
+  WHERE status = 'active' AND google_rating IS NOT NULL ORDER BY id LIMIT 1`;
 ---
 
 <Platform
@@ -50,8 +54,8 @@ const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", y
         </div>
       ) : (
         <div class="pf-panel pf-center">
-          <div style="font-size: 44px; margin-bottom: 8px;">⭐</div>
-          <h2 style="margin: 0 0 6px;">Eduard Fantolan — 5,0 su Google</h2>
+          <div style="color: #d97706; margin-bottom: 8px;"><Icona nome="stella" size={44} /></div>
+          <h2 style="margin: 0 0 6px;">{primo ? `${primo.name} — ${primo.google_rating}` : "I professionisti della rete"}</h2>
           <div class="pf-stars" style="font-size: 24px;">★★★★★</div>
           <p style="color: var(--iw-slate); max-width: 520px; margin: 12px auto 6px;">
             <strong>50 recensioni su Google</strong> per il primo infermiere della rete.

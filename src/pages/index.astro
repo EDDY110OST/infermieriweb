@@ -2,6 +2,8 @@
 export const prerender = false;
 
 import Platform from "../layouts/Platform.astro";
+import HomeSearch from "../islands/HomeSearch.jsx";
+import Icona from "../components/Icona.astro";
 import HomeMap from "../components/HomeMap.astro";
 import { getArticleImage } from "../utils/articleImageFallback.js";
 import { organizationSchema, faqSchema } from "../data/schema.js";
@@ -15,14 +17,14 @@ const righeArticoli = await sql`
 const ultimiArticoli = righeArticoli.map(mapArticolo);
 
 const categorie = [
-  { emoji: "🩹", nome: "Medicazioni", da: "da 30 €", href: "/servizio/medicazioni" },
-  { emoji: "🫀", nome: "ECG a domicilio", da: "da 50 €", href: "/servizio/ecg" },
-  { emoji: "🩸", nome: "Prelievi del sangue", da: "da 20 €", href: "/servizio/prelievi" },
-  { emoji: "💉", nome: "Iniezioni", da: "da 20 €", href: "/servizio/iniezioni" },
-  { emoji: "🩺", nome: "Holter cardiaco", da: "da 100 €", href: "/servizio/holter-cardiaci" },
-  { emoji: "📈", nome: "Holter pressorio", da: "da 80 €", href: "/servizio/holter-pressori" },
-  { emoji: "🧴", nome: "Flebo e terapie", da: "da 35 €", href: "/servizio/flebo" },
-  { emoji: "🏥", nome: "Cateteri e stomie", da: "da 40 €", href: "/servizio/cateteri-vescicali" },
+  { icona: "croce", nome: "Medicazioni", da: "da 30 €", href: "/servizio/medicazioni" },
+  { icona: "attivita", nome: "ECG a domicilio", da: "da 50 €", href: "/servizio/ecg" },
+  { icona: "provetta", nome: "Prelievi del sangue", da: "da 20 €", href: "/servizio/prelievi" },
+  { icona: "siringa", nome: "Iniezioni", da: "da 20 €", href: "/servizio/iniezioni" },
+  { icona: "cuore", nome: "Holter cardiaco", da: "da 100 €", href: "/servizio/holter-cardiaci" },
+  { icona: "indicatore", nome: "Holter pressorio", da: "da 80 €", href: "/servizio/holter-pressori" },
+  { icona: "goccia", nome: "Flebo e terapie", da: "da 35 €", href: "/servizio/flebo" },
+  { icona: "tubo", nome: "Cateteri e stomie", da: "da 40 €", href: "/servizio/cateteri-vescicali" },
 ];
 
 const faqItems = [
@@ -49,15 +51,12 @@ const faqItems = [
         Prezzi chiari, recensioni verificate e solo orari davvero liberi. Prenoti in un minuto,
         senza registrazione e senza carta: <strong>paghi all'infermiere dopo la prestazione.</strong>
       </p>
-      <form class="pf-search" action="/cerca" method="get" role="search">
-        <input type="search" name="q" placeholder="Città o prestazione" aria-label="Cerca per città o prestazione" />
-        <button type="submit">Trova un infermiere</button>
-      </form>
+      <HomeSearch client:load />
       <div class="pf-trust">
-        <span class="pf-trust-item"><span class="i">🎓</span> Iscritti all'OPI</span>
-        <span class="pf-trust-item"><span class="i">⭐</span> Recensioni verificate</span>
-        <span class="pf-trust-item"><span class="i">💶</span> Prezzi chiari</span>
-        <span class="pf-trust-item"><span class="i">🤝</span> Zero commissioni</span>
+        <span class="pf-trust-item"><span class="i"><Icona nome="laurea" size={18} /></span> Iscritti all'OPI</span>
+        <span class="pf-trust-item"><span class="i"><Icona nome="stella" size={18} /></span> Recensioni verificate</span>
+        <span class="pf-trust-item"><span class="i"><Icona nome="etichetta" size={18} /></span> Prezzi chiari</span>
+        <span class="pf-trust-item"><span class="i"><Icona nome="scudo" size={18} /></span> Zero commissioni</span>
       </div>
     </div>
     <div class="pf-hero-media">
@@ -73,7 +72,7 @@ const faqItems = [
     <div class="pf-cats">
       {categorie.map((c) => (
         <a class="pf-cat" href={c.href}>
-          <span class="emoji">{c.emoji}</span>
+          <span class="emoji"><Icona nome={c.icona} size={30} /></span>
           <span>
             <span class="nome">{c.nome}</span><br />
             <span class="da">{c.da}</span>
@@ -90,22 +89,22 @@ const faqItems = [
     </div>
     <div class="pf-perche">
       <div class="pf-perche-card">
-        <div class="ic">🎓</div>
+        <div class="ic"><Icona nome="laurea" size={28} /></div>
         <h3>Professionisti verificati</h3>
         <p>Ogni infermiere è iscritto all'albo OPI e verificato da noi al momento dell'ingresso nella rete.</p>
       </div>
       <div class="pf-perche-card">
-        <div class="ic">⭐</div>
+        <div class="ic"><Icona nome="stella" size={28} /></div>
         <h3>Recensioni vere</h3>
         <p>Solo chi ha completato una prenotazione può recensire: niente recensioni finte, solo esperienze reali.</p>
       </div>
       <div class="pf-perche-card">
-        <div class="ic">💶</div>
+        <div class="ic"><Icona nome="etichetta" size={28} /></div>
         <h3>Prezzi chiari</h3>
         <p>Vedi il prezzo "a partire da" prima di prenotare. Il compenso lo regoli direttamente col professionista.</p>
       </div>
       <div class="pf-perche-card">
-        <div class="ic">🤝</div>
+        <div class="ic"><Icona nome="scudo" size={28} /></div>
         <h3>Zero commissioni</h3>
         <p>La prenotazione è gratuita per te e i professionisti restano indipendenti: nessun costo nascosto.</p>
       </div>

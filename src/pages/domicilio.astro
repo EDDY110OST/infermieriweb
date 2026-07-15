@@ -2,18 +2,19 @@
 import Platform from "../layouts/Platform.astro";
 import { servicesData } from "../data/services.js";
 import { NOMI_COLLOQUIALI } from "../data/servizi-extra.js";
+import Icona from "../components/Icona.astro";
 import { pageSeo } from "../data/seo.js";
 import { organizationSchema } from "../data/schema.js";
 
-const EMOJI = {
-  ecg: "🫀", medicazioni: "🩹", prelievi: "🩸", iniezioni: "💉", flebo: "💧",
-  desutura: "✂️", "cateteri-vescicali": "🧑‍⚕️", "holter-pressori": "📈",
-  "holter-cardiaci": "📉", "sondini-naso-gastrici": "🍽️", "gestione-peg": "🍽️",
-  "terapia-orale": "💊", "parametri-vitali": "🌡️", "clisteri-evacuativi": "🚿",
-  "gestione-stomie": "🩺", "educazione-terapeutica": "🎓",
+const ICONE = {
+  ecg: "attivita", medicazioni: "croce", prelievi: "provetta", iniezioni: "siringa", flebo: "goccia",
+  desutura: "forbici", "cateteri-vescicali": "tubo", "holter-pressori": "indicatore",
+  "holter-cardiaci": "cuore", "sondini-naso-gastrici": "tubo", "gestione-peg": "imbuto",
+  "terapia-orale": "pillola", "parametri-vitali": "termometro", "clisteri-evacuativi": "goccia",
+  "gestione-stomie": "croce", "educazione-terapeutica": "laurea",
 };
 const servizi = Object.entries(servicesData).map(([id, s]) => ({
-  id, emoji: EMOJI[id] || "🩺",
+  id, icona: ICONE[id] || "croce",
   nome: NOMI_COLLOQUIALI[id] || s.title,
   descrizione: s.shortDescription,
 }));
@@ -40,7 +41,7 @@ const servizi = Object.entries(servicesData).map(([id, s]) => ({
       <div class="pf-cats">
         {servizi.map((s) => (
           <a class="pf-cat" href={`/servizio/${s.id}`}>
-            <span class="emoji">{s.emoji}</span>
+            <span class="emoji"><Icona nome={s.icona} size={30} /></span>
             <span>
               <span class="nome">{s.nome}</span><br />
               <span class="da">{s.descrizione}</span>
@@ -72,7 +73,7 @@ const servizi = Object.entries(servicesData).map(([id, s]) => ({
           <p>L'infermiere arriva all'orario scelto. Il compenso si regola direttamente con lui, dopo la prestazione.</p>
         </div>
       </div>
-      <a class="pf-btn" href="/cerca" style="margin-top: 28px;">🔍 Trova un infermiere</a>
+      <a class="pf-btn" href="/cerca" style="margin-top: 28px;">Trova un infermiere</a>
     </div>
   </section>
 </Platform>
