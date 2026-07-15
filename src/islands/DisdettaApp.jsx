@@ -54,7 +54,8 @@ export default function DisdettaApp() {
             <button className="pf-btn">Rimandami il link</button>
             <p className="pf-note" style={{ marginTop: 10 }}>
               In alternativa puoi sempre contattare direttamente il professionista
-              (il suo telefono è nella sua scheda e nell'email di conferma).
+              (il suo telefono è nella sua scheda e nell'email di conferma). Oppure
+              apri <a href="/le-mie-prenotazioni">Le mie prenotazioni</a> per vederle tutte.
             </p>
           </form>
         )}

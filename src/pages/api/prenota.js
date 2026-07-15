@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { randomBytes } from "node:crypto";
 import { sql } from "../../lib/db.js";
+import { createSession } from "../../lib/auth.js";
 import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista } from "../../lib/mailer.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { pushToProfessional } from "../../lib/push.js";
@@ -87,7 +88,9 @@ export async function POST({ request }) {
   };
   const svc = { name: service.service_name };
 
-  const conferma = emailConfermaPaziente({ booking, professional, service: svc, cancelToken });
+  const areaToken = createSession({ scope: "paziente", email: String(email).trim().toLowerCase() }, 60 * 60 * 24 * 30);
+  const areaLink = `https://infermieriweb.it/le-mie-prenotazioni?token=${encodeURIComponent(areaToken)}`;
+  const conferma = emailConfermaPaziente({ booking, professional, service: svc, cancelToken, areaLink });
   const emailedPaziente = await sendEmail({
     to: email, toName: name, replyTo: professional.email || undefined, ...conferma,
   });

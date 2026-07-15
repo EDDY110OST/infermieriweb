@@ -51,7 +51,7 @@ const dataEstesa = (iso) =>
     hour: "2-digit", minute: "2-digit",
   });
 
-export function emailConfermaPaziente({ booking, professional, service, cancelToken }) {
+export function emailConfermaPaziente({ booking, professional, service, cancelToken, areaLink }) {
   const linkDisdetta = `${SITE}/prenotazione?token=${cancelToken}`;
   return {
     subject: `Prenotazione confermata: ${service.name} — ${dataEstesa(booking.start)}`,
@@ -70,6 +70,12 @@ export function emailConfermaPaziente({ booking, professional, service, cancelTo
         <a href="${linkDisdetta}" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Gestisci o disdici la prenotazione</a>
       </p>
       <p style="color: #7b909b; font-size: 13px;">La disdetta online è possibile fino a ${professional.cancel_hours || 4} ore prima dell'appuntamento. Per qualsiasi necessità puoi rispondere a questa email: arriverà direttamente al professionista.</p>
+      ${areaLink ? `
+      <div style="margin-top: 22px; padding: 16px 18px; background: #f0fdfa; border-radius: 12px;">
+        <p style="margin: 0 0 10px; font-weight: bold; color: #0b3954;">Vuoi ritrovare le tue prenotazioni quando vuoi?</p>
+        <p style="margin: 0 0 12px; font-size: 14px;">Con il tuo link personale le vedi tutte in un posto solo e riprenoti lo stesso professionista in due tocchi. Senza password: basta la tua email.</p>
+        <p style="margin: 0;"><a href="${areaLink}" style="color: #00897b; font-weight: bold;">Apri "Le mie prenotazioni" →</a></p>
+      </div>` : ""}
     `),
   };
 }

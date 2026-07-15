@@ -1,0 +1,103 @@
+---
+export const prerender = false;
+
+import Platform from "../layouts/Platform.astro";
+import AreaPazienteForm from "../islands/AreaPazienteForm.jsx";
+import { sql } from "../lib/db.js";
+import { readSession } from "../lib/auth.js";
+
+const token = Astro.url.searchParams.get("token") || "";
+const sessione = readSession(token);
+const email = sessione?.scope === "paziente" ? sessione.email : null;
+
+let future = [], passate = [];
+if (email) {
+  const righe = await sql`
+    SELECT b.start_dt, b.status, b.cancel_token,
+           s.name AS service_name, s.id AS service_id,
+           p.name AS professional_name, p.slug AS professional_slug, p.photo_url
+    FROM bookings b
+    JOIN services s ON s.id = b.service_id
+    JOIN professionals p ON p.id = b.professional_id
+    WHERE lower(b.customer_email) = ${email}
+    ORDER BY b.start_dt DESC LIMIT 50`;
+  future = righe.filter((r) => new Date(r.start_dt) > new Date() && r.status === "active").reverse();
+  passate = righe.filter((r) => new Date(r.start_dt) <= new Date() || r.status !== "active");
+}
+
+const quando = (iso) =>
+  new Date(iso).toLocaleString("it-IT", {
+    timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
+  });
+const stato = (r) => (r.status === "cancelled" ? "Disdetta" : new Date(r.start_dt) <= new Date() ? "Completata" : "Confermata");
+---
+
+<Platform
+  title="Le mie prenotazioni | InfermieriWeb"
+  description="Ritrova tutte le tue prenotazioni su InfermieriWeb: gestiscile, disdici o riprenota il tuo professionista in due tocchi."
+  path="/le-mie-prenotazioni"
+  robots="noindex, nofollow"
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 46px;">
+    <span class="pf-hero-occhiello">Area personale</span>
+    <h1>Le mie prenotazioni</h1>
+    <p class="sottotitolo">Tutte le tue prenotazioni in un posto solo: gestisci, disdici o riprenota in due tocchi.</p>
+  </section>
+
+  <section class="pf-section" style="padding-top: 40px;">
+    <div class="pf-container" style="max-width: 680px;">
+      {!email ? (
+        <div class="pf-panel">
+          <h2 style="margin-top: 0;">Accedi con la tua email</h2>
+          <AreaPazienteForm client:load />
+        </div>
+      ) : (
+        <>
+          <p class="pf-note" style="margin-bottom: 18px;">Accesso come <strong>{email}</strong></p>
+
+          <h2 style="color: var(--iw-navy); font-size: 24px; margin-bottom: 14px;">In programma</h2>
+          {future.length === 0 && (
+            <div class="pf-panel" style="margin-bottom: 26px;">
+              <p style="margin: 0 0 14px; color: var(--iw-slate);">Non hai prenotazioni in programma.</p>
+              <a class="pf-btn" href="/cerca">Trova un infermiere</a>
+            </div>
+          )}
+          {future.map((r) => (
+            <div class="pf-pro-card" style="margin-bottom: 12px;">
+              <img class="foto" src={r.photo_url} alt={`Foto di ${r.professional_name}`} loading="lazy" />
+              <div class="info">
+                <div class="nome">{r.service_name}</div>
+                <div class="zona">con {r.professional_name}</div>
+                <div class="prezzo" style="text-transform: capitalize;">🗓 {quando(r.start_dt)}</div>
+                <div class="disponibilita">🟢 {stato(r)}</div>
+              </div>
+              <a class="pf-btn secondario" href={`/prenotazione?token=${r.cancel_token}`}>Gestisci</a>
+            </div>
+          ))}
+
+          {passate.length > 0 && (
+            <>
+              <h2 style="color: var(--iw-navy); font-size: 24px; margin: 30px 0 14px;">Storico</h2>
+              {passate.map((r) => (
+                <div class="pf-pro-card" style="margin-bottom: 12px;">
+                  <img class="foto" src={r.photo_url} alt={`Foto di ${r.professional_name}`} loading="lazy" />
+                  <div class="info">
+                    <div class="nome">{r.service_name}</div>
+                    <div class="zona">con {r.professional_name} · <span style="text-transform: capitalize;">{quando(r.start_dt)}</span></div>
+                    <div class="disponibilita" style={r.status === "cancelled" ? "color: var(--iw-muted);" : ""}>{stato(r)}</div>
+                  </div>
+                  <a class="pf-btn" href={`/p/${r.professional_slug}?servizio=${r.service_id}`}>Riprenota</a>
+                </div>
+              ))}
+            </>
+          )}
+
+          <p class="pf-note" style="margin-top: 24px;">
+            Questo link di accesso è personale e vale 30 giorni: quando scade, te ne mandiamo
+            uno nuovo da questa stessa pagina.
+          </p>
+        </>
+      )}
+    </div>
+  </section>
+</Platform>
