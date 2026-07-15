@@ -9,7 +9,7 @@ const json = (data, status = 200) =>
 // POST /api/panel/push {subscription} — registra il dispositivo per le notifiche
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try {
@@ -33,7 +33,7 @@ export async function POST({ request }) {
 // DELETE /api/panel/push {endpoint} — disattiva le notifiche del dispositivo
 export async function DELETE({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try {

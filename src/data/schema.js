@@ -2,16 +2,17 @@
 
 export const SITE_URL = "https://infermieriweb.it";
 
-export const medicalBusinessSchema = {
+export const organizationSchema = {
   "@context": "https://schema.org",
-  "@type": "MedicalBusiness",
-  "@id": `${SITE_URL}/#business`,
-  name: "Infermieri Web",
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
+  name: "InfermieriWeb",
   url: `${SITE_URL}/`,
   logo: `${SITE_URL}/logo.jpeg`,
   image: `${SITE_URL}/logo.jpeg`,
-  email: "infermieri.ef@gmail.com",
-  medicalSpecialty: "Nursing",
+  email: "prenotazioni@infermieriweb.it",
+  description:
+    "Piattaforma che mette in contatto pazienti e infermieri liberi professionisti per prestazioni a domicilio: prenotazione online gratuita, professionisti verificati, recensioni vere. InfermieriWeb non fornisce prestazioni sanitarie.",
   areaServed: [
     { "@type": "City", name: "Lucca" },
     { "@type": "City", name: "Capannori" },
@@ -19,29 +20,6 @@ export const medicalBusinessSchema = {
     { "@type": "City", name: "Altopascio" },
     { "@type": "City", name: "Montecarlo" },
   ],
-  serviceType: [
-    "Medicazioni a domicilio",
-    "ECG a domicilio",
-    "Prelievi a domicilio",
-    "Iniezioni a domicilio",
-    "Flebo a domicilio",
-    "Cateteri vescicali",
-    "Gestione stomie",
-    "Assistenza infermieristica personalizzata",
-  ],
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Lucca",
-    addressCountry: "IT",
-  },
-  openingHoursSpecification: {
-    "@type": "OpeningHoursSpecification",
-    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-    opens: "07:00",
-    closes: "22:00",
-  },
-  // aggregateRating solo dove le recensioni sono davvero visibili (scheda del
-  // professionista), mai nello schema globale: Google penalizza i rating "orfani".
 };
 
 export function articleSchema(article, imageUrl) {

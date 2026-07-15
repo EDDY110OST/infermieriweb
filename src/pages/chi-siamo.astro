@@ -1,6 +1,6 @@
 ---
 import Platform from "../layouts/Platform.astro";
-import { medicalBusinessSchema } from "../data/schema.js";
+import { organizationSchema } from "../data/schema.js";
 
 const valori = [
   {
@@ -30,7 +30,7 @@ const valori = [
   title="Chi siamo | InfermieriWeb"
   description="InfermieriWeb è la piattaforma che mette in contatto pazienti e infermieri liberi professionisti a domicilio: professionisti verificati, recensioni vere, zero commissioni."
   path="/chi-siamo"
-  schemas={[medicalBusinessSchema]}
+  schemas={[organizationSchema]}
 >
   <section class="pf-hero" style="text-align: center; padding: clamp(50px, 7vw, 90px) 20px;">
     <span class="pf-hero-occhiello">Chi siamo</span>

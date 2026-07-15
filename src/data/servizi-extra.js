@@ -59,3 +59,33 @@ export function faqServizio(nomeColloquiale, prezzoDa) {
     },
   ];
 }
+
+// Abbinamento pagina-prestazione → servizio in agenda: pattern espliciti sul
+// nome (il vecchio LIKE sulla prima parola sbagliava prezzo e professionista).
+// like: almeno uno deve comparire nel nome; not: nessuno deve comparire.
+export const MATCH_SERVIZIO = {
+  ecg: { like: ["ecg", "elettrocardiogramma"], not: ["holter"] },
+  medicazioni: { like: ["medicazion"] },
+  prelievi: { like: ["preliev"] },
+  iniezioni: { like: ["iniezion", "intramuscol"] },
+  flebo: { like: ["flebo", "infusional"] },
+  desutura: { like: ["sutur"] },
+  "cateteri-vescicali": { like: ["cateter"] },
+  "holter-pressori": { like: ["holter pressor"] },
+  "holter-cardiaci": { like: ["holter cardiac", "holter ecg"] },
+  "sondini-naso-gastrici": { like: ["sondin"] },
+  "gestione-peg": { like: ["peg"] },
+  "terapia-orale": { like: ["terapia orale"] },
+  "parametri-vitali": { like: ["parametri"] },
+  "clisteri-evacuativi": { like: ["clister"] },
+  "gestione-stomie": { like: ["stomi"] },
+  "educazione-terapeutica": { like: ["educazion"] },
+};
+
+export function matchServizio(serviceId, nomeServizio) {
+  const regole = MATCH_SERVIZIO[serviceId];
+  if (!regole) return false;
+  const nome = String(nomeServizio).toLowerCase();
+  if ((regole.not || []).some((p) => nome.includes(p))) return false;
+  return regole.like.some((p) => nome.includes(p));
+}

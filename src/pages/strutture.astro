@@ -1,15 +1,6 @@
 ---
-import Platform from "../layouts/Platform.astro";
-import StructuresIsland from "../islands/StructuresIsland.jsx";
-import { pageSeo } from "../data/seo.js";
-import { medicalBusinessSchema } from "../data/schema.js";
+// Pagina del vecchio sito personale (gli ambulatori di un singolo
+// professionista): fuori dal modello piattaforma — redirect permanente.
+export const prerender = false;
+return Astro.redirect("/cerca", 301);
 ---
-
-<Platform
-  title={pageSeo.strutture.title}
-  description={pageSeo.strutture.description}
-  path="/strutture"
-  schemas={[medicalBusinessSchema]}
->
-  <StructuresIsland pathname="/strutture" />
-</Platform>

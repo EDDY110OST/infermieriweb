@@ -10,7 +10,7 @@ const json = (data, status = 200) =>
 // La foto arriva già ridimensionata dal browser (~400px): pochi KB.
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }

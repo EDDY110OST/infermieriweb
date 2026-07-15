@@ -45,30 +45,32 @@ export async function POST({ request }) {
   }
 
   const recente = await sql`
-    SELECT id FROM applications WHERE email = ${email} AND created_at > now() - interval '1 day'`;
+    SELECT id FROM applications WHERE email = ${esc(email)} AND created_at > now() - interval '1 day'`;
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
     INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message})`;
+    VALUES (${esc(name)}, ${esc(email)}, ${esc(phone)}, ${esc(profession)}, ${esc(alboName)}, ${esc(alboNumber)}, ${esc(alboDate)}, ${esc(vatNumber)}, ${esc(city)}, ${esc(province)}, ${address}, ${esc(message)})`;
+
+  const esc = (t) => String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
   try {
     await sendEmail({
       to: "infermieri.ef@gmail.com",
-      subject: `Nuova candidatura: ${name} (${profession}, ${city})`,
+      subject: `Nuova candidatura: ${esc(name)} (${esc(profession)}, ${esc(city)})`,
       html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
         <h2 style="color: #0b3954;">Nuova candidatura da verificare 🩺</h2>
         <table style="width: 100%; font-size: 15px;">
-          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${name}</td></tr>
-          <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${profession}</td></tr>
-          <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${city}${province ? " (" + province + ")" : ""}</td></tr>
-          <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${alboName} n. ${alboNumber} (dal ${alboDate})</td></tr>
-          <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${vatNumber}</td></tr>
-          <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${email} · ${phone}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${esc(name)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${esc(profession)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${esc(city)}${province ? " (" + province + ")" : ""}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${esc(alboName)} n. ${esc(alboNumber)} (dal ${esc(alboDate)})</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${esc(vatNumber)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${esc(email)} · ${esc(phone)}</td></tr>
         </table>
-        ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${message}</p>` : ""}
+        ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${esc(message)}</p>` : ""}
         <p style="margin: 20px 0;">
           <a href="https://infermieriweb.it/admin" style="background: #00897b; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-weight: bold;">Verifica e approva in admin</a>
         </p>

@@ -48,7 +48,8 @@ export async function availableSlots(professionalId, serviceId, dateStr) {
   const weekday = romeWeekday(dateStr);
   const hours = await sql`
     SELECT start_min, end_min FROM opening_hours
-    WHERE professional_id = ${professionalId} AND weekday = ${weekday}`;
+    WHERE professional_id = ${professionalId} AND weekday = ${weekday}
+    ORDER BY start_min`;
   if (!hours.length) return [];
 
   const dayStart = romeDateTime(dateStr, 0);
@@ -98,7 +99,8 @@ export async function nextAvailability(professionalId) {
 
   const hours = await sql`
     SELECT weekday, start_min, end_min FROM opening_hours
-    WHERE professional_id = ${professionalId}`;
+    WHERE professional_id = ${professionalId}
+    ORDER BY start_min`;
   if (!hours.length) return null;
 
   const now = new Date();

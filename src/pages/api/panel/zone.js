@@ -49,15 +49,18 @@ export async function POST({ request }) {
     SELECT COUNT(*)::int AS n FROM coverage_areas WHERE professional_id = ${session.pid}`;
   if (n >= MAX_ZONE) return json({ error: `Puoi coprire al massimo ${MAX_ZONE} comuni` }, 400);
 
-  const [doppione] = await sql`
-    SELECT 1 FROM coverage_areas
-    WHERE professional_id = ${session.pid} AND lower(city) = ${city.toLowerCase()}`;
-  if (doppione) return json({ error: `${city} è già tra le tue zone` }, 400);
-
-  const [zona] = await sql`
-    INSERT INTO coverage_areas (professional_id, city, province, region)
-    VALUES (${session.pid}, ${city}, ${provinciaNome}, ${region})
-    RETURNING id, city, province, region`;
+  // indice UNIQUE (professional_id, lower(city)): il doppione lo blocca il DB,
+  // anche con due richieste simultanee
+  let zona;
+  try {
+    [zona] = await sql`
+      INSERT INTO coverage_areas (professional_id, city, province, region)
+      VALUES (${session.pid}, ${city}, ${provinciaNome}, ${region})
+      RETURNING id, city, province, region`;
+  } catch (err) {
+    if (String(err?.code) === "23505") return json({ error: `${city} è già tra le tue zone` }, 400);
+    throw err;
+  }
   return json({ ok: true, zona });
 }
 
@@ -71,11 +74,17 @@ export async function DELETE({ request }) {
   const id = Number(body.id);
   if (!id) return json({ error: "Zona non indicata" }, 400);
 
-  const [{ n }] = await sql`
-    SELECT COUNT(*)::int AS n FROM coverage_areas WHERE professional_id = ${session.pid}`;
-  if (n <= 1) return json({ error: "Devi coprire almeno un comune: aggiungine un altro prima di togliere questo" }, 400);
-
-  await sql`
-    DELETE FROM coverage_areas WHERE id = ${id} AND professional_id = ${session.pid}`;
+  // atomica: cancella solo se dopo resta almeno una zona (niente race)
+  const cancellate = await sql`
+    DELETE FROM coverage_areas
+    WHERE id = ${id} AND professional_id = ${session.pid}
+      AND (SELECT COUNT(*) FROM coverage_areas WHERE professional_id = ${session.pid}) > 1
+    RETURNING id`;
+  if (!cancellate.length) {
+    const [esiste] = await sql`
+      SELECT 1 FROM coverage_areas WHERE id = ${id} AND professional_id = ${session.pid}`;
+    if (esiste) return json({ error: "Devi coprire almeno un comune: aggiungine un altro prima di togliere questo" }, 400);
+    return json({ error: "Zona non trovata" }, 404);
+  }
   return json({ ok: true });
 }

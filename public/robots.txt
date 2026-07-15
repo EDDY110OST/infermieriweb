@@ -4,5 +4,4 @@ Disallow: /area-professionisti
 Disallow: /admin
 Disallow: /prenotazione
 
-Sitemap: https://infermieriweb.it/sitemap-index.xml
-Sitemap: https://infermieriweb.it/sitemap-dinamica.xml
+Sitemap: https://infermieriweb.it/sitemap.xml

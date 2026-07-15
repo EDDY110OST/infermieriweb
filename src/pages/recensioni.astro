@@ -1,15 +1,81 @@
 ---
+export const prerender = false;
+
 import Platform from "../layouts/Platform.astro";
-import RecensioniIsland from "../islands/RecensioniIsland.jsx";
 import { pageSeo } from "../data/seo.js";
-import { medicalBusinessSchema } from "../data/schema.js";
+import { organizationSchema } from "../data/schema.js";
+import { sql } from "../lib/db.js";
+
+// Le recensioni native (per professionista) più recenti, se ci sono
+const recensioni = await sql`
+  SELECT r.rating, r.text, r.author_name, r.created_at, p.name AS professional_name, p.slug
+  FROM reviews r JOIN professionals p ON p.id = r.professional_id
+  WHERE r.status = 'published' ORDER BY r.created_at DESC LIMIT 12`;
+const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
 ---
 
 <Platform
   title={pageSeo.recensioni.title}
   description={pageSeo.recensioni.description}
   path="/recensioni"
-  schemas={[medicalBusinessSchema]}
+  schemas={[organizationSchema]}
 >
-  <RecensioniIsland pathname="/recensioni" />
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Recensioni</span>
+    <h1>Recensioni vere, di pazienti veri</h1>
+    <p class="sottotitolo">
+      Su InfermieriWeb ogni professionista ha le sue recensioni, e può lasciarle solo
+      chi ha completato davvero una prenotazione: niente recensioni anonime o comprate.
+    </p>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 680px;">
+      {recensioni.length > 0 ? (
+        <div>
+          <h2 style="color: var(--iw-navy); margin-bottom: 18px;">Le ultime recensioni verificate</h2>
+          {recensioni.map((r) => (
+            <div class="pf-panel" style="margin-bottom: 14px;">
+              <div class="pf-recensione" style="border: none; padding: 0; margin: 0;">
+                <div class="testa">
+                  <span class="autore">{r.author_name || "Paziente"} <span class="verificata">✓ verificata</span></span>
+                  <span class="data">{dataIt(r.created_at)}</span>
+                </div>
+                <div class="pf-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
+                {r.text && <p>{r.text}</p>}
+                <p class="pf-note" style="margin: 8px 0 0;">per <a href={`/p/${r.slug}`} style="color: var(--iw-primary-deep); font-weight: 700;">{r.professional_name}</a></p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="pf-panel pf-center">
+          <div style="font-size: 44px; margin-bottom: 8px;">⭐</div>
+          <h2 style="margin: 0 0 6px;">Eduard Fantolan — 5,0 su Google</h2>
+          <div class="pf-stars" style="font-size: 24px;">★★★★★</div>
+          <p style="color: var(--iw-slate); max-width: 520px; margin: 12px auto 6px;">
+            <strong>50 recensioni su Google</strong> per il primo infermiere della rete.
+            Le recensioni native di InfermieriWeb compariranno qui e sulla scheda di ogni
+            professionista: può lasciarle solo chi ha completato una prenotazione.
+          </p>
+          <a
+            class="pf-btn"
+            href="https://g.page/r/CblrQcuM1y1GEBM/review"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="margin-top: 12px;"
+          >Lascia una recensione su Google</a>
+        </div>
+      )}
+
+      <div class="pf-panel" style="margin-top: 18px;">
+        <h2 style="margin-top: 0;">Come funzionano le recensioni qui</h2>
+        <ul class="pf-lista">
+          <li>Dopo la prestazione, il paziente riceve via email un link personale per recensire.</li>
+          <li>Solo chi ha completato una prenotazione può lasciare una recensione: niente profili anonimi.</li>
+          <li>Le recensioni sono del professionista, non della piattaforma: le trovi nella sua scheda.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 </Platform>

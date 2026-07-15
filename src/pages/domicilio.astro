@@ -1,15 +1,78 @@
 ---
 import Platform from "../layouts/Platform.astro";
-import DomicilioIsland from "../islands/DomicilioIsland.jsx";
+import { servicesData } from "../data/services.js";
+import { NOMI_COLLOQUIALI } from "../data/servizi-extra.js";
 import { pageSeo } from "../data/seo.js";
-import { medicalBusinessSchema } from "../data/schema.js";
+import { organizationSchema } from "../data/schema.js";
+
+const EMOJI = {
+  ecg: "🫀", medicazioni: "🩹", prelievi: "🩸", iniezioni: "💉", flebo: "💧",
+  desutura: "✂️", "cateteri-vescicali": "🧑‍⚕️", "holter-pressori": "📈",
+  "holter-cardiaci": "📉", "sondini-naso-gastrici": "🍽️", "gestione-peg": "🍽️",
+  "terapia-orale": "💊", "parametri-vitali": "🌡️", "clisteri-evacuativi": "🚿",
+  "gestione-stomie": "🩺", "educazione-terapeutica": "🎓",
+};
+const servizi = Object.entries(servicesData).map(([id, s]) => ({
+  id, emoji: EMOJI[id] || "🩺",
+  nome: NOMI_COLLOQUIALI[id] || s.title,
+  descrizione: s.shortDescription,
+}));
 ---
 
 <Platform
   title={pageSeo.domicilio.title}
   description={pageSeo.domicilio.description}
   path="/domicilio"
-  schemas={[medicalBusinessSchema]}
+  schemas={[organizationSchema]}
 >
-  <DomicilioIsland pathname="/domicilio" />
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Prestazioni a domicilio</span>
+    <h1>Tutte le prestazioni infermieristiche a casa tua</h1>
+    <p class="sottotitolo">
+      I professionisti della rete eseguono a domicilio le prestazioni qui sotto:
+      prezzi nella scheda di ciascuno, prenotazione online gratuita, si paga
+      direttamente all'infermiere dopo la prestazione.
+    </p>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container">
+      <div class="pf-cats">
+        {servizi.map((s) => (
+          <a class="pf-cat" href={`/servizio/${s.id}`}>
+            <span class="emoji">{s.emoji}</span>
+            <span>
+              <span class="nome">{s.nome}</span><br />
+              <span class="da">{s.descrizione}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section alt pf-center">
+    <div class="pf-container" style="max-width: 640px;">
+      <span class="pf-kicker">Come funziona</span>
+      <h2>Dalla ricerca alla visita in 3 passi</h2>
+      <div class="pf-steps" style="margin-top: 30px; text-align: left;">
+        <div class="pf-step">
+          <div class="num">1</div>
+          <h3>Trova il professionista</h3>
+          <p>Cerca per città o prestazione: vedi foto, prezzi e recensioni di chi ha prenotato davvero.</p>
+        </div>
+        <div class="pf-step">
+          <div class="num">2</div>
+          <h3>Prenota online</h3>
+          <p>Scegli tra gli orari realmente liberi e ricevi conferma immediata. Nessuna registrazione, nessuna carta.</p>
+        </div>
+        <div class="pf-step">
+          <div class="num">3</div>
+          <h3>Ricevi la visita a casa</h3>
+          <p>L'infermiere arriva all'orario scelto. Il compenso si regola direttamente con lui, dopo la prestazione.</p>
+        </div>
+      </div>
+      <a class="pf-btn" href="/cerca" style="margin-top: 28px;">🔍 Trova un infermiere</a>
+    </div>
+  </section>
 </Platform>

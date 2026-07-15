@@ -12,11 +12,14 @@ function encodeSvg(svg) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
+const escapeXml = (t) =>
+  String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 function buildPlaceholder(category, title) {
   const key = String(category || '').toLowerCase();
   const accent = colorMap[key] || '#00897b';
-  const label = (category || 'Guida').toUpperCase();
-  const safeTitle = String(title || 'Articolo').slice(0, 38);
+  const label = escapeXml((category || 'Guida').toUpperCase());
+  const safeTitle = escapeXml(String(title || 'Articolo').slice(0, 38));
 
   // Copertina brand: gradiente della piattaforma + croce sanitaria, niente finti scheletri
   const svg = `

@@ -9,8 +9,8 @@ export const servicesData = {
     details: [
       "Esame non invasivo e indolore",
       "Esecuzione rapida, circa 5-10 minuti",
-      "Disponibile anche in urgenza",
-      "Risultati elaborati e trasmessi al medico curante",
+      "Prenotabile anche a breve termine, in base all'agenda del professionista",
+      "Tracciato consegnato per la valutazione del medico curante",
       "Adatto a pazienti di tutte le età",
     ],
     indications: [
@@ -31,7 +31,7 @@ export const servicesData = {
       "Medicazioni semplici e complesse",
       "Wound care specializzato",
       "Utilizzo di materiali di qualità",
-      "Igiene e sterilità garantite",
+      "Materiali sterili e igiene professionale",
       "Cambio medicazioni secondo prescrizione",
     ],
     indications: [
@@ -115,7 +115,7 @@ export const servicesData = {
       "Rimozione punti di sutura in modo delicato",
       "Valutazione della ferita e della guarigione",
       "Consigli per il post-trattamento",
-      "Igiene professionale garantita",
+      "Materiali sterili monouso",
       "Assistenza personalizzata in base al tipo di sutura",
     ],
     indications: [
@@ -150,7 +150,7 @@ export const servicesData = {
     icon: "MdMonitorHeart",
     title: "Holter pressori",
     shortDescription: "Monitoraggio pressorio continuo a domicilio",
-    fullDescription: "Installiamo il monitor per lo studio dell'andamento della pressione arteriosa nelle 24 ore, direttamente a casa tua.",
+    fullDescription: "Montaggio e rimozione a domicilio del monitor che studia l'andamento della pressione arteriosa nelle 24 ore, senza code in ambulatorio.",
     details: [
       "Posizionamento del dispositivo",
       "Registrazione pressoria continua",
@@ -247,7 +247,7 @@ export const servicesData = {
     icon: "MdShowChart",
     title: "Parametri vitali",
     shortDescription: "Rilevamento dei parametri vitali a domicilio",
-    fullDescription: "Misuriamo pressione, frequenza cardiaca, saturazione, temperatura e altri parametri vitali direttamente a casa tua.",
+    fullDescription: "Controllo di pressione, frequenza cardiaca, saturazione, temperatura e altri parametri vitali direttamente a casa tua, con occhio esperto.",
     details: [
       "Misurazione della pressione arteriosa",
       "Rilevamento della saturazione ossigeno",
@@ -285,7 +285,7 @@ export const servicesData = {
     icon: "MdLocalHospital",
     title: "Gestione stomie",
     shortDescription: "Cura e assistenza per stomie a domicilio",
-    fullDescription: "Assistiamo nella gestione delle stomie, con cambio di sacche, cura della pelle circostante e controlli costanti.",
+    fullDescription: "Gestione della stomia a domicilio: cambio delle sacche, cura della pelle circostante e controlli regolari.",
     details: [
       "Cambio delle sacche per stomie",
       "Igiene e protezione della cute peristomale",

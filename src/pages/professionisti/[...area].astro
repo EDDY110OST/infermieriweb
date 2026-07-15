@@ -89,7 +89,7 @@ if (!regione) {
 }
 
 if (livello !== "citta" && voci.length === 1) {
-  return Astro.redirect(voci[0].href, 302);
+  return Astro.redirect(voci[0].href, 301);
 }
 
 const path = `/professionisti${segmenti.length ? "/" + segmenti.join("/") : ""}`;

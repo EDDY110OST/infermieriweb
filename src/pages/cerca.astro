@@ -1,7 +1,7 @@
 ---
 import Platform from "../layouts/Platform.astro";
 import SearchApp from "../islands/SearchApp.jsx";
-import { medicalBusinessSchema } from "../data/schema.js";
+import { organizationSchema } from "../data/schema.js";
 ---
 
 <Platform
@@ -9,7 +9,7 @@ import { medicalBusinessSchema } from "../data/schema.js";
   description="Cerca un infermiere a domicilio nella tua città: mappa, prezzi chiari, recensioni di chi ha prenotato davvero. Prenotazione online gratuita, senza registrazione."
   path="/cerca"
   robots="noindex, follow"
-  schemas={[medicalBusinessSchema]}
+  schemas={[organizationSchema]}
 >
   <section class="pf-hero pf-hero-centro">
     <span class="pf-hero-occhiello">Ricerca</span>

@@ -11,7 +11,7 @@ const json = (data, status = 200) =>
 // GET /api/panel/2fa — stato 2FA dell'utente loggato
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
   const [u] = await sql`SELECT totp_enabled FROM professional_users WHERE id = ${session.uid}`;
   return json({ enabled: !!u?.totp_enabled });
 }
@@ -19,7 +19,7 @@ export async function GET({ request }) {
 // POST /api/panel/2fa — {action: "setup" | "enable" | "disable", code?, password?}
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }

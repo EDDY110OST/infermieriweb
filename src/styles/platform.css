@@ -162,7 +162,9 @@
 /* ---------- Griglia categorie ---------- */
 
 .pf-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
-@media (max-width: 860px) { .pf-cats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 860px) { .pf-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pf-cat { min-width: 0; }
+.pf-cat .nome, .pf-cat .da { overflow-wrap: anywhere; }
 
 .pf-cat {
   background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: var(--iw-radius);

@@ -4,7 +4,7 @@ export const prerender = false;
 import Platform from "../../layouts/Platform.astro";
 import ArticoliIsland from "../../islands/ArticoliIsland.jsx";
 import { pageSeo } from "../../data/seo.js";
-import { medicalBusinessSchema } from "../../data/schema.js";
+import { organizationSchema } from "../../data/schema.js";
 import { sql } from "../../lib/db.js";
 import { mapArticolo } from "../../lib/blog.js";
 
@@ -19,7 +19,7 @@ const articoli = righe.map(mapArticolo);
   title={pageSeo.articoli.title}
   description={pageSeo.articoli.description}
   path="/articoli"
-  schemas={[medicalBusinessSchema]}
+  schemas={[organizationSchema]}
 >
   <section class="pf-hero pf-hero-centro">
     <span class="pf-hero-occhiello">Blog salute</span>
@@ -30,5 +30,5 @@ const articoli = righe.map(mapArticolo);
     </p>
   </section>
 
-  <ArticoliIsland pathname="/articoli" articles={articoli} />
+  <ArticoliIsland client:load pathname="/articoli" articles={articoli} />
 </Platform>

@@ -9,7 +9,7 @@ const json = (data, status = 200) =>
 // GET /api/panel/servizi — tutte le prestazioni del professionista (anche disattivate)
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const servizi = await sql`
     SELECT id, name, duration_min, price_cents, active, sort
@@ -30,7 +30,7 @@ const valida = (body) => {
 // POST /api/panel/servizi — nuova prestazione
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
@@ -48,7 +48,7 @@ export async function POST({ request }) {
 // PATCH /api/panel/servizi — modifica prestazione {id, name?, duration_min?, price_cents?, active?}
 export async function PATCH({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
@@ -77,7 +77,7 @@ export async function PATCH({ request }) {
 // DELETE /api/panel/servizi?id=3 — elimina (solo se mai prenotata, sennò disattivare)
 export async function DELETE({ request, url }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const id = Number(url.searchParams.get("id"));
   if (!id) return json({ error: "Id mancante" }, 400);

@@ -9,14 +9,18 @@ export default function AreaPazienteForm() {
   const invia = async (e) => {
     e.preventDefault();
     setErrore("");
-    const r = await fetch("/api/area-paziente", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const d = await r.json();
-    if (!r.ok) return setErrore(d.error || "Errore imprevisto");
-    setInviato(true);
+    try {
+      const r = await fetch("/api/area-paziente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const d = await r.json();
+      if (!r.ok) return setErrore(d.error || "Errore imprevisto");
+      setInviato(true);
+    } catch {
+      setErrore("Problema di connessione: riprova tra un attimo");
+    }
   };
 
   if (inviato) {

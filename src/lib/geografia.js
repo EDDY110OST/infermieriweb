@@ -58,9 +58,41 @@ const MAPPA = {
 };
 
 const SIGLE = {
-  to: "torino", mi: "milano", lu: "lucca", pt: "pistoia", fi: "firenze", pi: "pisa",
-  li: "livorno", ms: "massa-carrara", ar: "arezzo", si: "siena", gr: "grosseto", po: "prato",
-  rm: "roma", na: "napoli", ba: "bari", pa: "palermo", ge: "genova", bo: "bologna", ve: "venezia",
+  ag: "agrigento", al: "alessandria", an: "ancona", ao: "aosta", ar: "arezzo", ap: "ascoli piceno",
+  at: "asti", av: "avellino", ba: "bari", bt: "barletta-andria-trani", bl: "belluno", bn: "benevento",
+  bg: "bergamo", bi: "biella", bo: "bologna", bz: "bolzano", bs: "brescia", br: "brindisi",
+  ca: "cagliari", cl: "caltanissetta", cb: "campobasso", ce: "caserta", ct: "catania", cz: "catanzaro",
+  ch: "chieti", co: "como", cs: "cosenza", cr: "cremona", kr: "crotone", cn: "cuneo",
+  en: "enna", fm: "fermo", fe: "ferrara", fi: "firenze", fg: "foggia", fc: "forlì-cesena",
+  fr: "frosinone", ge: "genova", go: "gorizia", gr: "grosseto", im: "imperia", is: "isernia",
+  aq: "l'aquila", sp: "la spezia", lt: "latina", le: "lecce", lc: "lecco", li: "livorno",
+  lo: "lodi", lu: "lucca", mc: "macerata", mn: "mantova", ms: "massa-carrara", mt: "matera",
+  me: "messina", mi: "milano", mo: "modena", mb: "monza e brianza", na: "napoli", no: "novara",
+  nu: "nuoro", or: "oristano", pd: "padova", pa: "palermo", pr: "parma", pv: "pavia",
+  pg: "perugia", pu: "pesaro e urbino", pe: "pescara", pc: "piacenza", pi: "pisa", pt: "pistoia",
+  pn: "pordenone", pz: "potenza", po: "prato", rg: "ragusa", ra: "ravenna", rc: "reggio calabria",
+  re: "reggio emilia", ri: "rieti", rn: "rimini", rm: "roma", ro: "rovigo", sa: "salerno",
+  ss: "sassari", sv: "savona", si: "siena", sr: "siracusa", so: "sondrio", su: "sud sardegna",
+  ta: "taranto", te: "teramo", tr: "terni", to: "torino", tp: "trapani", tn: "trento",
+  tv: "treviso", ts: "trieste", ud: "udine", va: "varese", ve: "venezia", vb: "verbano-cusio-ossola",
+  vc: "vercelli", vr: "verona", vv: "vibo valentia", vi: "vicenza", vt: "viterbo",
+};
+
+// Grafie diverse della stessa provincia → una sola chiave canonica
+// (sennò "Massa Carrara" e "Massa-Carrara" diventano due pagine diverse)
+const CANONICHE = {
+  "massa carrara": "massa-carrara", massa: "massa-carrara",
+  "forlì": "forlì-cesena", cesena: "forlì-cesena",
+  monza: "monza e brianza", pesaro: "pesaro e urbino",
+  verbania: "verbano-cusio-ossola", aquila: "l'aquila",
+  barletta: "barletta-andria-trani", "reggio di calabria": "reggio calabria",
+};
+
+// Nomi da mostrare quando le maiuscole automatiche non bastano
+const DISPLAY = {
+  "l'aquila": "L'Aquila",
+  "monza e brianza": "Monza e Brianza",
+  "pesaro e urbino": "Pesaro e Urbino",
 };
 
 export function regioneDaProvincia(provincia) {
@@ -71,11 +103,14 @@ export function regioneDaProvincia(provincia) {
   return "";
 }
 
-// "LU"/"lu" -> "Lucca"; "lucca" -> "Lucca". Vuoto se sconosciuta.
+// "LU"/"lu" -> "Lucca"; "lucca" -> "Lucca"; "massa carrara" -> "Massa-Carrara".
+// Vuoto se sconosciuta.
 export function provinciaEstesa(provincia) {
-  const chiave = String(provincia || "").trim().toLowerCase();
+  let chiave = String(provincia || "").trim().toLowerCase();
   if (!chiave) return "";
-  const nome = SIGLE[chiave] || (MAPPA[chiave] ? chiave : "");
-  if (!nome) return "";
-  return nome.split(" ").map((p) => p.split("-").map((q) => q.charAt(0).toUpperCase() + q.slice(1)).join("-")).join(" ");
+  chiave = SIGLE[chiave] || chiave;
+  chiave = CANONICHE[chiave] || chiave;
+  if (!MAPPA[chiave]) return "";
+  if (DISPLAY[chiave]) return DISPLAY[chiave];
+  return chiave.split(" ").map((p) => p.split("-").map((q) => q.charAt(0).toUpperCase() + q.slice(1)).join("-")).join(" ");
 }

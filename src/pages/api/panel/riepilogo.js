@@ -7,7 +7,7 @@ import { sessionFromRequest } from "../../../lib/auth.js";
 // (il "regalo per il commercialista" del professionista)
 export async function GET({ request, url }) {
   const session = sessionFromRequest(request);
-  if (!session) return new Response("Non autenticato", { status: 401 });
+  if (!session?.pid) return new Response("Non autenticato", { status: 401 });
 
   const mese = url.searchParams.get("mese") || new Date().toISOString().slice(0, 7);
   if (!/^\d{4}-\d{2}$/.test(mese)) return new Response("Mese non valido", { status: 400 });

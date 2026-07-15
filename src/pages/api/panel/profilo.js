@@ -10,7 +10,7 @@ const json = (data, status = 200) =>
 // GET /api/panel/profilo — dati del profilo del professionista loggato
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const [profilo] = await sql`
     SELECT name, profession, albo_number, bio, phone, email, address, city, province, region,
@@ -24,7 +24,7 @@ export async function GET({ request }) {
 // se cambia indirizzo/città, il segnaposto sulla mappa si aggiorna da solo
 export async function PATCH({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try {

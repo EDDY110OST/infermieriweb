@@ -9,7 +9,7 @@ const json = (data, status = 200) =>
 // GET /api/panel/statistiche — il valore reso visibile: mese corrente vs precedente
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
   const pid = session.pid;
 
   const [prenotazioni] = await sql`

@@ -45,7 +45,7 @@ import { NOMI_COLLOQUIALI } from "./servizi-extra.js";
 export function serviceSeo(serviceId, service) {
   const nome = NOMI_COLLOQUIALI[serviceId] || `${service.title} a domicilio`;
   return {
-    title: `${nome} a Lucca: prezzi e prenotazione online | InfermieriWeb`,
+    title: `${nome} a Lucca | InfermieriWeb`,
     description: clip(
       `${nome} a Lucca e provincia con infermieri iscritti all'albo: ${service.price.toLowerCase()}, prenoti online l'orario che preferisci e paghi dopo la prestazione.`
     ),

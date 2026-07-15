@@ -4,7 +4,7 @@ export const prerender = false;
 import Platform from "../layouts/Platform.astro";
 import HomeMap from "../components/HomeMap.astro";
 import { getArticleImage } from "../utils/articleImageFallback.js";
-import { medicalBusinessSchema, faqSchema } from "../data/schema.js";
+import { organizationSchema, faqSchema } from "../data/schema.js";
 import { sql } from "../lib/db.js";
 import { mapArticolo } from "../lib/blog.js";
 
@@ -39,7 +39,7 @@ const faqItems = [
   title="Infermiere a domicilio: trova e prenota vicino a te | InfermieriWeb"
   description="Trova un infermiere a domicilio nella tua zona: prezzi chiari, recensioni verificate e prenotazione online in un minuto. Gratis per il paziente."
   path="/"
-  schemas={[medicalBusinessSchema, faqSchema(faqItems)]}
+  schemas={[organizationSchema, faqSchema(faqItems)]}
 >
   <section class="pf-hero pf-hero-split">
     <div class="pf-hero-testo">

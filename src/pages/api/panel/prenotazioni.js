@@ -14,7 +14,7 @@ const json = (data, status = 200) =>
 // body: {service_id, date "YYYY-MM-DD", time "HH:MM", customer_name, customer_phone, address?, city?}
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
@@ -63,7 +63,7 @@ export async function POST({ request }) {
 // PATCH /api/panel/prenotazioni {id, status} — annulla / segna esito
 export async function PATCH({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try {

@@ -10,7 +10,7 @@ const json = (data, status = 200) =>
 // GET /api/panel/agenda?from=2026-07-14&days=7 — prenotazioni e blocchi del professionista loggato
 export async function GET({ request, url }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const from = url.searchParams.get("from") || new Date().toISOString().slice(0, 10);
   const days = Math.min(Number(url.searchParams.get("days")) || 7, 31);

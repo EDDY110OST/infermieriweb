@@ -9,7 +9,7 @@ const json = (data, status = 200) =>
 // GET /api/panel/orari — orari settimanali (0=lunedì ... 6=domenica)
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const orari = await sql`
     SELECT weekday, start_min, end_min FROM opening_hours
@@ -21,7 +21,7 @@ export async function GET({ request }) {
 // body: { orari: [{weekday, start_min, end_min}, ...] } (giorni assenti = chiuso)
 export async function PUT({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }

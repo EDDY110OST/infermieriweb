@@ -5,7 +5,7 @@ import Platform from "../../layouts/Platform.astro";
 import ArticoloIsland from "../../islands/ArticoloIsland.jsx";
 import { articleSeo } from "../../data/seo.js";
 import { getArticleImage } from "../../utils/articleImageFallback.js";
-import { medicalBusinessSchema, articleSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
+import { organizationSchema, articleSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
 import { sql } from "../../lib/db.js";
 import { mapArticolo } from "../../lib/blog.js";
 
@@ -33,7 +33,7 @@ const rawImage = getArticleImage(article);
 const ogImage = rawImage.startsWith("data:") ? `${SITE_URL}/logo.jpeg` : new URL(rawImage, SITE_URL).href;
 
 const schemas = [
-  medicalBusinessSchema,
+  organizationSchema,
   articleSchema(article, ogImage),
   breadcrumbSchema([
     { name: "Home", url: `${SITE_URL}/` },

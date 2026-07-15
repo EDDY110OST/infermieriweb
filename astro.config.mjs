@@ -12,8 +12,14 @@ export default defineConfig({
   // girano come funzioni server su Netlify (motore prenotazioni).
   adapter: netlify(),
   integrations: [react(), sitemap({
-    // pagine riservate o strumentali: fuori dalla sitemap (sono anche noindex)
-    filter: (page) => !["/admin", "/area-professionisti", "/prenotazione", "/recensione"].some((p) => page.includes(p)),
+    // pagine riservate o strumentali: fuori dalla sitemap (sono anche noindex).
+    // Confronto sul percorso esatto: "includes" escludeva per sbaglio /recensioni.
+    filter: (page) => {
+      const path = new URL(page).pathname.replace(/\/$/, "");
+      const esatte = ["/prenotazione", "/recensione", "/cerca", "/le-mie-prenotazioni", "/strutture"];
+      const prefissi = ["/admin", "/area-professionisti", "/struttura/"];
+      return !esatte.includes(path) && !prefissi.some((p) => path.startsWith(p));
+    },
   })],
   vite: {
     resolve: {

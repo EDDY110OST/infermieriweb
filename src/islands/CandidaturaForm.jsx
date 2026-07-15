@@ -110,7 +110,7 @@ export default function CandidaturaForm() {
       <label htmlFor="cf-albo-nome">Albo di appartenenza * <span style={{ fontWeight: 400 }}>(es. OPI Lucca)</span></label>
       <input id="cf-albo-nome" required minLength={3} placeholder="es. OPI Lucca" value={dati.albo_name} onChange={(e) => setDati({ ...dati, albo_name: e.target.value })} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
         <div>
           <label htmlFor="cf-albo">N. iscrizione *</label>
           <input id="cf-albo" required value={dati.albo_number} onChange={(e) => setDati({ ...dati, albo_number: e.target.value })} />

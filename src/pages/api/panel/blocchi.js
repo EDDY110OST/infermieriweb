@@ -10,7 +10,7 @@ const json = (data, status = 200) =>
 // POST /api/panel/blocchi {start, end, reason} — blocca uno spazio in agenda
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try {
@@ -41,7 +41,7 @@ export async function POST({ request }) {
 // DELETE /api/panel/blocchi?id=3 — rimuove un blocco
 export async function DELETE({ request, url }) {
   const session = sessionFromRequest(request);
-  if (!session) return json({ error: "Non autenticato" }, 401);
+  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const id = Number(url.searchParams.get("id"));
   if (!id) return json({ error: "Id mancante" }, 400);

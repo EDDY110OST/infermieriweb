@@ -5,21 +5,28 @@ import Platform from "../../layouts/Platform.astro";
 import { servicesData } from "../../data/services.js";
 import { sql } from "../../lib/db.js";
 import { serviceSeo } from "../../data/seo.js";
-import { medicalBusinessSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
-import { NOMI_COLLOQUIALI, ARTICOLO_PER_SERVIZIO, faqServizio } from "../../data/servizi-extra.js";
+import { organizationSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
+import { NOMI_COLLOQUIALI, ARTICOLO_PER_SERVIZIO, faqServizio, matchServizio } from "../../data/servizi-extra.js";
 import { nextAvailability } from "../../lib/slots.js";
 
 const { serviceId } = Astro.params;
 const service = servicesData[serviceId];
 if (!service) return new Response(null, { status: 404 });
 
-// Chi offre DAVVERO questa prestazione: la guida deve portare a una prenotazione
-const professionisti = await sql`
-  SELECT DISTINCT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents
+// Chi offre DAVVERO questa prestazione: abbinamento esplicito per nome
+// (una card per professionista, col SUO servizio giusto e il SUO prezzo)
+const righe = await sql`
+  SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.name AS service_name, s.price_cents
   FROM professionals p
   JOIN services s ON s.professional_id = p.id AND s.active
-  WHERE p.status = 'active' AND lower(s.name) LIKE ${"%" + service.title.split(" ")[0].toLowerCase() + "%"}
-  ORDER BY p.name LIMIT 6`;
+  WHERE p.status = 'active'
+  ORDER BY p.name, s.price_cents`;
+const perProfessionista = new Map();
+for (const r of righe) {
+  if (!matchServizio(serviceId, r.service_name)) continue;
+  if (!perProfessionista.has(r.id)) perProfessionista.set(r.id, r);
+}
+const professionisti = [...perProfessionista.values()].slice(0, 6);
 const conDisponibilita = await Promise.all(
   professionisti.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) }))
 );
@@ -40,7 +47,7 @@ const seo = serviceSeo(serviceId, service);
 const path = `/servizio/${serviceId}`;
 
 const schemas = [
-  medicalBusinessSchema,
+  organizationSchema,
   faqSchema(faq),
   breadcrumbSchema([
     { name: "Home", url: `${SITE_URL}/` },

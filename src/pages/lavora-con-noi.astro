@@ -1,7 +1,7 @@
 ---
 import Platform from "../layouts/Platform.astro";
 import CandidaturaForm from "../islands/CandidaturaForm.jsx";
-import { medicalBusinessSchema } from "../data/schema.js";
+import { organizationSchema } from "../data/schema.js";
 
 const vantaggi = [
   { emoji: "🗓️", titolo: "Agenda online dal telefono", testo: "Prenotazioni con i tuoi orari reali, blocchi ferie in un tocco, promemoria automatici ai pazienti." },
@@ -17,7 +17,7 @@ const vantaggi = [
   title="Unisciti alla rete: agenda e visibilità per professionisti sanitari | InfermieriWeb"
   description="Scheda personale, agenda online, prenotazioni e recensioni verificate per infermieri e professionisti sanitari. Gratis in fase di lancio, zero commissioni."
   path="/lavora-con-noi"
-  schemas={[medicalBusinessSchema]}
+  schemas={[organizationSchema]}
 >
   <section class="pf-hero" style="padding-bottom: 60px;">
     <h1>Sei un infermiere libero professionista?<br /> La tua agenda, i tuoi pazienti.</h1>
