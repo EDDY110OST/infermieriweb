@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../lib/db.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
+import { sendEmail } from "../../lib/mailer.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -51,6 +52,30 @@ export async function POST({ request }) {
     INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message)
     VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message})`;
 
-  // TODO: notifica email a Bruno/Eduard (Brevo) quando ci sarà l'account
+  // Avviso immediato agli admin: una candidatura che aspetta giorni è un
+  // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
+  try {
+    await sendEmail({
+      to: "infermieri.ef@gmail.com",
+      subject: `Nuova candidatura: ${name} (${profession}, ${city})`,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
+        <h2 style="color: #0b3954;">Nuova candidatura da verificare 🩺</h2>
+        <table style="width: 100%; font-size: 15px;">
+          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${name}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${profession}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${city}${province ? " (" + province + ")" : ""}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${alboName} n. ${alboNumber} (dal ${alboDate})</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${vatNumber}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${email} · ${phone}</td></tr>
+        </table>
+        ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${message}</p>` : ""}
+        <p style="margin: 20px 0;">
+          <a href="https://infermieriweb.it/admin" style="background: #00897b; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-weight: bold;">Verifica e approva in admin</a>
+        </p>
+        <p style="color: #7b909b; font-size: 13px;">Prima di approvare: controlla l'iscrizione all'albo sul portale FNOPI e la P.IVA.</p>
+      </div>`,
+    });
+  } catch { /* la candidatura è salvata comunque: si vede in /admin */ }
+
   return json({ ok: true });
 }
