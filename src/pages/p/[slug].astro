@@ -188,11 +188,6 @@ try {
 
       <div class="pf-panel" id="prenota" style="position: sticky; top: 90px;">
         <h2>Prenota online</h2>
-        {pro.phone && (
-          <p class="pf-note" style="margin-top: -6px;">
-            Preferisci la voce? 📞 <a href={`tel:${pro.phone}`}>{pro.phone}</a>
-          </p>
-        )}
         {services.length > 0 ? (
           <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} telefono={pro.phone} />
         ) : (
