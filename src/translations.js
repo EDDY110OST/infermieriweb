@@ -326,7 +326,7 @@ const translations = {
         title: "Cosa dicono di InfermieriWeb",
         description: "Le recensioni dei pazienti sono importanti per raccontare la qualità, la puntualità e l'attenzione del nostro servizio infermieristico a domicilio.",
         rating: "5,0 su Google",
-        reviewCount: "Basato su 35 recensioni verificate su Google.",
+        reviewCount: "50 recensioni su Google. E su InfermieriWeb può recensire solo chi ha completato una prenotazione.",
         prompt: "Se hai già usufruito dei nostri servizi, lasciare una recensione ci aiuta a far conoscere InfermieriWeb ad altre persone che cercano assistenza infermieristica a domicilio a Lucca e provincia.",
         googleButton: "Lascia una recensione su Google"
       },
@@ -677,7 +677,7 @@ const translations = {
         title: "What people say about InfermieriWeb",
         description: "Patient reviews are important to tell the quality, punctuality and attention of our home nursing service.",
         rating: "5.0 on Google",
-        reviewCount: "Based on 35 verified reviews on Google.",
+        reviewCount: "50 reviews on Google. And on InfermieriWeb only patients who completed a booking can leave a review.",
         prompt: "If you have already used our services, leaving a review helps others find InfermieriWeb when they need home nursing care in Lucca and province.",
         googleButton: "Leave a review on Google"
       },

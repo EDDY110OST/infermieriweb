@@ -70,14 +70,29 @@ export default function SearchApp() {
   // Ricerca a parole: "infermiere a Lucca" e "medicazioni Lucca" devono funzionare,
   // non solo la frase esatta. Le parole di servizio non contano.
   const STOPWORD = new Set(["a", "ad", "di", "da", "in", "per", "il", "lo", "la", "un", "uno", "una", "vicino", "zona", "casa", "domicilio", "e"]);
+  // La ricerca deve capire il paziente, non pretendere la parola esatta del listino:
+  // "prelievo"≈"prelievi" (radice), "puntura"→iniezioni (sinonimo), "analisi"→prelievi.
+  const SINONIMI = {
+    puntura: "iniezioni", punture: "iniezioni", iniezione: "iniezioni",
+    sangue: "prelievi", analisi: "prelievi", prelievo: "prelievi",
+    medicazione: "medicazioni", ferita: "medicazioni", ferite: "medicazioni", piaga: "medicazioni", piaghe: "medicazioni",
+    elettrocardiogramma: "ecg", catetere: "cateteri", stomia: "stomie",
+    infermiera: "infermiere", infermieri: "infermiere", flebo: "flebo",
+  };
+  const radice = (w) =>
+    w.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[aeiou]+$/, "");
 
   const risultati = useMemo(() => {
     const parole = q.trim().toLowerCase().split(/\s+/).filter((t) => t && !STOPWORD.has(t));
     if (!parole.length) return tutti;
     return tutti.filter((p) => {
-      const campi = [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
-        .join(" ").toLowerCase();
-      return parole.every((t) => campi.includes(t));
+      const radiciCampi = [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
+        .join(" ").toLowerCase().split(/[^a-zà-ù0-9]+/).map(radice).filter(Boolean);
+      return parole.every((t) => {
+        const rt = radice(SINONIMI[t] || t);
+        // confronto per radice: "prelievo"≈"prelievi", "medicazione"≈"medicazioni", "capannoni"≈"capannori" no ma "capannor"≈ sì
+        return radiciCampi.some((w) => w.startsWith(rt) || rt.startsWith(w));
+      });
     });
   }, [q, tutti]);
 

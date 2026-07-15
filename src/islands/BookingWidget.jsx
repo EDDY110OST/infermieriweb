@@ -20,10 +20,12 @@ function prossimiGiorni(n = 14) {
 
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 
-export default function BookingWidget({ professionalId, services, servizioIniziale }) {
+export default function BookingWidget({ professionalId, services, servizioIniziale, telefono }) {
   const giorni = useMemo(() => prossimiGiorni(14), []);
+  // Nessuna prestazione preselezionata: un utente frettoloso confermerebbe
+  // l'esame sbagliato (es. ECG da 50€ invece della medicazione che gli serve)
   const [servizio, setServizio] = useState(
-    () => (servizioIniziale && services.some((s) => s.id === servizioIniziale) ? servizioIniziale : services[0]?.id || 0)
+    () => (servizioIniziale && services.some((s) => s.id === servizioIniziale) ? servizioIniziale : 0)
   );
   const [giorno, setGiorno] = useState(giorni[0].iso);
   const [giorniPieni, setGiorniPieni] = useState({});
@@ -132,12 +134,22 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         {fatto.emailed ? (
           <p style={{ margin: "8px 0", fontSize: 17 }}>
             Il professionista è stato avvisato. Ti abbiamo inviato una <strong>email di conferma</strong> con
-            il riepilogo e il link per disdire (controlla anche lo spam). Riceverai un promemoria 24 ore prima.
+            il riepilogo (controlla anche lo spam). Riceverai un promemoria 24 ore prima.
           </p>
         ) : (
           <p style={{ margin: "8px 0", fontSize: 17 }}>
-            Il professionista è stato avvisato. Se devi disdire,{" "}
-            <a href={`/prenotazione?token=${fatto.cancel_token}`}>usa questa pagina</a> (salvala tra i preferiti).
+            Il professionista è stato avvisato.
+          </p>
+        )}
+        {fatto.cancel_token && (
+          <p style={{ margin: "8px 0", fontSize: 16 }}>
+            🔗 Se devi disdire: <a href={`/prenotazione?token=${fatto.cancel_token}`}>gestisci la prenotazione da qui</a>
+            {" "}(il link è anche nell'email — salvalo tra i preferiti).
+          </p>
+        )}
+        {telefono && (
+          <p style={{ margin: "8px 0", fontSize: 16 }}>
+            📞 Per qualsiasi problema dell'ultimo minuto: <a href={`tel:${telefono}`}>{telefono}</a>
           </p>
         )}
       </div>
@@ -146,15 +158,18 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
   return (
     <form className="pf-book" onSubmit={prenota}>
-      <label htmlFor="bw-servizio">Prestazione</label>
-      <select id="bw-servizio" value={servizio} onChange={(e) => setServizio(Number(e.target.value))}>
+      <label htmlFor="bw-servizio">Prestazione *</label>
+      <select id="bw-servizio" required value={servizio} onChange={(e) => setServizio(Number(e.target.value))}>
+        <option value={0} disabled>Scegli la prestazione…</option>
         {services.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name} · {s.duration_min} min · {euro(s.price_cents)}
           </option>
         ))}
       </select>
+      {!servizio && <p className="pf-note">Scegli la prestazione che ti serve: vedrai giorni e orari disponibili.</p>}
 
+      {servizio > 0 && <>
       <label>Giorno</label>
       <div className="pf-days" role="listbox" aria-label="Scegli il giorno">
         {giorni.map((g) => (
@@ -235,11 +250,17 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {errore && <div className="pf-errore">{errore}</div>}
 
+          {servizioSel && slot && (
+            <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
+              📋 <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · da {euro(servizioSel.price_cents)}
+            </div>
+          )}
+
           <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
-            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? ` · ${euro(servizioSel.price_cents)}` : ""}`}
+            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? ` · da ${euro(servizioSel.price_cents)}` : ""}`}
           </button>
           <p className="pf-note" style={{ marginTop: 8 }}>
-            Non paghi nulla online: il compenso si regola direttamente con il professionista.
+            Non paghi nulla online, nessuna carta richiesta: paghi direttamente all'infermiere dopo la prestazione.
           </p>
         </>
       )}

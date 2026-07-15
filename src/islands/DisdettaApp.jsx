@@ -8,13 +8,59 @@ export default function DisdettaApp() {
   const [errore, setErrore] = useState("");
   const [fatto, setFatto] = useState(false);
 
+  const [recupero, setRecupero] = useState({ email: "", inviato: false, errore: "" });
+
   useEffect(() => {
-    if (!token) return setErrore("Link non valido: manca il codice della prenotazione.");
+    if (!token) return;
     fetch(`/api/disdetta?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
       .then((d) => (d.error ? setErrore(d.error) : setDati(d.booking)))
       .catch(() => setErrore("Errore di caricamento"));
   }, [token]);
+
+  const recuperaLink = async (e) => {
+    e.preventDefault();
+    setRecupero((r) => ({ ...r, errore: "" }));
+    const r = await fetch("/api/disdetta-recupero", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: recupero.email }),
+    });
+    const d = await r.json();
+    if (!r.ok) return setRecupero((prev) => ({ ...prev, errore: d.error || "Errore imprevisto" }));
+    setRecupero((prev) => ({ ...prev, inviato: true }));
+  };
+
+  // Nessun token (arrivo diretto): niente vicolo cieco, si recupera il link via email
+  if (!token) {
+    return (
+      <div className="pf-panel">
+        <h2 style={{ marginTop: 0 }}>Hai perso l'email con il link?</h2>
+        {recupero.inviato ? (
+          <div className="pf-successo">
+            Fatto ✅ Se ci sono prenotazioni attive collegate a quell'email, ti abbiamo
+            appena rimandato i link per gestirle (controlla anche lo spam).
+          </div>
+        ) : (
+          <form className="pf-book" onSubmit={recuperaLink}>
+            <p style={{ color: "var(--iw-slate)" }}>
+              Inserisci l'email usata per prenotare: ti rimandiamo subito il link per
+              gestire o disdire la prenotazione.
+            </p>
+            <label htmlFor="rec-email">La tua email</label>
+            <input id="rec-email" type="email" required value={recupero.email}
+              onChange={(e) => setRecupero((r) => ({ ...r, email: e.target.value }))} autoComplete="email" />
+            {recupero.errore && <div className="pf-errore">{recupero.errore}</div>}
+            <button className="pf-btn">Rimandami il link</button>
+            <p className="pf-note" style={{ marginTop: 10 }}>
+              In alternativa puoi sempre contattare direttamente il professionista
+              (il suo telefono è nella sua scheda e nell'email di conferma).
+            </p>
+          </form>
+        )}
+      </div>
+    );
+  }
 
   const disdici = async () => {
     setErrore("");

@@ -23,6 +23,10 @@ export async function POST({ request }) {
   if (!(await consenti(`login:${email}:${ipDa(request)}`, 5, 15))) {
     return json({ error: "Troppi tentativi: riprova tra 15 minuti" }, 429);
   }
+  // Tetto globale per IP: blocca il password-spraying (1 password su tante email)
+  if (!(await consenti(`login-ip:${ipDa(request)}`, 20, 15))) {
+    return json({ error: "Troppi tentativi da questa rete: riprova tra 15 minuti" }, 429);
+  }
 
   const [user] = await sql`
     SELECT u.id, u.email, u.pass_hash, u.name, u.role, u.professional_id, u.totp_enabled, u.totp_secret,

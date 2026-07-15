@@ -3,7 +3,7 @@ import Base from "./Base.astro";
 import "../styles/platform.css";
 import logo from "../assets/logo.jpeg";
 
-const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest } = Astro.props;
+const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
 const nav = [
   { href: "/professionisti", label: "Zone coperte" },
@@ -13,7 +13,7 @@ const nav = [
 ];
 ---
 
-<Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas} {manifest}>
+<Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas} {manifest} {robots}>
   <div class="pf">
     <header class="pf-header">
       <div class="pf-header-inner">
@@ -41,8 +41,8 @@ const nav = [
         <div>
           <h4>InfermieriWeb.it</h4>
           <p style="font-size:14.5px; margin:0; max-width:280px;">
-            La piattaforma che mette in contatto pazienti e professionisti sanitari
-            a domicilio, in tutta Italia.
+            La rete degli infermieri a domicilio. Partita da Lucca, cresce una
+            città alla volta — con professionisti verificati uno per uno.
           </p>
         </div>
         <div>
@@ -51,6 +51,7 @@ const nav = [
           <a href="/professionisti">Zone coperte</a>
           <a href="/articoli">Blog salute</a>
           <a href="/#come-funziona">Come funziona</a>
+          <a href="/prenotazione">Gestisci una prenotazione</a>
         </div>
         <div>
           <h4>Per i professionisti</h4>

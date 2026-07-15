@@ -11,7 +11,10 @@ export default defineConfig({
   // Statico di default; le pagine/API con `export const prerender = false`
   // girano come funzioni server su Netlify (motore prenotazioni).
   adapter: netlify(),
-  integrations: [react(), sitemap()],
+  integrations: [react(), sitemap({
+    // pagine riservate o strumentali: fuori dalla sitemap (sono anche noindex)
+    filter: (page) => !["/admin", "/area-professionisti", "/prenotazione", "/recensione"].some((p) => page.includes(p)),
+  })],
   vite: {
     resolve: {
       alias: {

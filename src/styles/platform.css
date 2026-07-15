@@ -692,3 +692,17 @@
 }
 .adm-utente strong { display: block; font-size: 16px; line-height: 1.2; }
 .adm-utente small { display: block; font-size: 12px; opacity: 0.85; }
+
+/* Barra azioni fissa su mobile nella scheda professionista */
+.pf-cta-mobile { display: none; }
+@media (max-width: 960px) {
+  .pf-cta-mobile {
+    display: flex; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--iw-line); box-shadow: 0 -6px 24px rgba(11, 57, 84, 0.10);
+  }
+  .pf-cta-mobile .pf-btn { flex: 1; text-align: center; }
+  /* la barra non deve coprire il fondo pagina */
+  .pf-profile-grid { padding-bottom: 74px; }
+}

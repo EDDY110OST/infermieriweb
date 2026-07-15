@@ -111,7 +111,7 @@ export async function POST({ request }) {
     ok: true,
     booking_id: inserted[0].id,
     emailed: emailedPaziente,
-    cancel_token: emailedPaziente ? undefined : cancelToken, // fallback finché le email non sono attive
+    cancel_token: cancelToken, // sempre visibile in conferma: l'email può avere un refuso o finire in spam
     professional: service.professional_name,
     service: service.service_name,
     start: start.toISOString(),

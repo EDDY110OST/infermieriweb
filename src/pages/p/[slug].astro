@@ -69,6 +69,7 @@ const schemas = [
 ];
 
 const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+const prezzoMinimo = services.length ? Math.min(...services.map((s) => s.price_cents)) : 0;
 
 // Contatore visite (statistiche del pannello); mai bloccare la pagina se fallisce
 try {
@@ -91,6 +92,18 @@ try {
         ) : pro.google_rating ? (
           <a class="badge-albo" href={pro.google_reviews_url} target="_blank" rel="noopener" style="text-decoration:none;">⭐ {pro.google_rating}</a>
         ) : null}
+        <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+          {services.length > 0 && (
+            <a class="pf-btn" style="background: #fff; color: var(--iw-primary-deep) !important;" href="#prenota">
+              📅 Prenota online{prezzoMinimo ? ` — da ${euro(prezzoMinimo)}` : ""}
+            </a>
+          )}
+          {pro.phone && (
+            <a class="pf-btn" style="background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.4);" href={`tel:${pro.phone}`}>
+              📞 Preferisci telefonare?
+            </a>
+          )}
+        </div>
       </div>
     </div>
   </section>
@@ -158,10 +171,15 @@ try {
         </div>
       </div>
 
-      <div class="pf-panel" style="position: sticky; top: 90px;">
+      <div class="pf-panel" id="prenota" style="position: sticky; top: 90px;">
         <h2>Prenota online</h2>
+        {pro.phone && (
+          <p class="pf-note" style="margin-top: -6px;">
+            Preferisci la voce? 📞 <a href={`tel:${pro.phone}`}>{pro.phone}</a>
+          </p>
+        )}
         {services.length > 0 ? (
-          <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} />
+          <BookingWidget client:load professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} telefono={pro.phone} />
         ) : (
           <p class="pf-note">
             Questo professionista sta completando il suo profilo: le prenotazioni online
@@ -171,4 +189,10 @@ try {
       </div>
     </div>
   </section>
+
+  <!-- Barra azioni fissa su mobile: prenota o chiama senza scrollare -->
+  <div class="pf-cta-mobile">
+    <a class="pf-btn" href="#prenota">📅 Prenota{prezzoMinimo ? ` · da ${euro(prezzoMinimo)}` : ""}</a>
+    {pro.phone && <a class="pf-btn secondario" href={`tel:${pro.phone}`}>📞 Chiama</a>}
+  </div>
 </Platform>

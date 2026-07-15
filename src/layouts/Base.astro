@@ -12,6 +12,7 @@ const {
   ogImageAlt = "Logo Infermieri Web",
   schemas = [],
   manifest = "/manifest.json",
+  robots = "index, follow",
 } = Astro.props;
 
 const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path, Astro.site).href.replace(/\/$/, "");
@@ -26,7 +27,7 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={robots} />
 
     <!-- Favicon: è l'icona che Google mostra accanto al risultato di ricerca
          (la vuole quadrata e multipla di 48px) e che si vede nelle schede del browser -->

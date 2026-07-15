@@ -1,0 +1,21 @@
+# Header di sicurezza e cache (Netlify li applica a ogni risposta)
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+
+# Immagini statiche: una settimana di cache (si rinomina il file quando cambia)
+/professionisti-foto/*
+  Cache-Control: public, max-age=604800
+
+/images/*
+  Cache-Control: public, max-age=2592000
+
+/hero-assistenza.webp
+  Cache-Control: public, max-age=604800
+
+/logo-512.png
+  Cache-Control: public, max-age=604800
