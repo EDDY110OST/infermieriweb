@@ -16,7 +16,7 @@ function buildPlaceholder(category, title) {
   const key = String(category || '').toLowerCase();
   const accent = colorMap[key] || '#00897b';
   const label = (category || 'Guida').toUpperCase();
-  const safeTitle = String(title || 'Articolo').slice(0, 46);
+  const safeTitle = String(title || 'Articolo').slice(0, 38);
 
   // Copertina brand: gradiente della piattaforma + croce sanitaria, niente finti scheletri
   const svg = `
@@ -36,7 +36,7 @@ function buildPlaceholder(category, title) {
   </g>
   <rect x="56" y="60" rx="999" width="${44 + label.length * 15}" height="46" fill="#ffffff" fill-opacity="0.18" />
   <text x="78" y="91" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="1">${label}</text>
-  <text x="56" y="300" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">${safeTitle}</text>
+  <text x="56" y="300" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">${safeTitle}</text>
   <text x="56" y="470" fill="#ffffff" fill-opacity="0.85" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600">InfermieriWeb · guide per pazienti e famiglie</text>
 </svg>`;
 

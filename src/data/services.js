@@ -53,7 +53,7 @@ export const servicesData = {
       "Personale qualificato e esperto",
       "Materiale sterile monouso",
       "Trasporto campioni in contenitori idonei",
-      "Risultati disponibili nel laboratorio convenzionato",
+      "Consegna dei campioni al laboratorio indicato dal medico",
     ],
     indications: [
       "Esami di routine",
