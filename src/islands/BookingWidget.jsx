@@ -20,7 +20,7 @@ function prossimiGiorni(n = 14) {
 
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 
-export default function BookingWidget({ professionalId, services, servizioIniziale, telefono }) {
+export default function BookingWidget({ professionalId, services, servizioIniziale }) {
   const giorni = useMemo(() => prossimiGiorni(14), []);
   // Nessuna prestazione preselezionata: un utente frettoloso confermerebbe
   // l'esame sbagliato (es. ECG da 50€ invece della medicazione che gli serve)
@@ -147,11 +147,10 @@ export default function BookingWidget({ professionalId, services, servizioInizia
             {" "}(il link è anche nell'email — salvalo tra i preferiti).
           </p>
         )}
-        {telefono && (
-          <p style={{ margin: "8px 0", fontSize: 16 }}>
-            📞 Per qualsiasi problema dell'ultimo minuto: <a href={`tel:${telefono}`}>{telefono}</a>
-          </p>
-        )}
+        <p style={{ margin: "8px 0", fontSize: 16 }}>
+          ✉️ Per qualsiasi problema dell'ultimo minuto rispondi all'email di conferma:
+          arriva direttamente al professionista.
+        </p>
       </div>
     );
   }

@@ -49,7 +49,6 @@ const schema = {
   name: pro.name,
   url: `${SITE_URL}${path}`,
   image: new URL(pro.photo_url, SITE_URL).href,
-  ...(pro.phone && { telephone: pro.phone }),
   medicalSpecialty: "Nursing",
   areaServed: zone.map((city) => ({ "@type": "City", name: city })),
   makesOffer: services.map((s) => ({
@@ -106,11 +105,6 @@ try {
           {services.length > 0 && (
             <a class="pf-btn" style="background: #fff; color: var(--iw-primary-deep) !important;" href="#prenota">
               📅 Prenota online{prezzoMinimo ? ` — da ${euro(prezzoMinimo)}` : ""}
-            </a>
-          )}
-          {pro.phone && (
-            <a class="pf-btn" style="background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.4);" href={`tel:${pro.phone}`}>
-              📞 Preferisci telefonare?
             </a>
           )}
         </div>
@@ -189,11 +183,11 @@ try {
       <div class="pf-panel" id="prenota" style="position: sticky; top: 90px;">
         <h2>Prenota online</h2>
         {services.length > 0 ? (
-          <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} telefono={pro.phone} />
+          <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} />
         ) : (
           <p class="pf-note">
             Questo professionista sta completando il suo profilo: le prenotazioni online
-            saranno disponibili a breve. {pro.phone && <>Nel frattempo puoi chiamarlo: <a href={`tel:${pro.phone}`}>{pro.phone}</a></>}
+            saranno disponibili a breve: riprova tra poco.
           </p>
         )}
       </div>
@@ -202,7 +196,6 @@ try {
 
   <!-- Barra azioni fissa su mobile: prenota o chiama senza scrollare -->
   <div class="pf-cta-mobile">
-    <a class="pf-btn" href="#prenota">📅 Prenota{prezzoMinimo ? ` · da ${euro(prezzoMinimo)}` : ""}</a>
-    {pro.phone && <a class="pf-btn secondario" href={`tel:${pro.phone}`}>📞 Chiama</a>}
+    <a class="pf-btn" href="#prenota" style="flex: 1;">📅 Prenota online{prezzoMinimo ? ` · da ${euro(prezzoMinimo)}` : ""}</a>
   </div>
 </Platform>

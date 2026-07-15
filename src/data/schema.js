@@ -10,7 +10,6 @@ export const medicalBusinessSchema = {
   url: `${SITE_URL}/`,
   logo: `${SITE_URL}/logo.jpeg`,
   image: `${SITE_URL}/logo.jpeg`,
-  telephone: "+393313139220",
   email: "infermieri.ef@gmail.com",
   medicalSpecialty: "Nursing",
   areaServed: [

@@ -53,9 +53,9 @@ export default function DisdettaApp() {
             {recupero.errore && <div className="pf-errore">{recupero.errore}</div>}
             <button className="pf-btn">Rimandami il link</button>
             <p className="pf-note" style={{ marginTop: 10 }}>
-              In alternativa puoi sempre contattare direttamente il professionista
-              (il suo telefono è nella sua scheda e nell'email di conferma). Oppure
-              apri <a href="/le-mie-prenotazioni">Le mie prenotazioni</a> per vederle tutte.
+              In alternativa rispondi all'email di conferma: arriva direttamente al
+              professionista. Oppure apri <a href="/le-mie-prenotazioni">Le mie
+              prenotazioni</a> per vederle tutte.
             </p>
           </form>
         )}

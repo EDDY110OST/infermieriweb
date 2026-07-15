@@ -123,7 +123,7 @@ const translations = {
       en: "English"
     },
     aria: {
-      callNow: "Chiama il numero 3313139220",
+      callNow: "Prenota online",
       whatsapp: "Contatta via WhatsApp",
       languageSwitcher: "Cambia lingua del sito",
       themeToggle: "Cambia tema chiaro o scuro",
@@ -235,7 +235,7 @@ const translations = {
         ],
         ctaTitle: "Hai bisogno di assistenza a domicilio?",
         ctaText: "Trova un professionista che copre la tua zona e prenota online in un minuto. Gratis per te.",
-        ctaCall: "📞 Chiama: 3313139220",
+        ctaCall: "📅 Prenota online",
         ctaEmail: "✉️ Email"
       },
       domicile: {
@@ -445,7 +445,7 @@ const translations = {
         },
         {
           question: "How can I book a visit?",
-          answer: "You can call directly or message on WhatsApp at 3313139220 to schedule the home visit."
+          answer: "You can book online in one minute: pick the service, choose a real free slot and get instant confirmation. No account or card needed."
         },
         {
           question: "Which services can I request at home?",
@@ -474,7 +474,7 @@ const translations = {
       en: "English"
     },
     aria: {
-      callNow: "Call number 3313139220",
+      callNow: "Book online",
       whatsapp: "Contact via WhatsApp",
       languageSwitcher: "Switch site language",
       themeToggle: "Toggle light or dark theme",
@@ -586,7 +586,7 @@ const translations = {
         ],
         ctaTitle: "Do you need care at home?",
         ctaText: "Find a professional covering your area and book online in a minute. Free for you.",
-        ctaCall: "Call: 3313139220",
+        ctaCall: "Book online",
         ctaEmail: "Email"
       },
       domicile: {
