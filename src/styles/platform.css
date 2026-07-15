@@ -729,3 +729,16 @@
 
 /* Prossima disponibilità sulle card (Pacchetto 3) */
 .pf-pro-card .disponibilita { font-size: 15.5px; color: #15803d; margin-top: 4px; }
+
+/* Zone coperte (pannello professionista) */
+.pf-zone-lista { display: flex; flex-wrap: wrap; gap: 10px; }
+.pf-zona {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px;
+  background: #fff; border: 1.5px solid var(--iw-line); font-size: 16px; font-weight: 700; color: var(--iw-navy);
+}
+.pf-zona small { font-weight: 500; color: var(--iw-muted); }
+.pf-zona button {
+  border: none; background: var(--iw-primary-soft); color: var(--iw-primary-deep); width: 24px; height: 24px;
+  border-radius: 50%; font-size: 16px; font-weight: 800; line-height: 1; cursor: pointer;
+}
+.pf-zona button:hover { background: #fecaca; color: #b91c1c; }

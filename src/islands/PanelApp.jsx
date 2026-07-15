@@ -421,6 +421,89 @@ function TabOrari() {
 
 // ---------------------------------------------------------------- Profilo
 
+function TabZone() {
+  const [zone, setZone] = useState(null);
+  const [nuova, setNuova] = useState({ city: "", province: "" });
+  const [messaggio, setMessaggio] = useState(null);
+
+  const avvisa = (tipo, testo) => {
+    setMessaggio({ tipo, testo });
+    setTimeout(() => setMessaggio(null), 4000);
+  };
+
+  const carica = () =>
+    fetch("/api/panel/zone").then((r) => r.json()).then((d) => {
+      setZone(d.zone || []);
+      // la provincia della prima zona è quasi sempre quella giusta anche per la prossima
+      if (d.zone?.length) setNuova((n) => ({ ...n, province: n.province || d.zone[0].province }));
+    });
+
+  useEffect(() => { carica(); }, []);
+
+  const aggiungi = async (e) => {
+    e.preventDefault();
+    const r = await fetch("/api/panel/zone", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuova),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    setNuova((n) => ({ city: "", province: n.province }));
+    avvisa("ok", `${d.zona.city} aggiunta ✅ Da adesso i pazienti di quella zona ti trovano.`);
+    carica();
+  };
+
+  const togli = async (z) => {
+    if (!confirm(`Togliere ${z.city} dalle tue zone? Non comparirai più nelle ricerche di quel comune.`)) return;
+    const r = await fetch("/api/panel/zone", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: z.id }),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", "Zona rimossa");
+    carica();
+  };
+
+  if (!zone) return <p className="pf-note">Caricamento…</p>;
+
+  return (
+    <div>
+      <p className="pf-note" style={{ marginTop: 0 }}>
+        I comuni che copri a domicilio: decidono dove compari nelle ricerche, sulla mappa
+        e nelle pagine di zona. Più comuni copri, più pazienti ti trovano.
+      </p>
+      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+
+      <div className="pf-zone-lista">
+        {zone.map((z) => (
+          <span className="pf-zona" key={z.id}>
+            📍 {z.city} <small>({z.province})</small>
+            <button type="button" aria-label={`Togli ${z.city}`} onClick={() => togli(z)}>×</button>
+          </span>
+        ))}
+      </div>
+
+      <form className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
+        <h2>+ Aggiungi un comune</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+          <div>
+            <label>Comune *</label>
+            <input required minLength={2} placeholder="es. Borgo a Mozzano" value={nuova.city} onChange={(e) => setNuova({ ...nuova, city: e.target.value })} />
+          </div>
+          <div>
+            <label>Provincia *</label>
+            <input required minLength={2} placeholder="es. Lucca o LU" value={nuova.province} onChange={(e) => setNuova({ ...nuova, province: e.target.value })} />
+          </div>
+        </div>
+        <button className="pf-btn">Aggiungi zona</button>
+      </form>
+    </div>
+  );
+}
+
 function TabProfilo() {
   const [profilo, setProfilo] = useState(null);
   const [qr, setQr] = useState(null);
@@ -767,6 +850,7 @@ export default function PanelApp() {
     { id: "agenda", label: "📅 Agenda" },
     { id: "servizi", label: "🩺 Servizi" },
     { id: "orari", label: "🕒 Orari" },
+    { id: "zone", label: "📍 Zone" },
     { id: "stats", label: "📊 Statistiche" },
     { id: "profilo", label: "👤 Profilo" },
   ];
@@ -785,6 +869,7 @@ export default function PanelApp() {
       {tab === "agenda" && <TabAgenda statoPush={statoPush} attivaNotifiche={attivaNotifiche} />}
       {tab === "servizi" && <TabServizi />}
       {tab === "orari" && <TabOrari />}
+      {tab === "zone" && <TabZone />}
       {tab === "stats" && <TabStatistiche />}
       {tab === "profilo" && <TabProfilo />}
     </div>

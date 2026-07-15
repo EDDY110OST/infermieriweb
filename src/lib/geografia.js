@@ -70,3 +70,12 @@ export function regioneDaProvincia(provincia) {
   if (SIGLE[chiave] && MAPPA[SIGLE[chiave]]) return MAPPA[SIGLE[chiave]];
   return "";
 }
+
+// "LU"/"lu" -> "Lucca"; "lucca" -> "Lucca". Vuoto se sconosciuta.
+export function provinciaEstesa(provincia) {
+  const chiave = String(provincia || "").trim().toLowerCase();
+  if (!chiave) return "";
+  const nome = SIGLE[chiave] || (MAPPA[chiave] ? chiave : "");
+  if (!nome) return "";
+  return nome.split(" ").map((p) => p.split("-").map((q) => q.charAt(0).toUpperCase() + q.slice(1)).join("-")).join(" ");
+}
