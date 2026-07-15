@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../../../lib/db.js";
 import { verifyPassword, createSession, sessionCookie } from "../../../lib/auth.js";
 import { consenti, ipDa } from "../../../lib/ratelimit.js";
+import { verificaCodice } from "../../../lib/totp.js";
 
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...headers } });
@@ -24,12 +25,22 @@ export async function POST({ request }) {
   }
 
   const [user] = await sql`
-    SELECT u.id, u.email, u.pass_hash, u.name, u.role, u.professional_id, p.slug, p.name AS professional_name
+    SELECT u.id, u.email, u.pass_hash, u.name, u.role, u.professional_id, u.totp_enabled, u.totp_secret,
+           p.slug, p.name AS professional_name
     FROM professional_users u JOIN professionals p ON p.id = u.professional_id
     WHERE lower(u.email) = ${email}`;
 
   if (!user || !verifyPassword(password, user.pass_hash)) {
     return json({ error: "Credenziali non corrette" }, 401);
+  }
+
+  // Autenticazione a due fattori: dopo la password serve il codice dell'app
+  if (user.totp_enabled) {
+    const codice = String(body.totp || "");
+    if (!codice) return json({ need_totp: true, error: "Inserisci il codice a 6 cifre dell'app di autenticazione" }, 401);
+    if (!verificaCodice(user.totp_secret, codice)) {
+      return json({ need_totp: true, error: "Codice 2FA non valido" }, 401);
+    }
   }
 
   const token = createSession({

@@ -11,13 +11,16 @@ const soloAdmin = (request) => {
   return session && session.role === "admin" ? session : null;
 };
 
-// GET /api/admin/recensioni — in attesa di moderazione
-export async function GET({ request }) {
+// GET /api/admin/recensioni?stato=pending|published|rejected — default: da moderare
+export async function GET({ request, url }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
+  const stato = ["pending", "published", "rejected"].includes(url.searchParams.get("stato"))
+    ? url.searchParams.get("stato")
+    : "pending";
   const recensioni = await sql`
-    SELECT r.id, r.rating, r.text, r.author_name, r.created_at, p.name AS professional_name
+    SELECT r.id, r.rating, r.text, r.author_name, r.created_at, r.status, p.name AS professional_name
     FROM reviews r JOIN professionals p ON p.id = r.professional_id
-    WHERE r.status = 'pending' ORDER BY r.created_at`;
+    WHERE r.status = ${stato} ORDER BY r.created_at DESC LIMIT 200`;
   return json({ recensioni });
 }
 
