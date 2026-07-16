@@ -174,8 +174,28 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
       <p style="margin: 4px 0;">3️⃣ Inserisci le tue <strong>prestazioni con i prezzi</strong> (scheda Servizi)</p>
       <p style="margin: 4px 0;">4️⃣ Imposta i tuoi <strong>orari settimanali</strong> (scheda Orari)</p>
       <p style="margin: 4px 0;">5️⃣ Aggiungi i <strong>comuni che copri a domicilio</strong> (scheda Zone): più comuni copri, più pazienti ti trovano</p>
-      <p style="margin: 4px 0;">6️⃣ Dal telefono: apri l'agenda, <strong>aggiungila alla schermata Home</strong> (Condividi → "Aggiungi a schermata Home") e attiva le <strong>notifiche</strong> nella scheda Agenda: ogni prenotazione ti arriverà come una notifica, come un'app</p>
       <p style="margin: 10px 0 4px; color: #7b909b; font-size: 14px;">Finché prestazioni e orari non sono inseriti, la tua scheda dice "sta completando il profilo" e non è prenotabile: bastano i passi 3 e 4 per andare in campo.</p>
+
+      <div style="background: #f0fdfa; border: 1px solid #ccebe6; border-radius: 12px; padding: 16px 18px; margin: 18px 0;">
+        <p style="margin: 0 0 4px; font-weight: bold; color: #0b3954; font-size: 16px;">📲 Porta l'agenda sul telefono, come una vera app (2 minuti)</p>
+        <p style="margin: 0 0 12px; color: #46626e; font-size: 14px;">Così ogni nuova prenotazione ti arriva come una <strong>notifica sul telefono</strong>, senza dover controllare le email. Segui i passi del tuo telefono:</p>
+
+        <p style="margin: 0 0 4px; font-weight: bold; color: #0b3954;">Se hai un iPhone:</p>
+        <p style="margin: 2px 0;">1. Apri <strong>Safari</strong> (la bussola blu — proprio Safari, non altre app) e vai su <strong>infermieriweb.it/area-professionisti</strong></p>
+        <p style="margin: 2px 0;">2. Tocca il tasto <strong>Condividi</strong>: è il <strong>quadratino con la freccia verso l'alto</strong>, in basso al centro dello schermo</p>
+        <p style="margin: 2px 0;">3. Scorri l'elenco che appare e tocca <strong>"Aggiungi alla schermata Home"</strong>, poi <strong>"Aggiungi"</strong> in alto a destra</p>
+        <p style="margin: 2px 0;">4. Chiudi Safari: sulla schermata Home ora c'è l'icona <strong>"IW Pro"</strong> — da oggi entri sempre da lì</p>
+
+        <p style="margin: 12px 0 4px; font-weight: bold; color: #0b3954;">Se hai un Android (Samsung, Xiaomi, ecc.):</p>
+        <p style="margin: 2px 0;">1. Apri <strong>Chrome</strong> e vai su <strong>infermieriweb.it/area-professionisti</strong></p>
+        <p style="margin: 2px 0;">2. Tocca i <strong>tre puntini</strong> in alto a destra</p>
+        <p style="margin: 2px 0;">3. Tocca <strong>"Aggiungi a schermata Home"</strong> e conferma con <strong>"Aggiungi"</strong></p>
+        <p style="margin: 2px 0;">4. Sulla schermata Home trovi l'icona <strong>"IW Pro"</strong> — entra sempre da lì</p>
+
+        <p style="margin: 12px 0 0; font-weight: bold; color: #0b3954;">Ultimo passo (importante):</p>
+        <p style="margin: 2px 0;">Apri l'app dall'icona nuova, entra con le tue credenziali e nella scheda <strong>Agenda</strong> tocca <strong>"🔔 Attiva notifiche"</strong>, poi <strong>"Consenti"</strong> quando il telefono te lo chiede. Fatto: da adesso le prenotazioni ti "suonano" in tasca.</p>
+        <p style="margin: 8px 0 0; color: #7b909b; font-size: 13px;">Su iPhone le notifiche funzionano SOLO se entri dall'icona sulla Home (non da Safari): per questo il passaggio sopra è importante.</p>
+      </div>
       <p style="text-align: center; margin: 22px 0;">
         <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Entra nella tua agenda</a>
       </p>
