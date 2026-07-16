@@ -164,6 +164,7 @@
 .pf-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
 @media (max-width: 860px) { .pf-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .pf-cat, .pf-cat > span { min-width: 0; }
+.pf-cat { justify-content: center; text-align: center; }
 .pf-cat .nome, .pf-cat .da { overflow-wrap: anywhere; hyphens: auto; }
 @media (max-width: 480px) {
   .pf-cat { gap: 10px; padding: 14px 12px; }

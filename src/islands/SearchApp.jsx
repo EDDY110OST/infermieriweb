@@ -173,7 +173,7 @@ export default function SearchApp() {
                 <div className="prof">{capitalizza(p.profession)}</div>
                 <Stelle pro={p} />
                 <div className="zona">📍 {p.city}{p.coverage?.length > 1 ? ` e altre ${p.coverage.length - 1} zone` : ""} ({p.province})</div>
-                {p.min_price_cents > 0 && <div className="prezzo">Prestazioni {prezzo(p.min_price_cents)}</div>}
+                
               </div>
               <a className="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
             </div>

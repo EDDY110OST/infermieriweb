@@ -40,10 +40,7 @@ const [articolo] = slugArticolo
 
 const euro = (c) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
 const nomeColloquiale = NOMI_COLLOQUIALI[serviceId] || service.title;
-const prezzoDa = professionisti.length
-  ? euro(Math.min(...professionisti.map((p) => p.price_cents)))
-  : service.price.replace("Da € ", "").trim() + " €";
-const faq = faqServizio(nomeColloquiale, prezzoDa);
+const faq = faqServizio(nomeColloquiale);
 const seo = serviceSeo(serviceId, service);
 const path = `/servizio/${serviceId}`;
 
@@ -78,7 +75,6 @@ const schemas = [
             <div class="info">
               <a class="nome" href={`/p/${p.slug}`}>{p.name}</a>
               <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>
-              <div class="prezzo">Da {euro(p.price_cents)}</div>
               {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
             </div>
             <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}#prenota`}>Vedi orari e prenota</a>
@@ -122,8 +118,8 @@ const schemas = [
       <div class="pf-panel" style="margin-bottom: 18px;">
         <h2 style="margin-top: 0;">Quanto costa</h2>
         <p style="color: var(--iw-slate);">
-          <strong style="color: var(--iw-navy); font-size: 22px;">da {prezzoDa}</strong> — il prezzo esatto è nella
-          scheda di ogni professionista e può variare in base alla complessità e alla distanza.
+          Il prezzo è indicato nella <strong>scheda di ogni professionista</strong>, accanto a
+          ciascuna prestazione, e può variare in base alla complessità e alla distanza.
         </p>
         <p class="pf-note" style="margin: 0;">
           Nessun pagamento online e nessuna carta richiesta: il compenso si regola direttamente

@@ -43,11 +43,11 @@ export const SERVIZIO_PER_ARTICOLO = {
 };
 
 // FAQ oneste per la pagina servizio (niente promesse che la piattaforma non controlla)
-export function faqServizio(nomeColloquiale, prezzoDa) {
+export function faqServizio(nomeColloquiale) {
   return [
     {
       question: `Quanto costa ${nomeColloquiale.toLowerCase()}?`,
-      answer: `I prezzi partono da ${prezzoDa} e sono indicati nella scheda di ogni professionista: possono variare in base alla complessità e alla distanza. Il compenso si paga direttamente all'infermiere, dopo la prestazione — nessun pagamento online.`,
+      answer: `Il prezzo è indicato nella scheda di ogni professionista, accanto a ciascuna prestazione: può variare in base alla complessità e alla distanza. Il compenso si paga direttamente all'infermiere, dopo la prestazione — nessun pagamento online.`,
     },
     {
       question: "Serve la prescrizione del medico?",

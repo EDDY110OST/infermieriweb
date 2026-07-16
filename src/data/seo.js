@@ -47,7 +47,7 @@ export function serviceSeo(serviceId, service) {
   return {
     title: `${nome} a Lucca | InfermieriWeb`,
     description: clip(
-      `${nome} a Lucca e provincia con infermieri iscritti all'albo: ${service.price.toLowerCase()}, prenoti online l'orario che preferisci e paghi dopo la prestazione.`
+      `${nome} a Lucca e provincia con infermieri iscritti all'albo: prezzi chiari nella scheda, prenoti online l'orario che preferisci e paghi dopo la prestazione.`
     ),
   };
 }

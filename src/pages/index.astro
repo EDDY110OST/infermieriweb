@@ -17,14 +17,14 @@ const righeArticoli = await sql`
 const ultimiArticoli = righeArticoli.map(mapArticolo);
 
 const categorie = [
-  { icona: "croce", nome: "Medicazioni", da: "da 30 €", href: "/servizio/medicazioni" },
-  { icona: "attivita", nome: "ECG a domicilio", da: "da 50 €", href: "/servizio/ecg" },
-  { icona: "provetta", nome: "Prelievi del sangue", da: "da 20 €", href: "/servizio/prelievi" },
-  { icona: "siringa", nome: "Iniezioni", da: "da 20 €", href: "/servizio/iniezioni" },
-  { icona: "cuore", nome: "Holter cardiaco", da: "da 100 €", href: "/servizio/holter-cardiaci" },
-  { icona: "indicatore", nome: "Holter pressorio", da: "da 80 €", href: "/servizio/holter-pressori" },
-  { icona: "goccia", nome: "Flebo e terapie", da: "da 35 €", href: "/servizio/flebo" },
-  { icona: "tubo", nome: "Cateteri e stomie", da: "da 40 €", href: "/servizio/cateteri-vescicali" },
+  { icona: "croce", nome: "Medicazioni", href: "/servizio/medicazioni" },
+  { icona: "attivita", nome: "ECG a domicilio", href: "/servizio/ecg" },
+  { icona: "provetta", nome: "Prelievi del sangue", href: "/servizio/prelievi" },
+  { icona: "siringa", nome: "Iniezioni", href: "/servizio/iniezioni" },
+  { icona: "cuore", nome: "Holter cardiaco", href: "/servizio/holter-cardiaci" },
+  { icona: "indicatore", nome: "Holter pressorio", href: "/servizio/holter-pressori" },
+  { icona: "goccia", nome: "Flebo e terapie", href: "/servizio/flebo" },
+  { icona: "tubo", nome: "Cateteri e stomie", href: "/servizio/cateteri-vescicali" },
 ];
 
 const faqItems = [
@@ -68,15 +68,12 @@ const faqItems = [
   <section class="pf-section pf-center">
     <span class="pf-kicker">Prestazioni</span>
     <h2>Di cosa hai bisogno?</h2>
-    <p class="pf-sub">Prestazioni infermieristiche a casa tua, 7 giorni su 7, con prezzi indicati in anticipo.</p>
+    <p class="pf-sub">Prestazioni infermieristiche a casa tua, 7 giorni su 7. Prezzi chiari nella scheda di ogni professionista.</p>
     <div class="pf-cats">
       {categorie.map((c) => (
         <a class="pf-cat" href={c.href}>
           <span class="emoji"><Icona nome={c.icona} size={30} /></span>
-          <span>
-            <span class="nome">{c.nome}</span><br />
-            <span class="da">{c.da}</span>
-          </span>
+          <span class="nome">{c.nome}</span>
         </a>
       ))}
     </div>

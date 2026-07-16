@@ -173,7 +173,6 @@ const intestazioni = {
                   <span class="pf-stars">★★★★★<span class="n">{p.google_rating}</span></span>
                 ) : null}
                 <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>
-                {Number(p.min_price) > 0 && <div class="prezzo">Prestazioni da {euro(p.min_price)}</div>}
                 {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
               </div>
               <a class="pf-btn" href={`/p/${p.slug}#prenota`}>Prenota servizio</a>

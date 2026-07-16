@@ -4,18 +4,18 @@ import React, { useRef, useState } from "react";
 // "digito e non succede niente" = "il sito non funziona".
 const CITTA = ["Lucca", "Capannori", "Porcari", "Altopascio", "Montecarlo"];
 const PRESTAZIONI = [
-  { nome: "Prelievo del sangue", da: "da 20 €", href: "/servizio/prelievi" },
-  { nome: "Medicazioni", da: "da 30 €", href: "/servizio/medicazioni" },
-  { nome: "Iniezioni", da: "da 20 €", href: "/servizio/iniezioni" },
-  { nome: "ECG a domicilio", da: "da 50 €", href: "/servizio/ecg" },
-  { nome: "Flebo e terapie", da: "da 35 €", href: "/servizio/flebo" },
-  { nome: "Rimozione punti di sutura", da: "da 30 €", href: "/servizio/desutura" },
-  { nome: "Catetere vescicale", da: "da 40 €", href: "/servizio/cateteri-vescicali" },
-  { nome: "Holter cardiaco", da: "da 100 €", href: "/servizio/holter-cardiaci" },
-  { nome: "Holter pressorio", da: "da 80 €", href: "/servizio/holter-pressori" },
-  { nome: "Gestione stomie", da: "da 40 €", href: "/servizio/gestione-stomie" },
-  { nome: "Gestione PEG", da: "da 50 €", href: "/servizio/gestione-peg" },
-  { nome: "Parametri vitali", da: "da 25 €", href: "/servizio/parametri-vitali" },
+  { nome: "Prelievo del sangue", href: "/servizio/prelievi" },
+  { nome: "Medicazioni", href: "/servizio/medicazioni" },
+  { nome: "Iniezioni", href: "/servizio/iniezioni" },
+  { nome: "ECG a domicilio", href: "/servizio/ecg" },
+  { nome: "Flebo e terapie", href: "/servizio/flebo" },
+  { nome: "Rimozione punti di sutura", href: "/servizio/desutura" },
+  { nome: "Catetere vescicale", href: "/servizio/cateteri-vescicali" },
+  { nome: "Holter cardiaco", href: "/servizio/holter-cardiaci" },
+  { nome: "Holter pressorio", href: "/servizio/holter-pressori" },
+  { nome: "Gestione stomie", href: "/servizio/gestione-stomie" },
+  { nome: "Gestione PEG", href: "/servizio/gestione-peg" },
+  { nome: "Parametri vitali", href: "/servizio/parametri-vitali" },
 ];
 
 const norma = (t) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -72,7 +72,7 @@ export default function HomeSearch() {
                 )}
               </span>
               <span className="nome">{s.nome}</span>
-              {s.da && <span className="da">{s.da}</span>}
+              
             </a>
           ))}
         </div>
