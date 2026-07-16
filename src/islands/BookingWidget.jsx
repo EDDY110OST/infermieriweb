@@ -126,27 +126,18 @@ export default function BookingWidget({ professionalId, services, servizioInizia
     });
     return (
       <div className="pf-successo">
-        <strong>Prenotazione confermata ✅</strong>
+        <strong>Quasi fatto! Ti abbiamo riservato l'orario ⏳</strong>
         <p style={{ margin: "8px 0" }}>
           {fatto.service} con {fatto.professional}<br />
           <strong>{quando}</strong>
         </p>
-        {fatto.emailed ? (
-          <p style={{ margin: "8px 0", fontSize: 17 }}>
-            Il professionista è stato avvisato. Ti abbiamo inviato una <strong>email di conferma</strong> con
-            il riepilogo (controlla anche lo spam). Riceverai un promemoria 24 ore prima.
-          </p>
-        ) : (
-          <p style={{ margin: "8px 0", fontSize: 17 }}>
-            Il professionista è stato avvisato.
-          </p>
-        )}
-        {fatto.cancel_token && (
-          <p style={{ margin: "8px 0", fontSize: 16 }}>
-            Se devi disdire: <a href={`/prenotazione?token=${fatto.cancel_token}`}>gestisci la prenotazione da qui</a>
-            {" "}(il link è anche nell'email — salvalo tra i preferiti).
-          </p>
-        )}
+        <p style={{ margin: "8px 0", fontSize: 17 }}>
+          Ora apri l'email che ti abbiamo appena inviato e premi
+          {" "}<strong>"Convalida la prenotazione" entro 60 minuti</strong> (controlla anche lo spam):
+          è quel click che la rende definitiva e avvisa il professionista. Senza convalida,
+          l'orario torna disponibile da solo.
+        </p>
+        
         <p style={{ margin: "8px 0", fontSize: 16 }}>
           Per qualsiasi problema dell'ultimo minuto rispondi all'email di conferma:
           arriva direttamente al professionista.

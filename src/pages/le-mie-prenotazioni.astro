@@ -22,8 +22,8 @@ if (email) {
     JOIN professionals p ON p.id = b.professional_id
     WHERE lower(b.customer_email) = ${email}
     ORDER BY b.start_dt DESC LIMIT 50`;
-  future = righe.filter((r) => new Date(r.start_dt) > new Date() && r.status === "active").reverse();
-  passate = righe.filter((r) => new Date(r.start_dt) <= new Date() || r.status !== "active");
+  future = righe.filter((r) => new Date(r.start_dt) > new Date() && (r.status === "active" || r.status === "pending")).reverse();
+  passate = righe.filter((r) => new Date(r.start_dt) <= new Date() || (r.status !== "active" && r.status !== "pending"));
 }
 
 const quando = (iso) => {
@@ -32,7 +32,7 @@ const quando = (iso) => {
   });
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
-const stato = (r) => (r.status === "cancelled" ? "Disdetta" : new Date(r.start_dt) <= new Date() ? "Completata" : "Confermata");
+const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expired" ? "Non convalidata" : r.status === "pending" ? "Da convalidare (vedi email)" : new Date(r.start_dt) <= new Date() ? "Completata" : "Confermata");
 ---
 
 <Platform

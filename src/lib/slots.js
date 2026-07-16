@@ -57,7 +57,8 @@ export async function availableSlots(professionalId, serviceId, dateStr) {
 
   const busy = await sql`
     SELECT start_dt, end_dt FROM bookings
-    WHERE professional_id = ${professionalId} AND status = 'active'
+    WHERE professional_id = ${professionalId}
+      AND (status = 'active' OR (status = 'pending' AND created_at > now() - interval '60 minutes'))
       AND start_dt < ${dayEnd.toISOString()} AND end_dt > ${dayStart.toISOString()}
     UNION ALL
     SELECT start_dt, end_dt FROM blocks
@@ -107,7 +108,8 @@ export async function nextAvailability(professionalId) {
   const fine = new Date(now.getTime() + 14 * 86400000);
   const busy = await sql`
     SELECT start_dt, end_dt FROM bookings
-    WHERE professional_id = ${professionalId} AND status = 'active'
+    WHERE professional_id = ${professionalId}
+      AND (status = 'active' OR (status = 'pending' AND created_at > now() - interval '60 minutes'))
       AND start_dt < ${fine.toISOString()} AND end_dt > ${now.toISOString()}
     UNION ALL
     SELECT start_dt, end_dt FROM blocks

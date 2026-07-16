@@ -24,6 +24,7 @@ export async function GET({ request, url }) {
            b.address, b.city, b.status, b.source, s.name AS service_name
     FROM bookings b JOIN services s ON s.id = b.service_id
     WHERE b.professional_id = ${session.pid}
+      AND b.status NOT IN ('pending', 'expired')
       AND b.start_dt >= ${start.toISOString()} AND b.start_dt < ${end.toISOString()}
     ORDER BY b.start_dt`;
 

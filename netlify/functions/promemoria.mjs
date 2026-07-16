@@ -15,11 +15,17 @@ const dataEstesa = (iso) =>
   });
 
 export default async () => {
+  const sql = neon(process.env.NETLIFY_DATABASE_URL);
+
+  // Le prenotazioni mai convalidate scadono da sole (double opt-in, finestra 60')
+  try {
+    await sql`UPDATE bookings SET status = 'expired' WHERE status = 'pending' AND created_at < now() - interval '60 minutes'`;
+  } catch { /* la pulizia riprova alla prossima ora */ }
+
   if (!API_KEY) {
     console.log("[promemoria] BREVO_API_KEY assente: salto il giro.");
     return new Response("no-key");
   }
-  const sql = neon(process.env.NETLIFY_DATABASE_URL);
 
   const inScadenza = await sql`
     SELECT b.id, b.start_dt, b.customer_name, b.customer_email, b.cancel_token, b.address, b.city,

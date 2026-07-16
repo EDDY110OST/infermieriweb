@@ -80,6 +80,30 @@ export function emailConfermaPaziente({ booking, professional, service, cancelTo
   };
 }
 
+export function emailConvalidaPrenotazione({ booking, professional, service, confermaLink }) {
+  return {
+    subject: `Convalida la tua prenotazione entro 60 minuti — ${service.name}`,
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Un ultimo passo: convalida la prenotazione ⏳</h2>
+      <p>Ciao ${booking.name},</p>
+      <p>abbiamo riservato per te questo appuntamento:</p>
+      <table style="width: 100%; font-size: 15px; margin: 14px 0;">
+        <tr><td style="padding: 5px 0; color: #7b909b;">Prestazione</td><td style="font-weight: bold;">${service.name}</td></tr>
+        <tr><td style="padding: 5px 0; color: #7b909b;">Professionista</td><td style="font-weight: bold;">${professional.name}</td></tr>
+        <tr><td style="padding: 5px 0; color: #7b909b;">Quando</td><td style="font-weight: bold; text-transform: capitalize;">${dataEstesa(booking.start)}</td></tr>
+      </table>
+      <p><strong>Per renderlo definitivo premi il tasto qui sotto entro 60 minuti</strong>:
+      dopo, l'orario torna disponibile per gli altri pazienti.</p>
+      <p style="text-align: center; margin: 26px 0;">
+        <a href="${confermaLink}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 17px 38px; border-radius: 999px; font-weight: bold; font-size: 17px;">✓ Convalida la prenotazione</a>
+      </p>
+      <p style="color: #7b909b; font-size: 13px;">Questo passaggio ci serve per verificare che la tua email sia
+      corretta e proteggere l'agenda dei professionisti dalle prenotazioni false. Se non hai richiesto tu
+      questa prenotazione, ignora questa email: si annullerà da sola.</p>
+    `),
+  };
+}
+
 export function emailNotificaProfessionista({ booking, service }) {
   return {
     subject: `Nuova prenotazione: ${service.name} — ${dataEstesa(booking.start)}`,

@@ -1,0 +1,58 @@
+---
+export const prerender = false;
+
+import Platform from "../layouts/Platform.astro";
+import ConfermaApp from "../islands/ConfermaApp.jsx";
+import { sql } from "../lib/db.js";
+import { readSession } from "../lib/auth.js";
+
+// Riepilogo della prenotazione da convalidare (la convalida vera è il POST del tasto)
+const token = Astro.url.searchParams.get("token") || "";
+const sessione = readSession(token);
+let prenotazione = null;
+if (sessione?.scope === "conferma" && sessione.bid) {
+  const [b] = await sql`
+    SELECT b.start_dt, b.status, s.name AS service_name, p.name AS professional_name
+    FROM bookings b
+    JOIN services s ON s.id = b.service_id
+    JOIN professionals p ON p.id = b.professional_id
+    WHERE b.id = ${sessione.bid}`;
+  prenotazione = b || null;
+}
+const quando = prenotazione
+  ? (() => {
+      const t = new Date(prenotazione.start_dt).toLocaleString("it-IT", {
+        timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
+      });
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    })()
+  : "";
+---
+
+<Platform
+  title="Convalida la tua prenotazione | InfermieriWeb"
+  description="Un click per rendere definitiva la tua prenotazione."
+  path="/conferma"
+  robots="noindex, nofollow"
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Ultimo passo</span>
+    <h1>Convalida la prenotazione</h1>
+  </section>
+
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 560px;">
+      {prenotazione && prenotazione.status === "pending" && (
+        <div class="pf-panel" style="margin-bottom: 16px;">
+          <p style="margin: 0; color: var(--iw-slate); font-size: 18px;">
+            <strong style="color: var(--iw-navy);">{prenotazione.service_name}</strong> con {prenotazione.professional_name}<br />
+            <strong style="color: var(--iw-navy);">{quando}</strong>
+          </p>
+        </div>
+      )}
+      <div class="pf-panel">
+        <ConfermaApp client:load />
+      </div>
+    </div>
+  </section>
+</Platform>
