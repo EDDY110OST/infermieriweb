@@ -80,5 +80,21 @@ export async function POST({ request }) {
     });
   } catch { /* la candidatura è salvata comunque: si vede in /admin */ }
 
+  // Ricevuta al candidato: deve sapere che è andata a buon fine e cosa succede ora
+  try {
+    await sendEmail({
+      to: email, toName: name,
+      subject: "Candidatura ricevuta ✅ — ecco cosa succede ora",
+      html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
+        <h2 style="color: #0b3954;">Candidatura ricevuta, ${esc(name)}!</h2>
+        <p>Grazie per aver scelto InfermieriWeb. Ecco come funziona da qui in poi:</p>
+        <p style="margin: 6px 0;">1️⃣ <strong>Verifichiamo la tua iscrizione all'albo</strong> (${esc(alboName)} n. ${esc(alboNumber)}): è la verifica che facciamo per ogni professionista della rete, ed è ciò che dà valore anche alla tua scheda.</p>
+        <p style="margin: 6px 0;">2️⃣ <strong>Entro pochi giorni ricevi la nostra risposta</strong> a questa email.</p>
+        <p style="margin: 6px 0;">3️⃣ Se è tutto in regola, nella stessa email troverai <strong>le credenziali di accesso</strong> alla tua agenda e i passi per completare la scheda (foto, prestazioni, prezzi, orari e zone coperte).</p>
+        <p style="color: #7b909b; font-size: 13px; margin-top: 18px;">Non devi fare nulla nel frattempo. Se hai domande, rispondi pure a questa email.</p>
+      </div>`,
+    });
+  } catch { /* la candidatura è comunque registrata */ }
+
   return json({ ok: true });
 }

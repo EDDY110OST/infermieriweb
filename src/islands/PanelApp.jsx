@@ -754,6 +754,7 @@ function TabStatistiche() {
 
 export default function PanelApp() {
   const [login, setLogin] = useState({ email: "", password: "" });
+  const [recupero, setRecupero] = useState({ aperto: false, email: "", inviato: false });
   const [utente, setUtente] = useState(null);
   const [errore, setErrore] = useState("");
   const [tab, setTab] = useState("agenda");
@@ -828,6 +829,46 @@ export default function PanelApp() {
   };
 
   if (!utente) {
+    if (recupero.aperto) {
+      return (
+        <div className="pf-panel" style={{ maxWidth: 440, margin: "0 auto" }}>
+          <h2>Password dimenticata</h2>
+          {recupero.inviato ? (
+            <div className="pf-successo">
+              Fatto ✅ Se quell'email ha un account, ti abbiamo inviato il link per
+              scegliere la nuova password (vale 60 minuti — controlla anche lo spam).
+            </div>
+          ) : (
+            <form className="pf-book" onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                const r = await fetch("/api/panel/recupero", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: recupero.email }),
+                });
+                const d = await r.json();
+                if (!r.ok) return setErrore(d.error || "Errore imprevisto");
+                setErrore("");
+                setRecupero({ ...recupero, inviato: true });
+              } catch { setErrore("Problema di connessione: riprova"); }
+            }}>
+              <p style={{ color: "var(--iw-slate)" }}>
+                Scrivi l'email del tuo account: ti mandiamo il link per reimpostarla.
+              </p>
+              <label htmlFor="pl-rec">Email</label>
+              <input id="pl-rec" type="email" required value={recupero.email}
+                onChange={(e) => setRecupero({ ...recupero, email: e.target.value })} autoComplete="username" />
+              {errore && <div className="pf-errore">{errore}</div>}
+              <button className="pf-btn" style={{ width: "100%" }}>Mandami il link</button>
+            </form>
+          )}
+          <p className="pf-note" style={{ marginTop: 12 }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setErrore(""); setRecupero({ aperto: false, email: "", inviato: false }); }}>← Torna all'accesso</a>
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="pf-panel" style={{ maxWidth: 440, margin: "0 auto" }}>
         <h2>Accesso professionisti</h2>
@@ -840,6 +881,9 @@ export default function PanelApp() {
           <button className="pf-btn" style={{ width: "100%" }}>Entra</button>
         </form>
         <p className="pf-note" style={{ marginTop: 12 }}>
+          <a href="#" onClick={(e) => { e.preventDefault(); setErrore(""); setRecupero({ aperto: true, email: login.email, inviato: false }); }}>Password dimenticata?</a>
+        </p>
+        <p className="pf-note" style={{ marginTop: 6 }}>
           Non hai ancora un account? <a href="/lavora-con-noi">Candidati qui</a>: l'iscrizione è gratuita in fase di lancio.
         </p>
       </div>

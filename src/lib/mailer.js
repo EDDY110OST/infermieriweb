@@ -168,15 +168,34 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
         <tr><td style="padding: 10px 14px; color: #7b909b;">Email</td><td style="padding: 10px 0; font-weight: bold;">${email}</td></tr>
         <tr><td style="padding: 10px 14px; color: #7b909b;">Password temporanea</td><td style="padding: 10px 0; font-weight: bold;">${passwordTemporanea}</td></tr>
       </table>
-      <p><strong>I tuoi primi 4 passi (10 minuti):</strong></p>
+      <p><strong>I tuoi primi passi (15 minuti in tutto):</strong></p>
       <p style="margin: 4px 0;">1️⃣ Entra e <strong>cambia subito la password</strong> (scheda Profilo)</p>
       <p style="margin: 4px 0;">2️⃣ Carica la tua <strong>foto</strong> e il tuo <strong>indirizzo</strong> (il segnaposto sulla mappa si posiziona da solo)</p>
       <p style="margin: 4px 0;">3️⃣ Inserisci le tue <strong>prestazioni con i prezzi</strong> (scheda Servizi)</p>
       <p style="margin: 4px 0;">4️⃣ Imposta i tuoi <strong>orari settimanali</strong> (scheda Orari)</p>
+      <p style="margin: 4px 0;">5️⃣ Aggiungi i <strong>comuni che copri a domicilio</strong> (scheda Zone): più comuni copri, più pazienti ti trovano</p>
+      <p style="margin: 4px 0;">6️⃣ Dal telefono: apri l'agenda, <strong>aggiungila alla schermata Home</strong> (Condividi → "Aggiungi a schermata Home") e attiva le <strong>notifiche</strong> nella scheda Agenda: ogni prenotazione ti arriverà come una notifica, come un'app</p>
+      <p style="margin: 10px 0 4px; color: #7b909b; font-size: 14px;">Finché prestazioni e orari non sono inseriti, la tua scheda dice "sta completando il profilo" e non è prenotabile: bastano i passi 3 e 4 per andare in campo.</p>
       <p style="text-align: center; margin: 22px 0;">
         <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Entra nella tua agenda</a>
       </p>
       <p>La tua scheda pubblica: <a href="${SITE}/p/${slug}">${SITE}/p/${slug}</a> — condividila su WhatsApp, Google e i social: è tua, e le prenotazioni che porta sono tue al 100%. Zero commissioni.</p>
+    `),
+  };
+}
+
+export function emailRecuperoPasswordProfessionista({ name, resetLink }) {
+  return {
+    subject: "Reimposta la tua password — InfermieriWeb",
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Reimposta la password</h2>
+      <p>Ciao ${name || ""},</p>
+      <p>abbiamo ricevuto la richiesta di reimpostare la password del tuo accesso professionista.
+      Premi il tasto qui sotto <strong>entro 60 minuti</strong> e scegli la nuova password:</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${resetLink}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 34px; border-radius: 999px; font-weight: bold; font-size: 16px;">Scegli la nuova password</a>
+      </p>
+      <p style="color: #7b909b; font-size: 13px;">Se non hai richiesto tu il reset, ignora questa email: la tua password attuale resta valida.</p>
     `),
   };
 }
