@@ -5,13 +5,14 @@ import logo from "../assets/logo.jpeg";
 
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
+// Menu potato secondo la revisione di Eduard (15/7): due percorsi chiari,
+// paziente e professionista. Zone e Chi siamo vivono nel footer.
 const nav = [
   { href: "/cerca", label: "Trova un infermiere" },
-  { href: "/professionisti", label: "Zone coperte" },
+  { href: "/domicilio", label: "Prestazioni" },
   { href: "/#come-funziona", label: "Come funziona" },
   { href: "/le-mie-prenotazioni", label: "La mia prenotazione" },
-  { href: "/articoli", label: "Blog salute" },
-  { href: "/chi-siamo", label: "Chi siamo" },
+  { href: "/articoli", label: "Blog" },
   { href: "/lavora-con-noi", label: "Per i professionisti" },
   { href: "/area-professionisti", label: "Area professionisti", spento: true },
 ];
@@ -52,6 +53,7 @@ const nav = [
         <div>
           <h4>Per i pazienti</h4>
           <a href="/cerca">Trova un professionista</a>
+          <a href="/domicilio">Tutte le prestazioni</a>
           <a href="/professionisti">Zone coperte</a>
           <a href="/articoli">Blog salute</a>
           <a href="/#come-funziona">Come funziona</a>
