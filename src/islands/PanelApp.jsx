@@ -649,6 +649,29 @@ function TabProfilo() {
       </form>
 
       <div className="pf-panel" style={{ marginBottom: 18 }}>
+        <h2>⭐ Fatti trovare su Google (5 minuti, vale oro)</h2>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Hai un <strong>profilo Google Business</strong> (quello con le recensioni che appare
+          quando cercano il tuo nome)? Collegalo alla tua scheda: chi ti cerca su Google
+          troverà il tasto per prenotarti online.
+        </p>
+        <ol style={{ margin: "0 0 12px", paddingLeft: 20, color: "var(--iw-slate)", fontSize: 16.5 }}>
+          <li>Cerca il tuo nome su Google ed entra con "Modifica profilo"</li>
+          <li>Vai su <strong>Modifica profilo → Contatti → Sito web</strong></li>
+          <li>Incolla il link della tua scheda (tasto qui sotto)</li>
+        </ol>
+        <button type="button" className="pf-btn secondario" onClick={() => {
+          navigator.clipboard?.writeText(`https://infermieriweb.it/p/${profilo.slug}`);
+          setEsito({ tipo: "ok", testo: "✅ Link copiato: incollalo nel tuo profilo Google Business." });
+          setTimeout(() => setEsito(null), 4000);
+        }}>📋 Copia il link della mia scheda</button>
+        <p className="pf-note" style={{ marginTop: 10 }}>
+          Non hai un profilo Google Business? Crealo gratis su business.google.com:
+          per un libero professionista è la vetrina più importante che esista.
+        </p>
+      </div>
+
+      <div className="pf-panel" style={{ marginBottom: 18 }}>
         <h2>🔳 Il tuo QR personale</h2>
         <p className="pf-note" style={{ marginTop: 0 }}>
           Punta alla tua scheda: stampalo su biglietti da visita, ricettario, vetrofania in farmacia.

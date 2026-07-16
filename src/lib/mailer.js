@@ -217,6 +217,15 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
         <p style="margin: 2px 0;">Apri l'app dall'icona nuova, entra con le tue credenziali e nella scheda <strong>Agenda</strong> tocca <strong>"🔔 Attiva notifiche"</strong>, poi <strong>"Consenti"</strong> quando il telefono te lo chiede. Fatto: da adesso le prenotazioni ti "suonano" in tasca.</p>
         <p style="margin: 8px 0 0; color: #7b909b; font-size: 13px;">Su iPhone le notifiche funzionano SOLO se entri dall'icona sulla Home (non da Safari): per questo il passaggio sopra è importante.</p>
       </div>
+
+      <div style="background: #fff8e6; border: 1px solid #f4dfa5; border-radius: 12px; padding: 16px 18px; margin: 18px 0;">
+        <p style="margin: 0 0 4px; font-weight: bold; color: #0b3954; font-size: 16px;">⭐ Passo 7 — Fatti trovare su Google (5 minuti, vale oro)</p>
+        <p style="margin: 0 0 10px; color: #46626e; font-size: 14px;">Se hai un <strong>profilo Google Business</strong> (quello con le recensioni che appare quando cercano il tuo nome su Google), collega la tua scheda:</p>
+        <p style="margin: 2px 0;">1. Cerca il tuo nome su Google ed entra nel tuo profilo con "Modifica profilo"</p>
+        <p style="margin: 2px 0;">2. Vai su <strong>Modifica profilo → Contatti → Sito web</strong></p>
+        <p style="margin: 2px 0;">3. Incolla il link della tua scheda: <strong>${SITE}/p/${slug}</strong></p>
+        <p style="margin: 10px 0 0; color: #46626e; font-size: 14px;">Da quel momento, chi ti cerca su Google trova il tasto per <strong>prenotarti online</strong>. Non hai un profilo Google Business? Crealo gratis su business.google.com: per un libero professionista è la vetrina più importante che esista.</p>
+      </div>
       <p style="text-align: center; margin: 22px 0;">
         <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Entra nella tua agenda</a>
       </p>

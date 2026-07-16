@@ -13,7 +13,7 @@ export async function GET({ request }) {
   if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const [profilo] = await sql`
-    SELECT name, profession, albo_number, bio, phone, email, address, city, province, region,
+    SELECT slug, name, profession, albo_number, bio, phone, email, address, city, province, region,
            photo_url, lat, lng, slug
     FROM professionals WHERE id = ${session.pid}`;
   if (!profilo) return json({ error: "Profilo non trovato" }, 404);
