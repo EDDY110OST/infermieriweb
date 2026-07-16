@@ -7,6 +7,9 @@ import { sendEmail } from "../../lib/mailer.js";
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 
+// Escape SOLO per l'HTML dell'email (mai per le query: sono già parametrizzate)
+const esc = (t) => String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 // POST /api/candidatura — form "Lavora con noi" (approvazione manuale)
 export async function POST({ request }) {
   let body;
@@ -45,14 +48,12 @@ export async function POST({ request }) {
   }
 
   const recente = await sql`
-    SELECT id FROM applications WHERE email = ${esc(email)} AND created_at > now() - interval '1 day'`;
+    SELECT id FROM applications WHERE email = ${email} AND created_at > now() - interval '1 day'`;
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
     INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message)
-    VALUES (${esc(name)}, ${esc(email)}, ${esc(phone)}, ${esc(profession)}, ${esc(alboName)}, ${esc(alboNumber)}, ${esc(alboDate)}, ${esc(vatNumber)}, ${esc(city)}, ${esc(province)}, ${address}, ${esc(message)})`;
-
-  const esc = (t) => String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message})`;
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
