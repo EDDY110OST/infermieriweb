@@ -823,3 +823,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width: 640px) { .pf-perche { grid-template-columns: 1fr; } }
 
 .pf-stars .n { display: inline-block; }
+
+/* CTA header sempre su una riga */
+.pf-cta { white-space: nowrap; }
