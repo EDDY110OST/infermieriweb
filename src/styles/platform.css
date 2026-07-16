@@ -774,7 +774,9 @@
 /* Icone SVG uniformi */
 .pf-ic { flex: none; }
 .pf-ic-inline { display: inline-block; vertical-align: -2px; margin-right: 2px; color: var(--iw-primary-deep); }
-.pf-cat .emoji, .pf-perche-card .ic, .pf-trust-item .i { color: var(--iw-primary-deep); display: inline-flex; align-items: center; }
+.pf-cat .emoji, .pf-perche-card .ic { color: var(--iw-primary-deep); display: inline-flex; align-items: center; }
+/* i chip fiducia stanno sull'hero scuro: l'icona segue il colore del testo (bianco) */
+.pf-trust-item .i { color: inherit; display: inline-flex; align-items: center; vertical-align: -3px; }
 
 /* Pallino disponibilità (al posto di 🟢) */
 .pf-dot {
