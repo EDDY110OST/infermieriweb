@@ -7,13 +7,13 @@ const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [
 const current = path.replace(/\/$/, "") || "/";
 // Menu potato secondo la revisione di Eduard (15/7): due percorsi chiari,
 // paziente e professionista. Zone e Chi siamo vivono nel footer.
+// Menu minimale (richiesta soci 16/7): "Come funziona" vive nella home,
+// "Per i professionisti" si raggiunge dal bottone "Voglio la mia scheda" in fondo alla home
 const nav = [
   { href: "/cerca", label: "Trova un infermiere" },
   { href: "/domicilio", label: "Prestazioni" },
-  { href: "/#come-funziona", label: "Come funziona" },
   { href: "/le-mie-prenotazioni", label: "La mia prenotazione" },
   { href: "/articoli", label: "Blog" },
-  { href: "/lavora-con-noi", label: "Per i professionisti" },
   { href: "/area-professionisti", label: "Area professionisti", spento: true },
 ];
 ---
