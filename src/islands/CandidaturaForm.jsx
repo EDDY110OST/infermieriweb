@@ -121,8 +121,13 @@ export default function CandidaturaForm() {
         </div>
       </div>
 
-      <label htmlFor="cf-piva">Partita IVA * <span style={{ fontWeight: 400 }}>(11 cifre)</span></label>
-      <input id="cf-piva" required pattern="[0-9]{11}" inputMode="numeric" minLength={11} maxLength={11} placeholder="es. 01234567890" value={dati.vat_number} onChange={(e) => setDati({ ...dati, vat_number: e.target.value.replace(/\D/g, "") })} />
+      <label htmlFor="cf-piva">Partita IVA <span style={{ fontWeight: 400 }}>(se ce l'hai — 11 cifre)</span></label>
+      <input id="cf-piva" pattern="[0-9]{11}" inputMode="numeric" maxLength={11} placeholder="es. 01234567890" value={dati.vat_number} onChange={(e) => setDati({ ...dati, vat_number: e.target.value.replace(/\D/g, "") })} />
+      <p className="pf-note" style={{ marginTop: -6 }}>
+        <strong>Hai la P.IVA?</strong> La tua scheda sarà prenotabile online dai pazienti a domicilio.{" "}
+        <strong>Non ce l'hai?</strong> Candidati lo stesso: il tuo profilo entrerà nella vetrina riservata
+        alle strutture sanitarie (in preparazione) e potrai attivare le prenotazioni a domicilio quando la aprirai.
+      </p>
 
       <label htmlFor="cf-indirizzo">Indirizzo studio/sede <span style={{ fontWeight: 400 }}>(per il tuo segnaposto sulla mappa)</span></label>
       <input id="cf-indirizzo" placeholder="es. Via Roma 12" value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" />

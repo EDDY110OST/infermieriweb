@@ -38,8 +38,8 @@ export async function POST({ request }) {
   if (alboName.length < 3 || !alboNumber || !alboDate) {
     return json({ error: "Servono albo di appartenenza, numero e data di iscrizione" }, 400);
   }
-  if (vatNumber.length !== 11) {
-    return json({ error: "La partita IVA deve avere 11 cifre" }, 400);
+  if (vatNumber && vatNumber.length !== 11) {
+    return json({ error: "La partita IVA, se indicata, deve avere 11 cifre" }, 400);
   }
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
 
@@ -68,7 +68,7 @@ export async function POST({ request }) {
           <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${esc(profession)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${esc(city)}${province ? " (" + province + ")" : ""}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${esc(alboName)} n. ${esc(alboNumber)} (dal ${esc(alboDate)})</td></tr>
-          <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${esc(vatNumber)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${vatNumber ? esc(vatNumber) : "<strong>assente</strong> — profilo per la vetrina strutture (non prenotabile dai pazienti)"}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${esc(email)} · ${esc(phone)}</td></tr>
         </table>
         ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${esc(message)}</p>` : ""}
@@ -90,7 +90,7 @@ export async function POST({ request }) {
         <p>Grazie per aver scelto InfermieriWeb. Ecco come funziona da qui in poi:</p>
         <p style="margin: 6px 0;">1️⃣ <strong>Verifichiamo la tua iscrizione all'albo</strong> (${esc(alboName)} n. ${esc(alboNumber)}): è la verifica che facciamo per ogni professionista della rete, ed è ciò che dà valore anche alla tua scheda.</p>
         <p style="margin: 6px 0;">2️⃣ <strong>Entro pochi giorni ricevi la nostra risposta</strong> a questa email.</p>
-        <p style="margin: 6px 0;">3️⃣ Se è tutto in regola, nella stessa email troverai <strong>le credenziali di accesso</strong> alla tua agenda e i passi per completare la scheda (foto, prestazioni, prezzi, orari e zone coperte).</p>
+        <p style="margin: 6px 0;">3️⃣ Se è tutto in regola, nella stessa email troverai <strong>le credenziali di accesso</strong> ${vatNumber ? "alla tua agenda e i passi per completare la scheda (foto, prestazioni, prezzi, orari e zone coperte)" : "al tuo profilo. Non avendo la P.IVA, il tuo profilo non sarà prenotabile dai pazienti ma entrerà nella <strong>vetrina riservata alle strutture sanitarie</strong> (in preparazione): appena aprirai la P.IVA, attiveremo anche le prenotazioni a domicilio"}.</p>
         <p style="color: #7b909b; font-size: 13px; margin-top: 18px;">Non devi fare nulla nel frattempo. Se hai domande, rispondi pure a questa email.</p>
       </div>`,
     });

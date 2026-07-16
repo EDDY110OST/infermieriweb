@@ -157,7 +157,28 @@ export function emailDisdettaPaziente({ booking, professional, service }) {
   };
 }
 
-export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug }) {
+export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug, senzaPiva = false }) {
+  if (senzaPiva) {
+    return {
+      subject: "Benvenuto su InfermieriWeb: il tuo profilo è attivo 🎉",
+      html: layout(`
+        <h2 style="color: #0b3954; margin-top: 0;">Benvenuto nella rete, ${name}!</h2>
+        <p>La tua candidatura è stata approvata e il tuo profilo professionale è attivo.</p>
+        <table style="width: 100%; font-size: 15px; margin: 14px 0; background: #f6f9f9; border-radius: 10px;">
+          <tr><td style="padding: 10px 14px; color: #7b909b;">Accesso</td><td style="padding: 10px 0; font-weight: bold;">${SITE}/area-professionisti</td></tr>
+          <tr><td style="padding: 10px 14px; color: #7b909b;">Email</td><td style="padding: 10px 0; font-weight: bold;">${email}</td></tr>
+          <tr><td style="padding: 10px 14px; color: #7b909b;">Password temporanea</td><td style="padding: 10px 0; font-weight: bold;">${passwordTemporanea}</td></tr>
+        </table>
+        <p><strong>Come funziona per te (senza partita IVA):</strong></p>
+        <p style="margin: 4px 0;">🏥 Il tuo profilo entrerà nella <strong>vetrina riservata alle strutture sanitarie</strong> (RSA, cliniche, cooperative) che cercano infermieri: la stiamo preparando e ti avviseremo appena è attiva. Nel frattempo il tuo profilo NON compare nelle ricerche dei pazienti e non è prenotabile: è normale, non è un errore.</p>
+        <p style="margin: 4px 0;">📋 Intanto <strong>completa il profilo</strong>: entra, <strong>cambia subito la password</strong> (scheda Profilo), carica la foto e scrivi due righe su di te — le strutture guarderanno proprio queste cose.</p>
+        <p style="margin: 4px 0;">🚀 <strong>Quando aprirai la partita IVA</strong>, rispondi a questa email: attiveremo la tua scheda pubblica e i pazienti potranno prenotarti online a domicilio, con zero commissioni.</p>
+        <p style="text-align: center; margin: 22px 0;">
+          <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Entra nel tuo profilo</a>
+        </p>
+      `),
+    };
+  }
   return {
     subject: "Benvenuto su InfermieriWeb: la tua agenda è pronta 🎉",
     html: layout(`

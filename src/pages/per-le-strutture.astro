@@ -1,0 +1,84 @@
+---
+import Platform from "../layouts/Platform.astro";
+import Icona from "../components/Icona.astro";
+import StruttureLeadForm from "../islands/StruttureLeadForm.jsx";
+import { organizationSchema } from "../data/schema.js";
+
+const punti = [
+  {
+    ic: "laurea",
+    titolo: "Solo professionisti verificati",
+    testo: "Ogni infermiere della rete è verificato uno per uno: iscrizione all'albo controllata prima dell'ingresso.",
+  },
+  {
+    ic: "posizione",
+    titolo: "Radicati sul territorio",
+    testo: "La rete cresce città per città: profili che lavorano davvero nella vostra zona, non elenchi nazionali anonimi.",
+  },
+  {
+    ic: "scudo",
+    titolo: "Contatto diretto, zero vincoli",
+    testo: "Vi mettiamo in contatto coi profili giusti: accordi, compensi e inquadramento restano tra voi e il professionista.",
+  },
+];
+---
+
+<Platform
+  title="Per le strutture sanitarie: trova infermieri verificati | InfermieriWeb"
+  description="RSA, cliniche, cooperative e centri medici: InfermieriWeb sta costruendo la vetrina degli infermieri verificati della tua zona. Raccontaci di cosa hai bisogno."
+  path="/per-le-strutture"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Per le strutture sanitarie</span>
+    <h1>Cerchi infermieri? Parliamone.</h1>
+    <p class="sottotitolo">
+      RSA, cliniche, cooperative, centri medici: trovare infermieri è sempre più difficile.
+      Stiamo costruendo la vetrina dei professionisti verificati della rete — e vogliamo
+      partire dai bisogni veri di chi assume.
+    </p>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container pf-center" style="margin-bottom: 32px;">
+      <span class="pf-kicker">Perché InfermieriWeb</span>
+      <h2>Una rete che nasce verificata</h2>
+    </div>
+    <div class="pf-perche" style="max-width: 900px;">
+      {punti.map((p) => (
+        <div class="pf-perche-card">
+          <div class="ic"><Icona nome={p.ic} size={28} /></div>
+          <h3>{p.titolo}</h3>
+          <p>{p.testo}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="pf-section alt">
+    <div class="pf-container" style="max-width: 640px;">
+      <div class="pf-center" style="margin-bottom: 24px;">
+        <span class="pf-kicker">Senza impegno</span>
+        <h2>Raccontaci di cosa avete bisogno</h2>
+        <p class="pf-sub">
+          Vi ricontattiamo entro 24 ore. Le prime strutture che entrano in contatto
+          con la rete hanno un canale preferenziale sui profili disponibili.
+        </p>
+      </div>
+      <div class="pf-panel">
+        <StruttureLeadForm client:load />
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section pf-center">
+    <div class="pf-container" style="max-width: 620px;">
+      <h2>Sei un infermiere?</h2>
+      <p class="pf-sub">
+        Con la partita IVA sei prenotabile dai pazienti a domicilio; senza, il tuo profilo
+        entra nella vetrina per le strutture. In entrambi i casi, l'iscrizione è gratuita.
+      </p>
+      <a class="pf-btn" href="/lavora-con-noi">Candidati alla rete</a>
+    </div>
+  </section>
+</Platform>

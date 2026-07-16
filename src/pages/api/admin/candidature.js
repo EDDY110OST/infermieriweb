@@ -74,7 +74,7 @@ export async function POST({ request }) {
   const passwordTemporanea = `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
-    INSERT INTO professionals (slug, name, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status)
+    INSERT INTO professionals (slug, name, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number)
     VALUES (
       ${slug}, ${cand.name}, ${cand.profession}, ${albo},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
@@ -82,7 +82,7 @@ export async function POST({ request }) {
       ${regione}, ${cand.province}, ${cand.city}, ${cand.address},
       ${cand.phone}, ${cand.email},
       ${geo ? geo.lat : null}, ${geo ? geo.lng : null},
-      'active'
+      ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}
     ) RETURNING id`;
 
   await sql`
@@ -97,6 +97,7 @@ export async function POST({ request }) {
 
   const benvenuto = emailBenvenutoProfessionista({
     name: cand.name, email: cand.email, passwordTemporanea, slug,
+    senzaPiva: !cand.vat_number,
   });
   const emailed = await sendEmail({ to: cand.email, toName: cand.name, ...benvenuto });
 
