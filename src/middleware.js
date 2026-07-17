@@ -1,4 +1,10 @@
-// Header di sicurezza sulle risposte SSR (le pagine statiche li prendono da public/_headers)
+import { avviaScheduler } from "./lib/scheduler.js";
+
+// Scheduler interno (Render non ha le funzioni schedulate di Netlify): parte una
+// sola volta al caricamento del modulo, cioè all'avvio del server.
+avviaScheduler();
+
+// Header di sicurezza sulle risposte SSR
 export const onRequest = async (context, next) => {
   const response = await next();
   const headers = response.headers;
