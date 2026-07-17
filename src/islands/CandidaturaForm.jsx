@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import CercaComune from "./CercaComune.jsx";
 
-const PROFESSIONI = ["infermiere", "fisioterapista", "ostetrica", "medico specialista", "altro"];
+const PROFESSIONI = ["Infermiere", "Infermiera"];
 
 // Candidatura in 2 passi: prima chi sei e come contattarti (30 secondi),
 // poi i dati professionali per la verifica. Stesso payload finale per l'API.
 export default function CandidaturaForm() {
   const [passo, setPasso] = useState(1);
   const [dati, setDati] = useState({
-    name: "", email: "", phone: "", profession: "infermiere", gender: "",
+    name: "", email: "", phone: "", profession: "", gender: "",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
     city: "", province: "", region: "", address: "", message: "", privacy: false,
     password: "", password2: "",
@@ -80,8 +80,9 @@ export default function CandidaturaForm() {
         </select>
 
         <label htmlFor="cf-prof">Professione *</label>
-        <select id="cf-prof" value={dati.profession} onChange={(e) => setDati({ ...dati, profession: e.target.value })}>
-          {PROFESSIONI.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+        <select id="cf-prof" required value={dati.profession} onChange={(e) => setDati({ ...dati, profession: e.target.value })}>
+          <option value="" disabled>Scegli…</option>
+          {PROFESSIONI.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
 
         <label htmlFor="cf-citta">Comune in cui operi *</label>
@@ -130,7 +131,7 @@ export default function CandidaturaForm() {
         davvero iscritto all'albo. È ciò che rende la rete affidabile.
       </p>
 
-      <label htmlFor="cf-albo-nome">Albo di appartenenza * <span style={{ fontWeight: 400 }}>(es. OPI Lucca)</span></label>
+      <label htmlFor="cf-albo-nome">OPI di Appartenenza * <span style={{ fontWeight: 400 }}>(es. OPI Lucca)</span></label>
       <input id="cf-albo-nome" required minLength={3} placeholder="es. OPI Lucca" value={dati.albo_name} onChange={(e) => setDati({ ...dati, albo_name: e.target.value })} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>

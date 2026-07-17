@@ -332,7 +332,11 @@ function ModificaScheda({ pid, nome, onIndietro }) {
               <option value="">—</option><option value="m">Dott. (uomo)</option><option value="f">Dott.ssa (donna)</option>
             </select>
           </div>
-          <div><label>Professione</label><input value={prof.profession || ""} onChange={(e) => setProf({ ...prof, profession: e.target.value })} /></div>
+          <div><label>Professione</label>
+            <select value={prof.profession || ""} onChange={(e) => setProf({ ...prof, profession: e.target.value })}>
+              <option value="">—</option><option value="Infermiere">Infermiere</option><option value="Infermiera">Infermiera</option>
+            </select>
+          </div>
           <div><label>Email di contatto</label><input value={prof.email || ""} onChange={(e) => setProf({ ...prof, email: e.target.value })} /></div>
           <div><label>Telefono</label><input value={prof.phone || ""} onChange={(e) => setProf({ ...prof, phone: e.target.value })} /></div>
         </div>
@@ -341,7 +345,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         <label>Indirizzo (facoltativo)</label>
         <input value={prof.address || ""} onChange={(e) => setProf({ ...prof, address: e.target.value })} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <div><label>Albo/OPI</label><input value={prof.albo_name || ""} onChange={(e) => setProf({ ...prof, albo_name: e.target.value })} /></div>
+          <div><label>OPI di Appartenenza</label><input value={prof.albo_name || ""} onChange={(e) => setProf({ ...prof, albo_name: e.target.value })} /></div>
           <div><label>N. iscrizione</label><input value={prof.albo_number || ""} onChange={(e) => setProf({ ...prof, albo_number: e.target.value })} /></div>
           <div><label>Data iscrizione</label><input type="date" value={prof.albo_date || ""} onChange={(e) => setProf({ ...prof, albo_date: e.target.value })} /></div>
         </div>
