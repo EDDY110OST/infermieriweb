@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
-import netlify from "@astrojs/netlify";
+import node from "@astrojs/node";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
@@ -10,7 +10,7 @@ export default defineConfig({
   build: { format: "file" },
   // Statico di default; le pagine/API con `export const prerender = false`
   // girano come funzioni server su Netlify (motore prenotazioni).
-  adapter: netlify(),
+  adapter: node({ mode: "standalone" }),
   integrations: [react(), sitemap({
     // pagine riservate o strumentali: fuori dalla sitemap (sono anche noindex).
     // Confronto sul percorso esatto: "includes" escludeva per sbaglio /recensioni.
