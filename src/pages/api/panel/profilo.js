@@ -53,7 +53,8 @@ export async function PATCH({ request }) {
   // (la P.IVA spesso arriva dopo l'iscrizione, il numero OPI può cambiare).
   const albo_name = body.albo_name !== undefined ? String(body.albo_name).trim().slice(0, 120) : attuale.albo_name;
   const albo_number = body.albo_number !== undefined ? String(body.albo_number).trim().slice(0, 40) : attuale.albo_number;
-  const albo_date = body.albo_date !== undefined ? (String(body.albo_date).trim() || null) : attuale.albo_date;
+  // albo_date è NOT NULL (default ''): mai null, sennò il salvataggio va in errore.
+  const albo_date = body.albo_date !== undefined ? String(body.albo_date).trim() : attuale.albo_date;
   const vat_number = body.vat_number !== undefined ? String(body.vat_number).replace(/\D/g, "").slice(0, 11) : attuale.vat_number;
 
   // Campi identità: modificabili SOLO dall'admin (il professionista non cambia

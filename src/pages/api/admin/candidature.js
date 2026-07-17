@@ -83,7 +83,6 @@ export async function POST({ request }) {
   // le zone coperte sono comuni singoli validi: le passo come ripiego per la mappa
   const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: provincia })).filter((z) => z.city);
   const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: provincia, zone: zoneCand });
-  const albo = [cand.albo_name, cand.albo_number ? `n. ${cand.albo_number}` : ""].filter(Boolean).join(" ");
   // password scelta dal candidato in registrazione; ripiego a temporanea solo per i vecchi record senza hash
   // Nome pubblico: "Dott./Dott.ssa Nome I." — il nome completo resta riservato
   // (va solo nell'email di conferma al paziente prenotato)
@@ -97,9 +96,9 @@ export async function POST({ request }) {
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
-    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by)
+    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by)
     VALUES (
-      ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${albo},
+      ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${cand.albo_name || ''}, ${cand.albo_number || ''}, ${cand.albo_date || ''},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
       '/professionisti-foto/placeholder.svg',
       ${regione}, ${provincia}, ${cand.city}, ${cand.address},
