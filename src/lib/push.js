@@ -6,7 +6,7 @@ import { sql } from "./db.js";
 
 const PUB = process.env.VAPID_PUBLIC_KEY || "";
 const PRIV = process.env.VAPID_PRIVATE_KEY || "";
-const SUBJECT = process.env.VAPID_SUBJECT || "mailto:prenotazioni@infermieriweb.it";
+const SUBJECT = process.env.VAPID_SUBJECT || "mailto:info@infermieriweb.it";
 
 let configured = false;
 if (PUB && PRIV) {

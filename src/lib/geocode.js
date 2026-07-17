@@ -2,7 +2,7 @@
 // Volumi bassi (una chiamata quando un professionista salva l'indirizzo):
 // entro la policy d'uso, con User-Agent identificativo come richiesto.
 
-const UA = "InfermieriWeb.it/1.0 (contatto: prenotazioni@infermieriweb.it)";
+const UA = "InfermieriWeb.it/1.0 (contatto: info@infermieriweb.it)";
 
 export async function geocodeAddress({ address = "", city = "", province = "" }) {
   const query = [address, city, province, "Italia"].filter(Boolean).join(", ");

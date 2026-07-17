@@ -10,7 +10,7 @@ export const organizationSchema = {
   url: `${SITE_URL}/`,
   logo: `${SITE_URL}/logo.jpeg`,
   image: `${SITE_URL}/logo.jpeg`,
-  email: "prenotazioni@infermieriweb.it",
+  email: "info@infermieriweb.it",
   description:
     "Piattaforma che mette in contatto pazienti e infermieri liberi professionisti per prestazioni a domicilio: prenotazione online gratuita, professionisti verificati, recensioni vere. InfermieriWeb non fornisce prestazioni sanitarie.",
   areaServed: [
