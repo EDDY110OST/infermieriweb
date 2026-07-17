@@ -13,7 +13,7 @@ export async function GET({ request, url }) {
   if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const from = url.searchParams.get("from") || new Date().toISOString().slice(0, 10);
-  const days = Math.min(Number(url.searchParams.get("days")) || 7, 31);
+  const days = Math.min(Number(url.searchParams.get("days")) || 7, 42); // 42 = griglia mensile completa
   if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) return json({ error: "Data non valida" }, 400);
 
   const start = romeDateTime(from, 0);

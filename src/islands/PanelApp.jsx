@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { LISTINO, LISTINO_MAP } from "../data/listino.js";
+import { LISTINO, LISTINO_MAP, FASCE, fasciaDi } from "../data/listino.js";
 
 const oraRoma = (iso) =>
   new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
-const giornoRoma = (iso) =>
-  new Date(iso).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" });
-
 const STATI = { active: "Attiva", cancelled: "Annullata", done: "Completata", noshow: "Non presentato" };
 const GIORNI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
@@ -30,6 +27,87 @@ const isIphoneNonInstallata = () =>
 
 // ---------------------------------------------------------------- Agenda
 
+
+// Semaforo dello stato: verde fatto, giallo da fare, rosso annullato
+const SEMAFORO = {
+  done:      { colore: "#16a34a", nome: "Effettuato" },
+  active:    { colore: "#eab308", nome: "Da fare" },
+  cancelled: { colore: "#dc2626", nome: "Annullato" },
+  noshow:    { colore: "#94a3b8", nome: "Non presentato" },
+};
+
+// Minuti dalla mezzanotte (ora di Roma) di una data ISO
+const minutiRoma = (iso) => {
+  const t = new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit", hour12: false });
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+};
+const giornoRoma = (iso) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(new Date(iso));
+
+function CalendarioMensile({ bookings, onGiorno, meseData, setMeseData }) {
+  const anno = meseData.getFullYear();
+  const mese = meseData.getMonth();
+  const primo = new Date(anno, mese, 1);
+  const inizioGriglia = new Date(primo);
+  inizioGriglia.setDate(1 - ((primo.getDay() + 6) % 7)); // la settimana parte da lunedì
+
+  const perGiorno = {};
+  for (const b of bookings) {
+    const g = giornoRoma(b.start_dt);
+    (perGiorno[g] ||= []).push(b);
+  }
+
+  const celle = Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(inizioGriglia);
+    d.setDate(inizioGriglia.getDate() + i);
+    const chiave = new Intl.DateTimeFormat("en-CA").format(d);
+    return { data: d, chiave, fuoriMese: d.getMonth() !== mese, appuntamenti: perGiorno[chiave] || [] };
+  });
+
+  const oggi = new Intl.DateTimeFormat("en-CA").format(new Date());
+  const nomeMese = meseData.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+
+  return (
+    <div className="pf-cal">
+      <div className="pf-cal-testa">
+        <button type="button" className="pf-btn secondario compatto" onClick={() => setMeseData(new Date(anno, mese - 1, 1))}>←</button>
+        <strong style={{ textTransform: "capitalize" }}>{nomeMese}</strong>
+        <button type="button" className="pf-btn secondario compatto" onClick={() => setMeseData(new Date(anno, mese + 1, 1))}>→</button>
+        <button type="button" className="pf-btn secondario compatto" onClick={() => setMeseData(new Date())}>Oggi</button>
+      </div>
+
+      <div className="pf-cal-griglia">
+        {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((g) => (
+          <div className="pf-cal-intestazione" key={g}>{g}</div>
+        ))}
+        {celle.map((c) => (
+          <button
+            type="button"
+            key={c.chiave}
+            className={`pf-cal-cella${c.fuoriMese ? " fuori" : ""}${c.chiave === oggi ? " oggi" : ""}${c.appuntamenti.length ? " pieno" : ""}`}
+            onClick={() => onGiorno(c.chiave)}
+          >
+            <span className="numero">{c.data.getDate()}</span>
+            <span className="pallini">
+              {c.appuntamenti.slice(0, 4).map((b) => (
+                <span key={b.id} className="pallino" style={{ background: (SEMAFORO[b.status] || SEMAFORO.active).colore }}
+                  title={`${new Date(b.start_dt).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })} ${b.customer_name} — ${(SEMAFORO[b.status] || SEMAFORO.active).nome}`} />
+              ))}
+              {c.appuntamenti.length > 4 && <span className="piu">+{c.appuntamenti.length - 4}</span>}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="pf-cal-legenda">
+        {Object.entries(SEMAFORO).map(([k, v]) => (
+          <span key={k}><span className="pallino" style={{ background: v.colore }} /> {v.nome}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TabAgenda({ statoPush, attivaNotifiche }) {
   const [agenda, setAgenda] = useState(null);
   const [errore, setErrore] = useState("");
@@ -39,13 +117,20 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   const [servizi, setServizi] = useState(null);
   const [manuale, setManuale] = useState({ service_id: "", date: "", time: "", customer_name: "", customer_phone: "", address: "", city: "" });
   const [erroreManuale, setErroreManuale] = useState("");
+  const [meseData, setMeseData] = useState(new Date());
+  const [giornoSel, setGiornoSel] = useState(() => new Intl.DateTimeFormat("en-CA").format(new Date()));
 
   const carica = useCallback(() => {
-    fetch("/api/panel/agenda?days=14")
+    // carico il mese visualizzato con i bordi (la griglia mostra anche code e teste di mese)
+    const primo = new Date(meseData.getFullYear(), meseData.getMonth(), 1);
+    const da = new Date(primo);
+    da.setDate(1 - ((primo.getDay() + 6) % 7));
+    const dal = new Intl.DateTimeFormat("en-CA").format(da);
+    fetch(`/api/panel/agenda?from=${dal}&days=42`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setAgenda(d); })
       .catch(() => setErrore("Errore di caricamento agenda"));
-  }, []);
+  }, [meseData]);
 
   useEffect(carica, [carica]);
 
@@ -122,7 +207,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
   return (
     <div>
-      <h2 style={{ color: "var(--iw-navy)", fontSize: 26, margin: "0 0 14px" }}>La tua agenda — prossimi 14 giorni</h2>
+      <h2 style={{ color: "var(--iw-navy)", fontSize: 26, margin: "0 0 14px" }}>La tua agenda</h2>
       <div className="pf-panel-toolbar">
         {statoPush === "pronte" && <button className="pf-btn secondario" onClick={attivaNotifiche}>🔔 Attiva notifiche</button>}
         {statoPush === "attive" && <span className="pf-push-ok">🔔 Notifiche attive</span>}
@@ -204,21 +289,41 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
       {errore && <div className="pf-errore">{errore}</div>}
       {!agenda && !errore && <p className="pf-note">Caricamento…</p>}
+      {agenda && (
+        <CalendarioMensile
+          bookings={agenda.bookings}
+          meseData={meseData}
+          setMeseData={setMeseData}
+          onGiorno={setGiornoSel}
+        />
+      )}
+
       {agenda && eventi.length === 0 && (
-        <div className="pf-panel">
-          <p style={{ margin: 0 }}>Nessuna prenotazione nei prossimi 14 giorni.</p>
+        <div className="pf-panel" style={{ marginTop: 14 }}>
+          <p style={{ margin: 0 }}>Nessuna prenotazione in questo mese.</p>
           <p className="pf-note" style={{ marginBottom: 0 }}>
             Fai girare il tuo link personale (lo trovi nella scheda Profilo): è il modo più rapido per riempire l'agenda.
           </p>
         </div>
       )}
 
-      {Object.entries(perGiorno).map(([giorno, lista]) => (
-        <div key={giorno} style={{ marginBottom: 22 }}>
-          <h3 style={{ color: "var(--iw-navy)", margin: "0 0 10px", textTransform: "capitalize" }}>{giorno}</h3>
-          {lista.map((e) =>
+      {Object.entries(perGiorno).filter(([giorno]) => giorno === giornoSel).map(([giorno, lista]) => (
+        <div key={giorno} style={{ marginBottom: 22, marginTop: 18 }}>
+          <h3 style={{ color: "var(--iw-navy)", margin: "0 0 10px", textTransform: "capitalize" }}>
+            {new Date(giorno + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+          </h3>
+          {["mattina", "pomeriggio", "sera", "notte"].map((chiave) => {
+            const diFascia = lista.filter((e) => fasciaDi(minutiRoma(e.quando)) === chiave);
+            if (!diFascia.length) return null;
+            return (
+              <div key={chiave} style={{ marginBottom: 14 }}>
+                <div className="pf-fascia-titolo">
+                  {FASCE[chiave].icona} {FASCE[chiave].nome} <span>{FASCE[chiave].orario}</span>
+                </div>
+                {diFascia.map((e) =>
             e.tipo === "booking" ? (
               <div className="pf-agenda-item" key={`b${e.dato.id}`}>
+                <span className="pallino grande" style={{ background: (SEMAFORO[e.dato.status] || SEMAFORO.active).colore }} title={(SEMAFORO[e.dato.status] || SEMAFORO.active).nome} />
                 <span className="ora">{oraRoma(e.dato.start_dt)}</span>
                 <div className="chi">
                   <strong>{e.dato.customer_name}</strong>
@@ -247,9 +352,18 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
                 <button className="pf-btn pericolo compatto" onClick={() => rimuoviBlocco(e.dato.id)}>Rimuovi</button>
               </div>
             )
-          )}
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
+
+      {agenda && eventi.length > 0 && !perGiorno[giornoSel] && (
+        <div className="pf-panel" style={{ marginTop: 14 }}>
+          <p style={{ margin: 0 }}>Nessun appuntamento in questa giornata. Tocca un giorno con il pallino per vedere il dettaglio.</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -258,7 +372,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
 function TabServizi() {
   const [servizi, setServizi] = useState(null);
-  const [nuovo, setNuovo] = useState({ key: "", durata: "", prezzo: "" });
+  const [nuovo, setNuovo] = useState({ key: "", durata: "", prezzo: "", prezzoNotte: "" });
   const [messaggio, setMessaggio] = useState(null);
 
   const carica = useCallback(() => {
@@ -276,11 +390,11 @@ function TabServizi() {
     const r = await fetch("/api/panel/servizi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ catalog_key: nuovo.key, duration_min: Number(nuovo.durata), price_cents: centesimi(nuovo.prezzo) }),
+      body: JSON.stringify({ catalog_key: nuovo.key, duration_min: Number(nuovo.durata), price_cents: centesimi(nuovo.prezzo), price_notte_cents: nuovo.prezzoNotte ? centesimi(nuovo.prezzoNotte) : null }),
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
-    setNuovo({ key: "", durata: "", prezzo: "" });
+    setNuovo({ key: "", durata: "", prezzo: "", prezzoNotte: "" });
     avvisa("ok", "Prestazione aggiunta ✅");
     carica();
   };
@@ -289,7 +403,7 @@ function TabServizi() {
     const r = await fetch("/api/panel/servizi", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: s.id, name: s.name, duration_min: Number(s.duration_min), price_cents: s._prezzo !== undefined ? centesimi(s._prezzo) : s.price_cents, active: s.active }),
+      body: JSON.stringify({ id: s.id, name: s.name, duration_min: Number(s.duration_min), price_cents: s._prezzo !== undefined ? centesimi(s._prezzo) : s.price_cents, price_notte_cents: s._prezzoNotte !== undefined ? (s._prezzoNotte ? centesimi(s._prezzoNotte) : null) : s.price_notte_cents, active: s.active }),
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
@@ -318,7 +432,7 @@ function TabServizi() {
         prezzo: non puoi scendere sotto il minimo indicato (per evitare concorrenza sleale),
         sopra il consigliato sei libero. Il compenso resta interamente tuo: zero commissioni.
         <br />Togli la spunta <strong>"attiva"</strong> per sospendere una prestazione (sparisce
-        dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla del tutto.
+        dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla del tutto. Il campo <strong>🌙 notte</strong> è la tua maggiorazione per le prenotazioni tra le 22:00 e le 07:00 (vuoto = di notte non la fai).
       </p>
       {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
 
@@ -333,8 +447,12 @@ function TabServizi() {
               <input type="number" min={5} max={480} step={5} value={s.duration_min} onChange={(e) => cambia(s.id, "duration_min", e.target.value)} aria-label="Durata in minuti" />
             </label>
             <label>
-              € 
-              <input inputMode="decimal" value={s._prezzo !== undefined ? s._prezzo : euro(s.price_cents)} onChange={(e) => cambia(s.id, "_prezzo", e.target.value)} aria-label="Prezzo" />
+              € giorno
+              <input inputMode="decimal" value={s._prezzo !== undefined ? s._prezzo : euro(s.price_cents)} onChange={(e) => cambia(s.id, "_prezzo", e.target.value)} aria-label="Prezzo di giorno" />
+            </label>
+            <label title="Prezzo maggiorato per le prenotazioni notturne (22:00-07:00). Lascia vuoto se di notte non fai questa prestazione.">
+              🌙 notte
+              <input inputMode="decimal" placeholder="—" value={s._prezzoNotte !== undefined ? s._prezzoNotte : (s.price_notte_cents ? euro(s.price_notte_cents) : "")} onChange={(e) => cambia(s.id, "_prezzoNotte", e.target.value)} aria-label="Prezzo di notte" />
             </label>
             <label className="attivo">
               <input type="checkbox" checked={s.active} onChange={(e) => cambia(s.id, "active", e.target.checked)} /> attiva
@@ -357,7 +475,7 @@ function TabServizi() {
             <label>Prestazione *</label>
             <select required value={nuovo.key} onChange={(e) => {
               const v = LISTINO_MAP[e.target.value];
-              setNuovo({ key: e.target.value, durata: v ? String(v.durata) : "", prezzo: v ? String(v.consigliato).replace(".", ",") : "" });
+              setNuovo({ key: e.target.value, durata: v ? String(v.durata) : "", prezzo: v ? String(v.consigliato).replace(".", ",") : "", prezzoNotte: "" });
             }}>
               <option value="">Scegli dal listino…</option>
               {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome}</option>)}
@@ -373,10 +491,17 @@ function TabServizi() {
                 <input type="number" required min={5} max={480} step={5} value={nuovo.durata} onChange={(e) => setNuovo({ ...nuovo, durata: e.target.value })} />
               </div>
               <div>
-                <label>Il tuo prezzo (€) *</label>
+                <label>Il tuo prezzo di giorno (€) *</label>
                 <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovo.prezzo} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
               </div>
             </div>
+            <label>🌙 Prezzo di notte (€) <span style={{ fontWeight: 400 }}>— facoltativo</span></label>
+            <input inputMode="decimal" placeholder="lascia vuoto se di notte non la fai" value={nuovo.prezzoNotte} onChange={(e) => setNuovo({ ...nuovo, prezzoNotte: e.target.value })} />
+            <p className="pf-note" style={{ marginTop: -4 }}>
+              Vale per le prenotazioni tra le <strong>22:00 e le 07:00</strong>. È una maggiorazione:
+              non può essere inferiore al prezzo di giorno. Se lo lasci vuoto, di notte questa
+              prestazione non è prenotabile.
+            </p>
             <button className="pf-btn" disabled={!nuovo.key}>Aggiungi</button>
           </form>
         );
@@ -392,12 +517,15 @@ function TabOrari() {
   const [messaggio, setMessaggio] = useState(null);
   const [salvo, setSalvo] = useState(false);
 
+  // Ogni giorno ha una LISTA di fasce: mattina/pomeriggio/sera/notte le decide
+  // il professionista, e le pause (pranzo, cena) sono i buchi tra una fascia e l'altra.
   useEffect(() => {
     fetch("/api/panel/orari").then((r) => r.json()).then((d) => {
-      const base = GIORNI.map((nome, weekday) => ({ nome, weekday, attivo: false, dalle: "08:00", alle: "19:00" }));
+      const base = GIORNI.map((nome, weekday) => ({ nome, weekday, fasce: [] }));
       for (const o of d.orari || []) {
-        base[o.weekday] = { ...base[o.weekday], attivo: true, dalle: minutiA(o.start_min), alle: minutiA(o.end_min) };
+        base[o.weekday].fasce.push({ dalle: minutiA(o.start_min), alle: minutiA(o.end_min) });
       }
+      base.forEach((g) => g.fasce.sort((a, b) => a.dalle.localeCompare(b.dalle)));
       setGiorni(base);
     });
   }, []);
@@ -405,13 +533,15 @@ function TabOrari() {
   const salva = async () => {
     setSalvo(true);
     setMessaggio(null);
-    const orari = giorni.filter((g) => g.attivo).map((g) => ({
-      weekday: g.weekday, start_min: aMinuti(g.dalle), end_min: aMinuti(g.alle),
-    }));
+    const orari = [];
+    for (const g of giorni) {
+      for (const f of g.fasce) {
+        if (!f.dalle || !f.alle) continue;
+        orari.push({ weekday: g.weekday, start_min: aMinuti(f.dalle), end_min: aMinuti(f.alle) });
+      }
+    }
     const r = await fetch("/api/panel/orari", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orari }),
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orari }),
     });
     const d = await r.json();
     setSalvo(false);
@@ -420,42 +550,79 @@ function TabOrari() {
       : { tipo: "err", testo: d.error });
   };
 
-  const cambia = (weekday, campo, valore) =>
-    setGiorni(giorni.map((g) => (g.weekday === weekday ? { ...g, [campo]: valore } : g)));
+  const aggiungiFascia = (weekday) =>
+    setGiorni(giorni.map((g) => {
+      if (g.weekday !== weekday) return g;
+      const ultima = g.fasce[g.fasce.length - 1];
+      const proposta = !g.fasce.length ? { dalle: "08:00", alle: "13:00" }
+        : ultima.alle < "15:00" ? { dalle: "15:00", alle: "19:00" }
+        : { dalle: "21:00", alle: "23:00" };
+      return { ...g, fasce: [...g.fasce, proposta] };
+    }));
+
+  const togliFascia = (weekday, i) =>
+    setGiorni(giorni.map((g) => (g.weekday === weekday ? { ...g, fasce: g.fasce.filter((_, k) => k !== i) } : g)));
+
+  const cambiaFascia = (weekday, i, campo, valore) =>
+    setGiorni(giorni.map((g) => (g.weekday === weekday
+      ? { ...g, fasce: g.fasce.map((f, k) => (k === i ? { ...f, [campo]: valore } : f)) }
+      : g)));
+
+  const copiaSuTutti = (weekday) => {
+    const modello = giorni.find((g) => g.weekday === weekday);
+    if (!modello.fasce.length) return;
+    if (!confirm(`Copiare gli orari di ${modello.nome} su TUTTI gli altri giorni?`)) return;
+    setGiorni(giorni.map((g) => ({ ...g, fasce: modello.fasce.map((f) => ({ ...f })) })));
+    setMessaggio({ tipo: "ok", testo: "Orari copiati su tutti i giorni — ricordati di premere Salva" });
+  };
 
   if (!giorni) return <p className="pf-note">Caricamento…</p>;
 
   return (
     <div>
       <p className="pf-note" style={{ marginTop: 0 }}>
-        I pazienti possono prenotare solo dentro questi orari (meno le prenotazioni già prese e i blocchi).
+        I pazienti possono prenotare solo dentro queste fasce (meno le prenotazioni già prese e i blocchi).
+        Puoi mettere <strong>più fasce per giorno</strong>: la pausa pranzo o cena è semplicemente il buco
+        tra una fascia e l'altra. Le fasce tra le <strong>22:00 e le 07:00</strong> 🌙 sono notturne: lì
+        valgono i prezzi maggiorati che hai impostato nella scheda Servizi.
       </p>
+      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+
       {giorni.map((g) => (
-        <div className="pf-orario-riga" key={g.weekday}>
-          <label className="giorno">
-            <input type="checkbox" checked={g.attivo} onChange={(e) => cambia(g.weekday, "attivo", e.target.checked)} />
-            {g.nome}
-          </label>
-          {g.attivo ? (
-            <span className="fascia">
-              <input type="time" value={g.dalle} onChange={(e) => cambia(g.weekday, "dalle", e.target.value)} aria-label={`${g.nome} dalle`} />
-              →
-              <input type="time" value={g.alle} onChange={(e) => cambia(g.weekday, "alle", e.target.value)} aria-label={`${g.nome} alle`} />
+        <div className="pf-giorno-card" key={g.weekday}>
+          <div className="testa">
+            <strong>{g.nome}</strong>
+            {g.fasce.length === 0 && <span className="chiuso">Chiuso</span>}
+            <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+              {g.fasce.length > 0 && (
+                <button type="button" className="pf-btn secondario compatto" onClick={() => copiaSuTutti(g.weekday)} title="Copia questi orari su tutti i giorni">
+                  Copia su tutti
+                </button>
+              )}
+              <button type="button" className="pf-btn secondario compatto" onClick={() => aggiungiFascia(g.weekday)}>+ Fascia</button>
             </span>
-          ) : (
-            <span className="chiuso">Chiuso</span>
-          )}
+          </div>
+          {g.fasce.map((f, i) => {
+            const notturna = aMinuti(f.dalle) >= 22 * 60 || aMinuti(f.alle) <= 7 * 60;
+            return (
+              <div className="fascia-riga" key={i}>
+                <input type="time" value={f.dalle} onChange={(e) => cambiaFascia(g.weekday, i, "dalle", e.target.value)} aria-label={`${g.nome} fascia ${i + 1} dalle`} />
+                <span>→</span>
+                <input type="time" value={f.alle} onChange={(e) => cambiaFascia(g.weekday, i, "alle", e.target.value)} aria-label={`${g.nome} fascia ${i + 1} alle`} />
+                {notturna && <span className="tag-notte">🌙 notturna</span>}
+                <button type="button" className="pf-elimina" onClick={() => togliFascia(g.weekday, i)} aria-label="Togli fascia">🗑</button>
+              </div>
+            );
+          })}
         </div>
       ))}
-      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ margin: "12px 0" }}>{messaggio.testo}</div>}
-      <button className="pf-btn" onClick={salva} disabled={salvo} style={{ marginTop: 10 }}>
+
+      <button className="pf-btn" onClick={salva} disabled={salvo} style={{ marginTop: 14 }}>
         {salvo ? "Salvo…" : "Salva orari"}
       </button>
     </div>
   );
 }
-
-// ---------------------------------------------------------------- Profilo
 
 function TabZone() {
   const [zone, setZone] = useState(null);

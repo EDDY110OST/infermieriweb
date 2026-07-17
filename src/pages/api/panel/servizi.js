@@ -13,7 +13,7 @@ export async function GET({ request }) {
   if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const servizi = await sql`
-    SELECT id, name, duration_min, price_cents, active, sort, catalog_key
+    SELECT id, name, duration_min, price_cents, price_notte_cents, active, sort, catalog_key
     FROM services WHERE professional_id = ${session.pid} ORDER BY sort, id`;
   return json({ servizi });
 }
@@ -29,7 +29,17 @@ const valida = (body, catalogKeyEsistente = "") => {
   if (!Number.isFinite(price) || price > 100000000) return { error: "Prezzo non valido" };
   const min = minCentsPerKey(catalogKey);
   if (price < min) return { error: `Per "${voce.nome}" il prezzo minimo è ${voce.min} € (consigliato ${voce.consigliato} €)` };
-  return { name, duration, price, catalogKey };
+
+  // Prezzo notturno (22:00-07:00): facoltativo. Vuoto = questa prestazione di notte non si fa.
+  // Se indicato è una MAGGIORAZIONE, quindi non può essere inferiore al prezzo di giorno.
+  const grezzoNotte = body.price_notte_cents;
+  let priceNotte = null;
+  if (grezzoNotte !== undefined && grezzoNotte !== null && grezzoNotte !== "") {
+    priceNotte = Math.round(Number(grezzoNotte));
+    if (!Number.isFinite(priceNotte) || priceNotte > 100000000) return { error: "Prezzo notturno non valido" };
+    if (priceNotte < price) return { error: "Il prezzo notturno è una maggiorazione: non può essere inferiore a quello di giorno" };
+  }
+  return { name, duration, price, catalogKey, priceNotte };
 };
 
 // POST /api/panel/servizi — nuova prestazione
@@ -47,8 +57,8 @@ export async function POST({ request }) {
   if (gia) return json({ error: "Hai già questa prestazione nel tuo elenco" }, 400);
 
   const [nuovo] = await sql`
-    INSERT INTO services (professional_id, name, duration_min, price_cents, active, sort, catalog_key)
-    SELECT ${session.pid}, ${v.name}, ${v.duration}, ${v.price}, TRUE, COALESCE(MAX(sort), 0) + 1, ${v.catalogKey}
+    INSERT INTO services (professional_id, name, duration_min, price_cents, price_notte_cents, active, sort, catalog_key)
+    SELECT ${session.pid}, ${v.name}, ${v.duration}, ${v.price}, ${v.priceNotte}, TRUE, COALESCE(MAX(sort), 0) + 1, ${v.catalogKey}
     FROM services WHERE professional_id = ${session.pid}
     RETURNING id`;
   return json({ ok: true, id: nuovo.id });
@@ -65,19 +75,20 @@ export async function PATCH({ request }) {
   if (!id) return json({ error: "Id mancante" }, 400);
 
   const [attuale] = await sql`
-    SELECT name, duration_min, price_cents, active, catalog_key FROM services
+    SELECT name, duration_min, price_cents, price_notte_cents, active, catalog_key FROM services
     WHERE id = ${id} AND professional_id = ${session.pid}`;
   if (!attuale) return json({ error: "Prestazione non trovata" }, 404);
 
   const v = valida({
     duration_min: body.duration_min ?? attuale.duration_min,
     price_cents: body.price_cents ?? attuale.price_cents,
+    price_notte_cents: body.price_notte_cents !== undefined ? body.price_notte_cents : attuale.price_notte_cents,
   }, attuale.catalog_key);
   if (v.error) return json(v, 400);
   const active = body.active ?? attuale.active;
 
   await sql`
-    UPDATE services SET name = ${v.name}, duration_min = ${v.duration}, price_cents = ${v.price}, active = ${!!active}
+    UPDATE services SET name = ${v.name}, duration_min = ${v.duration}, price_cents = ${v.price}, price_notte_cents = ${v.priceNotte}, active = ${!!active}
     WHERE id = ${id} AND professional_id = ${session.pid}`;
   return json({ ok: true });
 }

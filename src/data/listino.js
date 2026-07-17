@@ -35,3 +35,27 @@ export function minCentsPerKey(key) {
   const p = LISTINO_MAP[key];
   return p ? p.min * 100 : 0;
 }
+
+// ---- Fascia notturna (decisa dai soci il 17/7/26): 22:00 -> 07:00 ----
+export const NOTTE_DA = 22 * 60;   // 22:00 in minuti dalla mezzanotte
+export const NOTTE_A = 7 * 60;     // 07:00
+
+// Un orario (minuti dalla mezzanotte) cade nella fascia notturna?
+export function eNotte(minutiDaMezzanotte) {
+  return minutiDaMezzanotte >= NOTTE_DA || minutiDaMezzanotte < NOTTE_A;
+}
+
+// Fascia di appartenenza, per l'agenda del professionista
+export function fasciaDi(minutiDaMezzanotte) {
+  if (eNotte(minutiDaMezzanotte)) return "notte";
+  if (minutiDaMezzanotte < 13 * 60) return "mattina";
+  if (minutiDaMezzanotte < 18 * 60) return "pomeriggio";
+  return "sera";
+}
+
+export const FASCE = {
+  mattina:    { nome: "Mattina",    orario: "07:00-13:00", icona: "🌅" },
+  pomeriggio: { nome: "Pomeriggio", orario: "13:00-18:00", icona: "☀️" },
+  sera:       { nome: "Sera",       orario: "18:00-22:00", icona: "🌆" },
+  notte:      { nome: "Notte",      orario: "22:00-07:00", icona: "🌙" },
+};

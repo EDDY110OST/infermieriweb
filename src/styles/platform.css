@@ -835,3 +835,116 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .pf-elimina:hover { background: #fee2e2; border-color: #fca5a5; }
+
+/* Slot notturno nel widget di prenotazione */
+.pf-slot { position: relative; }
+
+/* Orari a fasce multiple (pannello professionista) */
+.pf-giorno-card {
+  background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: 14px;
+  padding: 14px 16px; margin-bottom: 10px;
+}
+.pf-giorno-card .testa { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.pf-giorno-card .testa strong { color: var(--iw-navy); font-size: 18px; min-width: 90px; }
+.pf-giorno-card .chiuso { color: var(--iw-muted); font-size: 15px; }
+.pf-giorno-card .fascia-riga { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
+.pf-giorno-card .fascia-riga input[type="time"] {
+  border: 1px solid var(--iw-line); border-radius: 10px; padding: 8px 10px; font-size: 16px; font-family: inherit;
+}
+.pf-giorno-card .tag-notte {
+  background: #1e293b; color: #e2e8f0; border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600;
+}
+
+/* ---- Agenda mensile a calendario (semaforo sugli appuntamenti) ---- */
+.pf-cal {
+  background: #fff;
+  border: 1px solid var(--iw-bordo, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+}
+.pf-cal-testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.pf-cal-testa strong {
+  color: var(--iw-navy);
+  font-size: 18px;
+  text-transform: capitalize;
+}
+.pf-cal-griglia {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.pf-cal-intestazione {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  padding: 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pf-cal-cella {
+  min-height: 58px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #fff;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.pf-cal-cella:hover { background: #f8fafc; border-color: #cbd5e1; }
+.pf-cal-cella:active { transform: scale(0.97); }
+.pf-cal-cella.vuota { border: none; background: transparent; cursor: default; }
+.pf-cal-cella.fuori { opacity: 0.35; }
+.pf-cal-cella.oggi { border-color: var(--iw-teal, #0d9488); border-width: 2px; }
+.pf-cal-cella.scelto { background: var(--iw-navy); border-color: var(--iw-navy); }
+.pf-cal-cella.scelto .pf-cal-numero { color: #fff; }
+.pf-cal-numero { font-size: 13px; font-weight: 600; color: #0f172a; }
+.pf-cal-pallini {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+.pallino {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.pallino.grande { width: 11px; height: 11px; }
+.pf-cal-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eef2f7;
+  font-size: 12px;
+  color: #475569;
+}
+.pf-cal-legenda span { display: inline-flex; align-items: center; gap: 5px; }
+.pf-fascia-titolo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--iw-navy);
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+.pf-fascia-titolo span { font-weight: 400; color: #94a3b8; }
+@media (max-width: 520px) {
+  .pf-cal { padding: 10px; }
+  .pf-cal-cella { min-height: 46px; }
+}

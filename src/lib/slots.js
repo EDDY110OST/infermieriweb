@@ -1,4 +1,5 @@
 import { sql } from "./db.js";
+import { eNotte } from "../data/listino.js";
 
 // Tutta l'agenda ragiona nel fuso di Roma, il database salva in UTC.
 
@@ -36,7 +37,7 @@ const STEP_MIN = 30;
  */
 export async function availableSlots(professionalId, serviceId, dateStr) {
   const [service] = await sql`
-    SELECT duration_min FROM services
+    SELECT duration_min, price_cents, price_notte_cents FROM services
     WHERE id = ${serviceId} AND professional_id = ${professionalId} AND active`;
   if (!service) return [];
 
@@ -76,10 +77,15 @@ export async function availableSlots(professionalId, serviceId, dateStr) {
       if (start.getTime() < notBefore) continue;
       const overlaps = busyRanges.some(([bs, be]) => start.getTime() < be && end.getTime() > bs);
       if (overlaps) continue;
+      const notte = eNotte(t);
+      // di notte si prenota solo se il professionista ha impostato un prezzo notturno
+      if (notte && !service.price_notte_cents) continue;
       slots.push({
         start: start.toISOString(),
         end: end.toISOString(),
         label: `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`,
+        notte,
+        price_cents: notte ? service.price_notte_cents : service.price_cents,
       });
     }
   }

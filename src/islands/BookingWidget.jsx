@@ -21,6 +21,8 @@ function prossimiGiorni(n = 14) {
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 
 export default function BookingWidget({ professionalId, services, servizioIniziale, zone = [] }) {
+  // il prezzo dipende dallo slot: di notte (22-07) vale la maggiorazione del professionista
+  const prezzoSlot = (sv, sl) => (sl?.notte && sl?.price_cents ? sl.price_cents : sv?.price_cents);
   const giorni = useMemo(() => prossimiGiorni(14), []);
   // Nessuna prestazione preselezionata: un utente frettoloso confermerebbe
   // l'esame sbagliato (es. ECG da 50€ invece della medicazione che gli serve)
@@ -105,7 +107,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         window.gtag("event", "prenotazione_completata", {
           professionista: professionalId,
           prestazione: servizioSel?.name,
-          valore_da: servizioSel ? servizioSel.price_cents / 100 : undefined,
+          valore_da: servizioSel ? prezzoSlot(servizioSel, slot) / 100 : undefined,
           currency: "EUR",
         });
       }
@@ -194,7 +196,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
               onClick={() => setSlot(s)}
               aria-selected={slot?.start === s.start}
             >
-              {s.label}
+              {s.label}{s.notte && " 🌙"}
             </button>
           ))}
         </div>
@@ -255,12 +257,12 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {servizioSel && slot && (
             <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
-              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · da {euro(servizioSel.price_cents)}
+              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · da {euro(prezzoSlot(servizioSel, slot))}{slot.notte && " 🌙 (tariffa notturna)"}
             </div>
           )}
 
           <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
-            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? ` · da ${euro(servizioSel.price_cents)}` : ""}`}
+            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? ` · da ${euro(prezzoSlot(servizioSel, slot))}` : ""}`}
           </button>
           <p className="pf-note" style={{ marginTop: 10, textAlign: "center" }}>
             Se cambi idea, la disdetta online è <strong>gratuita e senza penali</strong>.
