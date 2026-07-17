@@ -1,0 +1,23 @@
+# Automatismi schedulati (dopo la migrazione a Render, che non ha più le
+# funzioni schedulate di Netlify). Chiama gli endpoint /api/cron/* protetti
+# da CRON_SECRET (nel segreto del repo). Zero servizi esterni.
+name: Automatismi InfermieriWeb
+on:
+  schedule:
+    - cron: "5 * * * *"     # ogni ora: promemoria 24h + pulizia prenotazioni pending scadute
+    - cron: "0 1 * * *"     # 03:00 ora italiana: backup notturno
+  workflow_dispatch:
+
+jobs:
+  promemoria:
+    if: github.event.schedule != '0 1 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Promemoria 24h + pulizia pending
+        run: curl -sf --max-time 60 -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" https://infermieriweb.it/api/cron/promemoria
+  backup:
+    if: github.event.schedule == '0 1 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup notturno
+        run: curl -sf --max-time 120 -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" https://infermieriweb.it/api/cron/backup
