@@ -12,7 +12,7 @@ const { slug } = Astro.params;
 const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
 
 const [pro] = await sql`
-  SELECT id, slug, name, profession, albo_number, bio, photo_url, region, province, city,
+  SELECT id, slug, name, profession, albo_number, vat_number, bio, photo_url, region, province, city,
          phone, google_rating, google_reviews_url, cancel_hours
   FROM professionals WHERE slug = ${slug} AND status = 'active'`;
 
@@ -151,6 +151,12 @@ try {
             Il compenso si regola direttamente con il professionista.
           </p>
         </div>
+
+        {pro.vat_number && (
+          <p class="pf-note" style="text-align: center;">
+            Professionista con partita IVA {pro.vat_number} · iscritto all'albo
+          </p>
+        )}
 
         <div class="pf-panel" id="recensioni">
           <h2>Recensioni dei pazienti</h2>
