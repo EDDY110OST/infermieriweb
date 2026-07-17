@@ -16,7 +16,7 @@ export default defineConfig({
     // Confronto sul percorso esatto: "includes" escludeva per sbaglio /recensioni.
     filter: (page) => {
       const path = new URL(page).pathname.replace(/\/$/, "");
-      const esatte = ["/prenotazione", "/recensione", "/cerca", "/le-mie-prenotazioni", "/strutture"];
+      const esatte = ["/prenotazione", "/recensione", "/cerca", "/le-mie-prenotazioni", "/strutture", "/conferma", "/reimposta-password"];
       const prefissi = ["/admin", "/area-professionisti", "/struttura/"];
       return !esatte.includes(path) && !prefissi.some((p) => path.startsWith(p));
     },

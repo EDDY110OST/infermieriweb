@@ -297,6 +297,15 @@ function TabServizi() {
     carica();
   };
 
+  const elimina = async (s) => {
+    if (!confirm(`Eliminare "${s.name}" dalla tua scheda?\n\nSe vuoi solo sospenderla temporaneamente, togli la spunta "attiva" invece di eliminarla.`)) return;
+    const r = await fetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE" });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", `"${s.name}" eliminata dalla tua scheda`);
+    carica();
+  };
+
   const cambia = (id, campo, valore) =>
     setServizi(servizi.map((s) => (s.id === id ? { ...s, [campo]: valore, _mod: true } : s)));
 
@@ -305,9 +314,11 @@ function TabServizi() {
   return (
     <div>
       <p className="pf-note" style={{ marginTop: 0 }}>
-        Scegli le tue prestazioni dal listino e imposta il prezzo: non puoi scendere sotto il
-        minimo indicato (per evitare concorrenza sleale), sopra il consigliato sei libero. Il
-        compenso resta interamente tuo: zero commissioni.
+        Scegli dal listino <strong>solo le prestazioni che vuoi offrire</strong> e imposta il tuo
+        prezzo: non puoi scendere sotto il minimo indicato (per evitare concorrenza sleale),
+        sopra il consigliato sei libero. Il compenso resta interamente tuo: zero commissioni.
+        <br />Togli la spunta <strong>"attiva"</strong> per sospendere una prestazione (sparisce
+        dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla del tutto.
       </p>
       {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
 
@@ -329,6 +340,7 @@ function TabServizi() {
               <input type="checkbox" checked={s.active} onChange={(e) => cambia(s.id, "active", e.target.checked)} /> attiva
             </label>
             {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
+            <button className="pf-elimina" onClick={() => elimina(s)} type="button" title={`Elimina ${s.name}`} aria-label={`Elimina ${s.name}`}>🗑</button>
           </div>
           {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {voce.min} € · consigliato {voce.consigliato} €</p>}
         </div>
