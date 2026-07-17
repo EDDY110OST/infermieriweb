@@ -68,12 +68,14 @@ export async function POST({ request }) {
     slug = `${base}-${n}`;
   }
 
-  // regione dal comune vero (elenco ISTAT): più affidabile che dedurla dalla provincia
+  // regione E provincia dal comune vero (elenco ISTAT): più affidabile del testo
+  // scritto dal candidato (che a volte mette la sigla, es. "Lu" invece di "Lucca")
   const comuneCand = trovaComune(cand.city);
   const regione = comuneCand?.regione || "";
+  const provincia = comuneCand?.provincia || cand.province;
   // le zone coperte sono comuni singoli validi: le passo come ripiego per la mappa
-  const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: cand.province })).filter((z) => z.city);
-  const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: cand.province, zone: zoneCand });
+  const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: provincia })).filter((z) => z.city);
+  const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: provincia, zone: zoneCand });
   const albo = [cand.albo_name, cand.albo_number ? `n. ${cand.albo_number}` : ""].filter(Boolean).join(" ");
   // password scelta dal candidato in registrazione; ripiego a temporanea solo per i vecchi record senza hash
   // Nome pubblico: "Dott./Dott.ssa Nome I." — il nome completo resta riservato
@@ -93,7 +95,7 @@ export async function POST({ request }) {
       ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${albo},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
       '/professionisti-foto/placeholder.svg',
-      ${regione}, ${cand.province}, ${cand.city}, ${cand.address},
+      ${regione}, ${provincia}, ${cand.city}, ${cand.address},
       ${cand.phone}, ${cand.email},
       ${geo ? geo.lat : null}, ${geo ? geo.lng : null},
       ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}
