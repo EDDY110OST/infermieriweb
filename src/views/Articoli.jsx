@@ -54,8 +54,12 @@ export default function Articoli({ articles = [] }) {
     if (canonical) canonical.setAttribute("href", meta.url);
   }, []);
 
+  const featured = articles.find((a) => a.featured);
+  const heroVisibile = Boolean(featured) && category === "Tutti" && !search.trim();
+
   const filteredArticles = useMemo(() => {
     return articles.filter((article) => {
+      if (heroVisibile && featured && article.slug === featured.slug) return false;
       const matchesCategory = category === "Tutti" || article.category === category;
       const query = search.trim().toLowerCase();
       const matchesSearch =
@@ -64,13 +68,27 @@ export default function Articoli({ articles = [] }) {
         article.category.toLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
-  }, [category, search]);
+  }, [category, search, heroVisibile]);
 
   return (
     <>
 
 
       <section className="section white articles-listing">
+        {heroVisibile && (
+          <Link to={`/articoli/${featured.slug}`} className="article-featured">
+            <div className="feat-media">
+              <img src={getArticleImage(featured)} alt={featured.title} loading="lazy" />
+            </div>
+            <div className="feat-body">
+              <span className="feat-badge">In evidenza</span>
+              <h2>{featured.title}</h2>
+              <p>{featured.excerpt}</p>
+              <span className="feat-link">Leggi la guida →</span>
+            </div>
+          </Link>
+        )}
+
         <div className="article-toolbar">
           <div className="search-wrap">
             <label htmlFor="article-search" className="sr-only">

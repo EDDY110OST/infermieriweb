@@ -8,6 +8,61 @@ const formatData = (iso) => {
   return isNaN(d) ? iso || "" : d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
 };
 
+// Rende cliccabili gli URL dentro un testo semplice
+const URL_RE = /(https?:\/\/[^\s)]+)/g;
+function linkify(text) {
+  return String(text).split(URL_RE).map((parte, i) =>
+    /^https?:\/\//.test(parte) ? (
+      <a key={i} href={parte} target="_blank" rel="noreferrer noopener">
+        {parte.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+      </a>
+    ) : (
+      parte
+    )
+  );
+}
+
+// Dal contenuto (array di paragrafi) ai blocchi: "- " diventa elenco puntato,
+// "> " una nota evidenziata, il resto paragrafi. Gli URL diventano link.
+function renderBlocchi(content, chiave) {
+  const righe = Array.isArray(content) ? content : [content || ""];
+  const blocchi = [];
+  let lista = null;
+  const chiudiLista = () => {
+    if (lista) {
+      blocchi.push(<ul key={`${chiave}-ul-${blocchi.length}`} className="article-list">{lista}</ul>);
+      lista = null;
+    }
+  };
+  righe.forEach((riga, idx) => {
+    const testo = String(riga);
+    if (testo.startsWith("- ")) {
+      if (!lista) lista = [];
+      lista.push(<li key={`${chiave}-li-${idx}`}>{linkify(testo.slice(2))}</li>);
+      return;
+    }
+    chiudiLista();
+    if (testo.startsWith("> ")) {
+      blocchi.push(<p key={`${chiave}-nota-${idx}`} className="article-note">{linkify(testo.slice(2))}</p>);
+    } else {
+      blocchi.push(<p key={`${chiave}-p-${idx}`}>{linkify(testo)}</p>);
+    }
+  });
+  chiudiLista();
+  return blocchi;
+}
+
+// Riconosce un marcatore [!nome] a inizio sezione: sintesi | documento | fonti
+function analizzaSezione(section) {
+  const content = Array.isArray(section.content) ? section.content : [section.content || ""];
+  const primo = String(content[0] || "").trim();
+  const m = primo.match(/^\[!(\w+)\]\s*/);
+  if (!m) return { variante: "normale", content };
+  const resto = primo.slice(m[0].length);
+  const pulito = [resto, ...content.slice(1)].filter((x) => String(x).trim() !== "");
+  return { variante: m[1], content: pulito };
+}
+
 export default function Articolo({ article, related = [] }) {
   const safeCategory = article?.category || "Articolo";
   const safeDate = formatData(article?.date);
@@ -177,26 +232,75 @@ export default function Articolo({ article, related = [] }) {
           </aside>
 
           <article className="article-content">
-            {articleSections.map((section, index) => (
-              <section key={section.id} id={section.id} className="article-section">
-                <h2>{section.title}</h2>
-                {Array.isArray(section.content)
-                  ? section.content.map((paragraph, idx) => (
-                      <p key={`${section.id}-${idx}`}>{paragraph}</p>
-                    ))
-                  : <p>{section.content || ""}</p>
+            {(() => {
+              let ctaMostrata = false;
+              const ctaPro = ["Normativa", "Per i professionisti", "Lavorare come infermiere"].includes(safeCategory);
+              return articleSections.map((section) => {
+                const { variante, content } = analizzaSezione(section);
+
+                if (variante === "sintesi") {
+                  return (
+                    <section key={section.id} id={section.id} className="article-section article-sintesi">
+                      <span className="article-sintesi-tag">In sintesi</span>
+                      <h2>{section.title}</h2>
+                      {renderBlocchi(content, section.id)}
+                    </section>
+                  );
                 }
-                {index === 0 && (
-                  <div className="article-cta-card">
-                    <h3>Hai bisogno di assistenza infermieristica?</h3>
-                    <p>Trova un infermiere che copre la tua zona: prezzi chiari, recensioni verificate e prenotazione online in un minuto. Gratis per te.</p>
-                    <a href="/cerca" className="btn-primary">
-                      Trova un infermiere
-                    </a>
-                  </div>
-                )}
-              </section>
-            ))}
+
+                if (variante === "documento") {
+                  return (
+                    <section key={section.id} id={section.id} className="article-section">
+                      <div className="doc-toolbar no-print">
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => { if (typeof window !== "undefined") window.print(); }}
+                        >
+                          🖨️ Stampa o salva in PDF
+                        </button>
+                        <span className="doc-hint">Viene stampato solo il modulo qui sotto.</span>
+                      </div>
+                      <div className="print-sheet">
+                        <h2>{section.title}</h2>
+                        {renderBlocchi(content, section.id)}
+                      </div>
+                    </section>
+                  );
+                }
+
+                if (variante === "fonti") {
+                  return (
+                    <section key={section.id} id={section.id} className="article-section article-fonti">
+                      <h2>{section.title}</h2>
+                      {renderBlocchi(content, section.id)}
+                    </section>
+                  );
+                }
+
+                const mostraCta = !ctaMostrata;
+                if (mostraCta) ctaMostrata = true;
+                return (
+                  <section key={section.id} id={section.id} className="article-section">
+                    <h2>{section.title}</h2>
+                    {renderBlocchi(content, section.id)}
+                    {mostraCta && (ctaPro ? (
+                      <div className="article-cta-card">
+                        <h3>Sei un infermiere in regola?</h3>
+                        <p>Crea la tua scheda gratuita su InfermieriWeb: ti trovano i pazienti della tua zona e gestisci gli appuntamenti dall'agenda online.</p>
+                        <a href="/lavora-con-noi" className="btn-primary">Crea la tua scheda</a>
+                      </div>
+                    ) : (
+                      <div className="article-cta-card">
+                        <h3>Hai bisogno di assistenza infermieristica?</h3>
+                        <p>Trova un infermiere che copre la tua zona: prezzi chiari, recensioni verificate e prenotazione online in un minuto. Gratis per te.</p>
+                        <a href="/cerca" className="btn-primary">Trova un infermiere</a>
+                      </div>
+                    ))}
+                  </section>
+                );
+              });
+            })()}
 
             {servizioAbbinato && (
               <div className="article-cta-card">

@@ -9,9 +9,9 @@ import { sql } from "../../lib/db.js";
 import { mapArticolo } from "../../lib/blog.js";
 
 const righe = await sql`
-  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
+  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections, featured
   FROM articles WHERE status = 'published'
-  ORDER BY published_at DESC, id DESC`;
+  ORDER BY featured DESC, published_at DESC, id DESC`;
 const articoli = righe.map(mapArticolo);
 ---
 

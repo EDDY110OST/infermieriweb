@@ -48,4 +48,5 @@ export const mapArticolo = (r) => ({
   readingTime: r.reading_time,
   date: r.published_at ? new Date(r.published_at).toISOString().slice(0, 10) : "",
   sections: r.sections || [],
+  featured: !!r.featured,
 });

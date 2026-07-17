@@ -2124,3 +2124,113 @@ summary:focus-visible {
 
 /* niente sottolineatura sui link-card giù nel blog */
 .article-card, .article-preview-card { text-decoration: none; }
+
+/* ===== Blog: elenchi, note, box sintesi, fonti, modulo stampabile ===== */
+.article-list { margin: 0 0 18px; padding-left: 22px; display: grid; gap: 8px; }
+.article-list li { line-height: 1.55; }
+.article-content a { color: var(--primary); font-weight: 600; }
+
+.article-note {
+  border-left: 3px solid var(--primary);
+  background: rgba(0, 137, 123, 0.06);
+  padding: 12px 16px;
+  border-radius: 0 12px 12px 0;
+  color: var(--text-secondary);
+  margin: 0 0 18px;
+}
+
+/* Riquadro "In sintesi" ben evidenziato in cima all'articolo */
+.article-sintesi {
+  background: linear-gradient(180deg, rgba(0, 137, 123, 0.10), rgba(0, 137, 123, 0.04));
+  border: 1px solid rgba(0, 137, 123, 0.22);
+  border-left: 6px solid var(--primary);
+  border-radius: 20px;
+  padding: 26px 28px;
+}
+.article-sintesi-tag {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+.article-sintesi h2 { font-size: 24px; margin: 0 0 12px; }
+.article-sintesi .article-list li { font-weight: 500; }
+
+/* Sezione fonti ufficiali */
+.article-fonti { color: var(--text-secondary); }
+.article-fonti .article-list { gap: 12px; }
+
+/* Barra azioni sopra il modulo */
+.doc-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.doc-hint { color: var(--text-secondary); font-size: 14px; }
+
+/* Foglio del modulo: aspetto "carta" pronto per la stampa */
+.print-sheet {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 44px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  color: #1a1a1a;
+  line-height: 1.6;
+}
+.print-sheet h2 { font-size: 22px; margin: 0 0 20px; }
+.print-sheet p { margin: 0 0 14px; }
+
+@media (max-width: 650px) {
+  .print-sheet { padding: 26px 20px; }
+  .article-sintesi { padding: 22px 20px; }
+}
+
+/* Card "In evidenza" in cima al blog */
+.article-featured {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  border: 1px solid rgba(0, 137, 123, 0.25);
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--bg-card);
+  text-decoration: none;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.article-featured:hover { transform: translateY(-4px); box-shadow: 0 26px 55px rgba(15, 23, 42, 0.12); }
+.article-featured .feat-media { position: relative; min-height: 220px; }
+.article-featured .feat-media img { width: 100%; height: 100%; object-fit: cover; }
+.article-featured .feat-body { padding: 30px 32px; display: flex; flex-direction: column; gap: 12px; }
+.article-featured .feat-badge {
+  align-self: flex-start;
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  padding: 5px 12px; border-radius: 999px;
+}
+.article-featured h2 { font-size: 26px; margin: 0; }
+.article-featured .feat-body p { color: var(--text-secondary); margin: 0; }
+.article-featured .feat-link { color: var(--primary); font-weight: 700; margin-top: 4px; }
+@media (max-width: 760px) {
+  .article-featured { grid-template-columns: 1fr; }
+  .article-featured .feat-media { min-height: 170px; }
+}
+
+/* ===== Stampa: esce solo il modulo (.print-sheet) ===== */
+@media print {
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .print-sheet, .print-sheet * { visibility: visible !important; }
+  .print-sheet {
+    position: absolute; left: 0; top: 0; width: 100%;
+    border: none !important; box-shadow: none !important;
+    padding: 0 !important; margin: 0 !important; max-width: none !important;
+  }
+  .no-print { display: none !important; }
+  @page { margin: 18mm; }
+}
