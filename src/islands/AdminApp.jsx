@@ -225,18 +225,24 @@ function ModificaScheda({ pid, nome, onIndietro }) {
 
   const salvaProfilo = async () => {
     setSalvo(true);
-    const r = await fetch("/api/panel/profilo", {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pid, name: prof.name, full_name: prof.full_name, gender: prof.gender, profession: prof.profession,
-        email: prof.email, phone: prof.phone, bio: prof.bio, address: prof.address,
-        city: prof.city, sigla: prof._sigla, albo_name: prof.albo_name, albo_number: prof.albo_number,
-        albo_date: prof.albo_date, vat_number: prof.vat_number,
-      }),
-    });
-    const d = await r.json(); setSalvo(false);
-    if (!r.ok) return avvisa("err", d.error);
-    avvisa("ok", "Dati salvati ✅" + (d.posizioneCambiata ? " (segnaposto mappa aggiornato)" : "")); carica();
+    try {
+      const r = await fetch("/api/panel/profilo", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pid, name: prof.name, full_name: prof.full_name, gender: prof.gender, profession: prof.profession,
+          email: prof.email, phone: prof.phone, bio: prof.bio, address: prof.address,
+          city: prof.city, sigla: prof._sigla, albo_name: prof.albo_name, albo_number: prof.albo_number,
+          albo_date: prof.albo_date, vat_number: prof.vat_number,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return avvisa("err", d.error || "Errore nel salvataggio: riprova");
+      avvisa("ok", "Dati salvati ✅" + (d.posizioneCambiata ? " (segnaposto mappa aggiornato)" : "")); carica();
+    } catch {
+      avvisa("err", "Errore di rete: riprova tra poco");
+    } finally {
+      setSalvo(false);
+    }
   };
 
   const caricaFoto = (e) => {

@@ -16,7 +16,12 @@ export async function geocodeAddress({ address = "", city = "", province = "" })
     url.searchParams.set("countrycodes", "it");
     url.searchParams.set("addressdetails", "0");
 
-    const r = await fetch(url, { headers: { "User-Agent": UA, "Accept-Language": "it" } });
+    // Timeout: Nominatim a volte è lento/irraggiungibile e senza questo il
+    // salvataggio del profilo resterebbe appeso all'infinito.
+    const r = await fetch(url, {
+      headers: { "User-Agent": UA, "Accept-Language": "it" },
+      signal: AbortSignal.timeout(6000),
+    });
     if (!r.ok) return null;
     const results = await r.json();
     if (!results.length) return null;
