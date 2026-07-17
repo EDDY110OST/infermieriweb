@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "start": "node ./server.mjs"
+    "start": "HOST=0.0.0.0 node ./dist/server/entry.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
