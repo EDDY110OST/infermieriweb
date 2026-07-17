@@ -13,9 +13,32 @@ const ICONE = {
   "terapia-orale": "pillola", "parametri-vitali": "termometro", "clisteri-evacuativi": "goccia",
   "gestione-stomie": "croce", "educazione-terapeutica": "laurea",
 };
+// Diciture allineate ai nomi del listino delle schede (soci, 18/7/26): il
+// paziente ritrova la STESSA parola su /domicilio e nella scheda dell'infermiere.
+// Le categorie ampie (Medicazioni, Iniezioni, Cateteri) restano tali perché
+// nelle schede si sdoppiano (es. Iniezione IM/SC). I nomi SEO più lunghi
+// restano per le pagine /servizio (NOMI_COLLOQUIALI).
+const NOMI_DOMICILIO = {
+  ecg: "ECG",
+  medicazioni: "Medicazioni",
+  prelievi: "Prelievo",
+  iniezioni: "Iniezioni",
+  flebo: "Flebo",
+  desutura: "Rimozione punti",
+  "cateteri-vescicali": "Cateteri vescicali",
+  "holter-pressori": "Holter pressorio",
+  "holter-cardiaci": "Holter cardiaco",
+  "sondini-naso-gastrici": "Sondino naso-gastrico",
+  "gestione-peg": "Gestione PEG",
+  "terapia-orale": "Somministrazione terapia orale",
+  "parametri-vitali": "Parametri vitali",
+  "clisteri-evacuativi": "Clistere",
+  "gestione-stomie": "Gestione stomia",
+  "educazione-terapeutica": "Educazione terapeutica",
+};
 const servizi = Object.entries(servicesData).map(([id, s]) => ({
   id, icona: ICONE[id] || "croce",
-  nome: NOMI_COLLOQUIALI[id] || s.title,
+  nome: NOMI_DOMICILIO[id] || NOMI_COLLOQUIALI[id] || s.title,
   descrizione: s.shortDescription,
 }));
 ---

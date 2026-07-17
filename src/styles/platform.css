@@ -316,6 +316,17 @@
 }
 .pf-book label { font-weight: 600; font-size: 16px; color: var(--iw-slate); display: block; margin-bottom: 5px; }
 
+/* Campo password con icona "occhio" (mostra/nascondi) */
+.pf-pass-wrap { position: relative; margin-bottom: 12px; }
+.pf-pass-wrap .pf-pass-input { margin-bottom: 0; padding-right: 46px; }
+.pf-pass-eye {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0; margin: 0;
+  background: none; border: 0; cursor: pointer; color: var(--iw-slate); border-radius: 8px;
+}
+.pf-pass-eye:hover { color: var(--iw-navy); background: rgba(11, 57, 84, 0.07); }
+
 .pf-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; min-width: 0; }
 .pf-day {
   border: 1px solid var(--iw-line); background: #fff; border-radius: var(--iw-r-ctrl); padding: 8px 6px;

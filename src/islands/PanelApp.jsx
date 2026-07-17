@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { LISTINO, LISTINO_MAP, FASCE, fasciaDi } from "../data/listino.js";
 import CercaComune from "./CercaComune.jsx";
+import CampoPassword from "./CampoPassword.jsx";
 
 const oraRoma = (iso) =>
   new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
@@ -1145,7 +1146,7 @@ export default function PanelApp() {
           <label htmlFor="pl-email">Email</label>
           <input id="pl-email" type="email" required value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} autoComplete="username" />
           <label htmlFor="pl-pass">Password</label>
-          <input id="pl-pass" type="password" required value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} autoComplete="current-password" />
+          <CampoPassword id="pl-pass" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} autoComplete="current-password" />
           {errore && <div className="pf-errore">{errore}</div>}
           <button className="pf-btn" style={{ width: "100%" }}>Entra</button>
         </form>

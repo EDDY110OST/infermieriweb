@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import CampoPassword from "./CampoPassword.jsx";
 
 const dataIt = (iso) =>
   new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -1118,7 +1119,7 @@ export default function AdminApp() {
           <label htmlFor="ad-email">Email</label>
           <input id="ad-email" type="email" required value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} autoComplete="username" />
           <label htmlFor="ad-pass">Password</label>
-          <input id="ad-pass" type="password" required value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} autoComplete="current-password" />
+          <CampoPassword id="ad-pass" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} autoComplete="current-password" />
           {serveTotp && (
             <>
               <label htmlFor="ad-totp">Codice a 6 cifre (app di autenticazione)</label>
