@@ -33,6 +33,16 @@ const valida = (body) => {
   return { title, category, excerpt, image, bodyRaw };
 };
 
+// Copertina caricata: data URI (base64) ridimensionata dal browser. undefined = non toccare.
+const validaCover = (data) => {
+  if (data === undefined || data === null) return { cover: undefined };
+  const d = String(data);
+  if (!d) return { cover: "" };
+  if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(d)) return { error: "Formato immagine di copertina non valido" };
+  if (d.length > 900_000) return { error: "Copertina troppo pesante: usa un'immagine più leggera" };
+  return { cover: d };
+};
+
 // POST /api/admin/blog — nuovo articolo {title, category, excerpt, image?, body_raw, publish?}
 export async function POST({ request }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
@@ -49,11 +59,20 @@ export async function POST({ request }) {
     slug = `${base}-${n}`;
   }
 
+  const cov = validaCover(body.cover_data);
+  if (cov.error) return json(cov, 400);
+  let image = v.image;
+  let coverData = "";
+  if (cov.cover) {
+    coverData = cov.cover;
+    image = `/api/blog-immagine/${slug}?v=${Date.now()}`;
+  }
+
   const publish = !!body.publish;
   const sections = JSON.stringify(parseBody(v.bodyRaw, v.title));
   const [nuovo] = await sql`
-    INSERT INTO articles (slug, title, category, excerpt, image, reading_time, body_raw, sections, status, published_at)
-    VALUES (${slug}, ${v.title}, ${v.category}, ${v.excerpt}, ${v.image}, ${readingTime(v.bodyRaw)},
+    INSERT INTO articles (slug, title, category, excerpt, image, cover_data, reading_time, body_raw, sections, status, published_at)
+    VALUES (${slug}, ${v.title}, ${v.category}, ${v.excerpt}, ${image}, ${coverData}, ${readingTime(v.bodyRaw)},
             ${v.bodyRaw}, ${sections}::jsonb, ${publish ? "published" : "draft"}, ${publish ? new Date().toISOString().slice(0, 10) : null})
     RETURNING id, slug`;
   return json({ ok: true, id: nuovo.id, slug: nuovo.slug });
@@ -79,6 +98,18 @@ export async function PATCH({ request }) {
   });
   if (v.error) return json(v, 400);
 
+  const cov = validaCover(body.cover_data);
+  if (cov.error) return json(cov, 400);
+  let image = v.image;
+  let coverData = attuale.cover_data || "";
+  if (cov.cover) {
+    coverData = cov.cover;
+    image = `/api/blog-immagine/${attuale.slug}?v=${Date.now()}`;
+  } else if (body.remove_cover) {
+    coverData = "";
+    image = "";
+  }
+
   let status = attuale.status;
   let publishedAt = attuale.published_at;
   if (body.publish) {
@@ -90,7 +121,7 @@ export async function PATCH({ request }) {
   const sections = JSON.stringify(parseBody(v.bodyRaw, v.title));
   await sql`
     UPDATE articles SET title = ${v.title}, category = ${v.category}, excerpt = ${v.excerpt},
-      image = ${v.image}, body_raw = ${v.bodyRaw}, sections = ${sections}::jsonb,
+      image = ${image}, cover_data = ${coverData}, body_raw = ${v.bodyRaw}, sections = ${sections}::jsonb,
       reading_time = ${readingTime(v.bodyRaw)}, status = ${status}, published_at = ${publishedAt},
       updated_at = now()
     WHERE id = ${id}`;

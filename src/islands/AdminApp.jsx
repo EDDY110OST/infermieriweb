@@ -927,7 +927,29 @@ function BlogAdmin() {
     setTimeout(() => setMessaggio(null), 5000);
   };
 
-  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "" });
+  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "", cover_data: "" });
+
+  // Copertina: ridimensionata nel browser (max 1200px, JPEG) e inviata come data URI
+  const caricaCopertina = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 1200;
+      const scala = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scala);
+      const h = Math.round(img.height * scala);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      const data = canvas.toDataURL("image/jpeg", 0.82);
+      setEditor((ed) => ({ ...ed, cover_data: data, image: "", remove_cover: false }));
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  };
+  const rimuoviCopertina = () => setEditor((ed) => ({ ...ed, cover_data: "", image: "", remove_cover: true }));
 
   const salva = async (publish) => {
     setSalvo(true);
@@ -975,15 +997,28 @@ function BlogAdmin() {
           <h2>{editor.id ? "Modifica articolo" : "Nuovo articolo"}</h2>
           <label>Titolo *</label>
           <input value={editor.title} onChange={(e) => setEditor({ ...editor, title: e.target.value })} placeholder="es. Come prepararsi a un prelievo a domicilio" />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <label>Categoria</label>
-              <input value={editor.category} onChange={(e) => setEditor({ ...editor, category: e.target.value })} placeholder="es. Prelievi" />
+          <label>Categoria</label>
+          <input value={editor.category} onChange={(e) => setEditor({ ...editor, category: e.target.value })} placeholder="es. Prelievi" />
+
+          <label>Immagine di copertina <span style={{ fontWeight: 400 }}>(compare in cima all'articolo e nell'elenco · facoltativa)</span></label>
+          {(editor.cover_data || editor.image) && (
+            <div style={{ marginBottom: 8 }}>
+              <img
+                src={editor.cover_data || editor.image}
+                alt="Anteprima copertina"
+                style={{ width: "100%", maxWidth: 360, aspectRatio: "5 / 3", objectFit: "cover", borderRadius: 12, border: "1px solid #e2e8f0" }}
+              />
             </div>
-            <div>
-              <label>Copertina (URL, facoltativa)</label>
-              <input value={editor.image} onChange={(e) => setEditor({ ...editor, image: e.target.value })} placeholder="vuota = copertina automatica" />
-            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
+            <label className="pf-btn secondario compatto" style={{ cursor: "pointer", margin: 0 }}>
+              {editor.cover_data || editor.image ? "Cambia immagine" : "Carica immagine"}
+              <input type="file" accept="image/*" onChange={caricaCopertina} style={{ display: "none" }} />
+            </label>
+            {(editor.cover_data || editor.image) && (
+              <button type="button" className="pf-btn pericolo compatto" onClick={rimuoviCopertina}>Rimuovi</button>
+            )}
+            <span className="pf-note" style={{ margin: 0 }}>Si ridimensiona da sola. Se la lasci vuota, viene usata una copertina grafica automatica.</span>
           </div>
           <label>Sommario * <span style={{ fontWeight: 400 }}>(1-2 frasi: compare in elenco e su Google)</span></label>
           <textarea rows={2} maxLength={300} value={editor.excerpt} onChange={(e) => setEditor({ ...editor, excerpt: e.target.value })} />
