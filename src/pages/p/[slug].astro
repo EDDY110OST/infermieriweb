@@ -12,7 +12,7 @@ const { slug } = Astro.params;
 const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
 
 const [pro] = await sql`
-  SELECT id, slug, name, profession, albo_number, vat_number, bio, photo_url, region, province, city,
+  SELECT id, slug, name, profession, albo_name, albo_number, vat_number, bio, photo_url, region, province, city,
          phone, google_rating, google_reviews_url, cancel_hours
   FROM professionals WHERE slug = ${slug} AND status = 'active'`;
 
@@ -96,7 +96,7 @@ try {
       <div>
         <h1>{pro.name}</h1>
         <p class="prof">{professione} · {pro.city} ({pro.province})</p>
-        <span class="badge-albo">✓ {pro.albo_number || "Iscritto all'albo professionale"}</span>
+        <span class="badge-albo">✓ {[pro.albo_name, pro.albo_number ? `n. ${pro.albo_number}` : ""].filter(Boolean).join(" ") || "Iscritto all'albo professionale"}</span>
         {Number(ratingAgg?.totale) > 0 ? (
           <span class="badge-albo">★ {String(ratingAgg.media).replace(".", ",")} · {ratingAgg.totale} recensioni verificate</span>
         ) : pro.google_rating ? (
