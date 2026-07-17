@@ -5,6 +5,22 @@ import logo from "../assets/logo.jpeg";
 
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
+
+// "Dove siamo" nel footer: le città reali della rete, dal database
+// (statiche = aggiornate a ogni deploy; SSR = sempre fresche)
+const slugifyFooter = (t) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/['\s]+/g, "-").replace(/[^a-z0-9-]/g, "");
+let cittaFooter = [];
+try {
+  const { sql } = await import("../lib/db.js");
+  const zone = await sql`
+    SELECT c.city, c.province, c.region, COUNT(*) AS n
+    FROM coverage_areas c JOIN professionals p ON p.id = c.professional_id AND p.status = 'active'
+    GROUP BY 1, 2, 3 ORDER BY n DESC, c.city LIMIT 6`;
+  cittaFooter = zone.map((z) => ({
+    city: z.city,
+    href: `/professionisti/${slugifyFooter(z.region)}/${slugifyFooter(z.province)}/${slugifyFooter(z.city)}`,
+  }));
+} catch { /* footer senza città se il DB non risponde */ }
 // Menu potato secondo la revisione di Eduard (15/7): due percorsi chiari,
 // paziente e professionista. Zone e Chi siamo vivono nel footer.
 // Menu minimale (richiesta soci 16/7): "Come funziona" vive nella home,
@@ -46,8 +62,8 @@ const nav = [
         <div>
           <h4>InfermieriWeb.it</h4>
           <p style="font-size:14.5px; margin:0; max-width:280px;">
-            La rete degli infermieri a domicilio. Partita da Lucca, cresce una
-            città alla volta — con professionisti verificati uno per uno.
+            La rete italiana degli infermieri a domicilio: cresce una città alla
+            volta, con professionisti verificati uno per uno.
           </p>
         </div>
         <div>
@@ -68,11 +84,10 @@ const nav = [
         </div>
         <div>
           <h4>Dove siamo</h4>
-          <a href="/professionisti/toscana/lucca/lucca">Infermiere a Lucca</a>
-          <a href="/professionisti/toscana/lucca/capannori">Infermiere a Capannori</a>
-          <a href="/professionisti/toscana/lucca/porcari">Infermiere a Porcari</a>
-          <a href="/professionisti/toscana/lucca/altopascio">Infermiere ad Altopascio</a>
-          <a href="/professionisti/toscana/lucca/montecarlo">Infermiere a Montecarlo</a>
+          {cittaFooter.map((c) => (
+            <a href={c.href}>Infermiere a {c.city}</a>
+          ))}
+          <a href="/professionisti">Tutte le zone →</a>
         </div>
         <div>
           <h4>Informazioni</h4>

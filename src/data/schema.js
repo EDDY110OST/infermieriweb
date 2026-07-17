@@ -13,13 +13,7 @@ export const organizationSchema = {
   email: "info@infermieriweb.it",
   description:
     "Piattaforma che mette in contatto pazienti e infermieri liberi professionisti per prestazioni a domicilio: prenotazione online gratuita, professionisti verificati, recensioni vere. InfermieriWeb non fornisce prestazioni sanitarie.",
-  areaServed: [
-    { "@type": "City", name: "Lucca" },
-    { "@type": "City", name: "Capannori" },
-    { "@type": "City", name: "Porcari" },
-    { "@type": "City", name: "Altopascio" },
-    { "@type": "City", name: "Montecarlo" },
-  ],
+  areaServed: { "@type": "Country", name: "Italia" },
 };
 
 export function articleSchema(article, imageUrl) {
