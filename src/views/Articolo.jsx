@@ -255,6 +255,7 @@ export default function Articolo({ article, related = [] }) {
                         <button
                           type="button"
                           className="btn-primary"
+                          data-print
                           onClick={() => { if (typeof window !== "undefined") window.print(); }}
                         >
                           🖨️ Stampa o salva in PDF

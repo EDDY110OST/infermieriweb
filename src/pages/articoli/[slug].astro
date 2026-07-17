@@ -46,3 +46,15 @@ const schemas = [
 <Platform title={seo.title} description={seo.description} path={path} ogType="article" ogImage={ogImage} ogImageAlt={article.title} schemas={schemas}>
   <ArticoloIsland pathname={path} params={{ slug }} article={article} related={related} />
 </Platform>
+
+<!-- La pagina articolo è HTML statico (nessuna hydration): aggancio la stampa
+     del modulo con uno script indipendente dal framework. -->
+<script>
+  document.addEventListener("click", (event) => {
+    const el = event.target;
+    if (el && el.closest && el.closest("[data-print]")) {
+      event.preventDefault();
+      window.print();
+    }
+  });
+</script>
