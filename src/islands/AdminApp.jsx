@@ -260,6 +260,7 @@ function Professionisti({ filtroStato }) {
 
 function Candidature({ aggiornaBadge }) {
   const [candidature, setCandidature] = useState(null);
+  const [verifiche, setVerifiche] = useState({}); // { [id]: { piva: bool, albo: bool } }
   const [esiti, setEsiti] = useState({});
 
   const carica = useCallback(() => {
@@ -272,10 +273,15 @@ function Candidature({ aggiornaBadge }) {
 
   const gestisci = async (id, action) => {
     if (action === "reject" && !window.confirm("Rifiuto questa candidatura? Il candidato riceverà una email.")) return;
+    const v = verifiche[id] || {};
+    if (action === "approve" && (!v.piva || !v.albo)) {
+      alert("Prima di approvare devi confermare di aver verificato SIA la partita IVA (Agenzia delle Entrate) SIA l'iscrizione all'albo (FNOPI). Spunta entrambe le caselle.");
+      return;
+    }
     const r = await fetch("/api/admin/candidature", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
+      body: JSON.stringify({ id, action, verificaPiva: !!(verifiche[id]||{}).piva, verificaAlbo: !!(verifiche[id]||{}).albo }),
     });
     const d = await r.json();
     if (!r.ok) return alert(d.error);
@@ -300,9 +306,26 @@ function Candidature({ aggiornaBadge }) {
             📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ {c.email}
           </p>
           {c.message && <p style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
-          <p className="pf-note">
-            ✔️ Prima di approvare: verifica l'iscrizione su <a href="https://portale.fnopi.it/ricerca-iscritti" target="_blank" rel="noreferrer">portale FNOPI</a> e chiedi la polizza RC (videochiamata da checklist).
-          </p>
+
+          <div style={{ background: "#fff8e6", border: "1px solid #f4dfa5", borderRadius: 12, padding: "14px 16px", margin: "12px 0" }}>
+            <strong style={{ color: "#0b3954" }}>🔒 Verifica obbligatoria prima di attivare</strong>
+            <p className="pf-note" style={{ margin: "4px 0 10px" }}>
+              Controlla i dati sui portali ufficiali (si aprono in una nuova scheda), poi spunta le due caselle.
+              Restano registrati chi verifica e quando.
+            </p>
+            <p style={{ margin: "6px 0" }}>
+              <a className="pf-btn secondario" href="https://telemanagrafici.agenziaentrate.gov.it/VerificaPIVA/Scegli.do" target="_blank" rel="noreferrer">Verifica P.IVA {c.vat_number || "(assente)"} ↗</a>{" "}
+              <a className="pf-btn secondario" href="https://www.fnopi.it/gli-ordini-provinciali/ricerca-albo/" target="_blank" rel="noreferrer">Verifica albo: {c.name} — n. {c.albo_number} ↗</a>
+            </p>
+            <label style={{ display: "block", margin: "8px 0" }}>
+              <input type="checkbox" checked={!!(verifiche[c.id]||{}).piva} onChange={(e) => setVerifiche((v) => ({ ...v, [c.id]: { ...(v[c.id]||{}), piva: e.target.checked } }))} />{" "}
+              Ho verificato la <strong>partita IVA {c.vat_number}</strong> su Agenzia delle Entrate {c.vat_number ? "(risulta attiva)" : "— ATTENZIONE: candidatura senza P.IVA (solo vetrina strutture)"}
+            </label>
+            <label style={{ display: "block", margin: "8px 0" }}>
+              <input type="checkbox" checked={!!(verifiche[c.id]||{}).albo} onChange={(e) => setVerifiche((v) => ({ ...v, [c.id]: { ...(v[c.id]||{}), albo: e.target.checked } }))} />{" "}
+              Ho verificato l'<strong>iscrizione all'albo</strong> ({c.albo_name} n. {c.albo_number}) su FNOPI e corrisponde al nominativo
+            </label>
+          </div>
           {esiti[c.id] ? (
             <div className="pf-successo">
               <strong>Approvato ✅ Scheda: /p/{esiti[c.id].slug}</strong>
@@ -312,7 +335,7 @@ function Candidature({ aggiornaBadge }) {
             </div>
           ) : (
             <div style={{ display: "flex", gap: 10 }}>
-              <button className="pf-btn" onClick={() => gestisci(c.id, "approve")}>✅ Approva e attiva</button>
+              <button className="pf-btn" disabled={!((verifiche[c.id]||{}).piva && (verifiche[c.id]||{}).albo)} onClick={() => gestisci(c.id, "approve")}>✅ Approva e attiva</button>
               <button className="pf-btn pericolo" onClick={() => gestisci(c.id, "reject")}>Rifiuta</button>
             </div>
           )}
@@ -535,7 +558,7 @@ function RecensioniModerazione({ aggiornaBadge }) {
     await fetch("/api/admin/recensioni", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
+      body: JSON.stringify({ id, action, verificaPiva: !!(verifiche[id]||{}).piva, verificaAlbo: !!(verifiche[id]||{}).albo }),
     });
     carica();
   };

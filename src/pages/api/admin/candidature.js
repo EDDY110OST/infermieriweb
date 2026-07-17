@@ -55,6 +55,12 @@ export async function POST({ request }) {
     return json({ ok: true });
   }
 
+  // --- GATE DI VERIFICA (tutela legale): non si attiva chi non è stato verificato ---
+  if (!body.verificaPiva || !body.verificaAlbo) {
+    return json({ error: "Approvazione bloccata: conferma di aver verificato partita IVA (Agenzia Entrate) e iscrizione all'albo (FNOPI)." }, 400);
+  }
+  const verificatoDa = session?.email || session?.name || "admin";
+
   // --- APPROVAZIONE ---
   const [utenteEsistente] = await sql`SELECT id FROM professional_users WHERE lower(email) = ${cand.email.toLowerCase()}`;
   if (utenteEsistente) return json({ error: "Esiste già un account con questa email" }, 409);
@@ -90,7 +96,7 @@ export async function POST({ request }) {
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
-    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number)
+    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by)
     VALUES (
       ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${albo},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
@@ -98,7 +104,7 @@ export async function POST({ request }) {
       ${regione}, ${provincia}, ${cand.city}, ${cand.address},
       ${cand.phone}, ${cand.email},
       ${geo ? geo.lat : null}, ${geo ? geo.lng : null},
-      ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}
+      ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}, now(), now(), ${verificatoDa}
     ) RETURNING id`;
 
   await sql`
