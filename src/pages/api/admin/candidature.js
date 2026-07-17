@@ -32,7 +32,8 @@ export async function GET({ request }) {
 
 // POST /api/admin/candidature {id, action: "approve"|"reject"}
 export async function POST({ request }) {
-  if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
+  const admin = sessionFromRequest(request);
+  if (!admin || admin.role !== "admin") return json({ error: "Riservato agli amministratori" }, 403);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
@@ -59,7 +60,7 @@ export async function POST({ request }) {
   if (!body.verificaPiva || !body.verificaAlbo) {
     return json({ error: "Approvazione bloccata: conferma di aver verificato partita IVA (Agenzia Entrate) e iscrizione all'albo (FNOPI)." }, 400);
   }
-  const verificatoDa = session?.email || session?.name || "admin";
+  const verificatoDa = admin?.email || admin?.name || "admin";
 
   // --- APPROVAZIONE ---
   const [utenteEsistente] = await sql`SELECT id FROM professional_users WHERE lower(email) = ${cand.email.toLowerCase()}`;
