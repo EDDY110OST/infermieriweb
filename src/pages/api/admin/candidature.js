@@ -3,7 +3,7 @@ export const prerender = false;
 import { randomBytes } from "node:crypto";
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest, hashPassword } from "../../../lib/auth.js";
-import { geocodeWithFallback } from "../../../lib/geocode.js";
+import { geocodePerMappa, jitterPerId } from "../../../lib/geocode.js";
 import { regioneDaProvincia } from "../../../lib/geografia.js";
 import { sendEmail, emailBenvenutoProfessionista } from "../../../lib/mailer.js";
 
@@ -69,9 +69,13 @@ export async function POST({ request }) {
   }
 
   const regione = regioneDaProvincia(cand.province) || "";
-  const geo = await geocodeWithFallback({ address: cand.address, city: cand.city, province: cand.province });
+  // le zone coperte sono comuni singoli validi: le passo come ripiego per la mappa
+  const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: cand.province })).filter((z) => z.city);
+  const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: cand.province, zone: zoneCand });
   const albo = [cand.albo_name, cand.albo_number ? `n. ${cand.albo_number}` : ""].filter(Boolean).join(" ");
-  const passwordTemporanea = `IW-${randomBytes(5).toString("hex")}`;
+  // password scelta dal candidato in registrazione; ripiego a temporanea solo per i vecchi record senza hash
+  const passwordScelta = cand.pass_hash && cand.pass_hash.startsWith("scrypt$");
+  const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
     INSERT INTO professionals (slug, name, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number)
@@ -87,11 +91,20 @@ export async function POST({ request }) {
 
   await sql`
     INSERT INTO professional_users (professional_id, email, pass_hash, name, role)
-    VALUES (${prof.id}, ${cand.email}, ${hashPassword(passwordTemporanea)}, ${cand.name.split(" ")[0]}, 'professional')`;
+    VALUES (${prof.id}, ${cand.email}, ${passwordScelta ? cand.pass_hash : hashPassword(passwordTemporanea)}, ${cand.name.split(" ")[0]}, 'professional')`;
 
-  await sql`
-    INSERT INTO coverage_areas (professional_id, city, province, region)
-    VALUES (${prof.id}, ${cand.city}, ${cand.province}, ${regione})`;
+  // zone coperte: comuni singoli puliti (mai il campo città grezzo tipo "Lucca e dintorni")
+  const comuni = zoneCand.length ? zoneCand.map((z) => z.city) : [cand.city];
+  for (const comune of [...new Set(comuni.filter((c) => c && c.length >= 2))]) {
+    await sql`INSERT INTO coverage_areas (professional_id, city, province, region)
+      VALUES (${prof.id}, ${comune}, ${cand.province}, ${regione}) ON CONFLICT DO NOTHING`;
+  }
+
+  // marker distinto: se la posizione è a livello città, scosto in base all'id
+  if (geo && geo.precision === "citta") {
+    const j = jitterPerId(geo.lat, geo.lng, prof.id);
+    await sql`UPDATE professionals SET lat = ${j.lat}, lng = ${j.lng} WHERE id = ${prof.id}`;
+  }
 
   await sql`UPDATE applications SET status = 'approved' WHERE id = ${id}`;
 

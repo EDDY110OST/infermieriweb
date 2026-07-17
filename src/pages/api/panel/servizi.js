@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
+import { LISTINO_MAP, minCentsPerKey } from "../../../data/listino.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -12,19 +13,23 @@ export async function GET({ request }) {
   if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   const servizi = await sql`
-    SELECT id, name, duration_min, price_cents, active, sort
+    SELECT id, name, duration_min, price_cents, active, sort, catalog_key
     FROM services WHERE professional_id = ${session.pid} ORDER BY sort, id`;
   return json({ servizi });
 }
 
-const valida = (body) => {
-  const name = String(body.name || "").trim().slice(0, 120);
+const valida = (body, catalogKeyEsistente = "") => {
+  const catalogKey = String(body.catalog_key || catalogKeyEsistente || "").trim();
+  const voce = LISTINO_MAP[catalogKey];
+  if (!voce) return { error: "Scegli una prestazione dal listino" };
+  const name = voce.nome; // il nome lo detta il listino (niente testo libero)
   const duration = Math.round(Number(body.duration_min));
   const price = Math.round(Number(body.price_cents));
-  if (name.length < 3) return { error: "Il nome della prestazione è troppo corto" };
   if (!Number.isFinite(duration) || duration < 5 || duration > 480) return { error: "Durata non valida (5-480 minuti)" };
-  if (!Number.isFinite(price) || price < 0 || price > 100000000) return { error: "Prezzo non valido" };
-  return { name, duration, price };
+  if (!Number.isFinite(price) || price > 100000000) return { error: "Prezzo non valido" };
+  const min = minCentsPerKey(catalogKey);
+  if (price < min) return { error: `Per "${voce.nome}" il prezzo minimo è ${voce.min} € (consigliato ${voce.consigliato} €)` };
+  return { name, duration, price, catalogKey };
 };
 
 // POST /api/panel/servizi — nuova prestazione
@@ -37,9 +42,13 @@ export async function POST({ request }) {
   const v = valida(body);
   if (v.error) return json(v, 400);
 
+  const [gia] = await sql`
+    SELECT id FROM services WHERE professional_id = ${session.pid} AND catalog_key = ${v.catalogKey}`;
+  if (gia) return json({ error: "Hai già questa prestazione nel tuo elenco" }, 400);
+
   const [nuovo] = await sql`
-    INSERT INTO services (professional_id, name, duration_min, price_cents, active, sort)
-    SELECT ${session.pid}, ${v.name}, ${v.duration}, ${v.price}, TRUE, COALESCE(MAX(sort), 0) + 1
+    INSERT INTO services (professional_id, name, duration_min, price_cents, active, sort, catalog_key)
+    SELECT ${session.pid}, ${v.name}, ${v.duration}, ${v.price}, TRUE, COALESCE(MAX(sort), 0) + 1, ${v.catalogKey}
     FROM services WHERE professional_id = ${session.pid}
     RETURNING id`;
   return json({ ok: true, id: nuovo.id });
@@ -56,15 +65,14 @@ export async function PATCH({ request }) {
   if (!id) return json({ error: "Id mancante" }, 400);
 
   const [attuale] = await sql`
-    SELECT name, duration_min, price_cents, active FROM services
+    SELECT name, duration_min, price_cents, active, catalog_key FROM services
     WHERE id = ${id} AND professional_id = ${session.pid}`;
   if (!attuale) return json({ error: "Prestazione non trovata" }, 404);
 
   const v = valida({
-    name: body.name ?? attuale.name,
     duration_min: body.duration_min ?? attuale.duration_min,
     price_cents: body.price_cents ?? attuale.price_cents,
-  });
+  }, attuale.catalog_key);
   if (v.error) return json(v, 400);
   const active = body.active ?? attuale.active;
 

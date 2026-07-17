@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../../lib/db.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { sendEmail } from "../../lib/mailer.js";
+import { hashPassword } from "../../lib/auth.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -31,6 +32,7 @@ export async function POST({ request }) {
   const address = String(body.address || "").trim().slice(0, 200);
   const province = String(body.province || "").trim();
   const message = String(body.message || "").trim().slice(0, 2000);
+  const password = String(body.password || "");
 
   if (name.length < 2 || !email.includes("@") || phone.length < 6 || city.length < 2) {
     return json({ error: "Compila nome, email, telefono e città" }, 400);
@@ -41,6 +43,7 @@ export async function POST({ request }) {
   if (vatNumber && vatNumber.length !== 11) {
     return json({ error: "La partita IVA, se indicata, deve avere 11 cifre" }, 400);
   }
+  if (password.length < 8) return json({ error: "Scegli una password di almeno 8 caratteri" }, 400);
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
 
   if (!(await consenti(`candidatura:${ipDa(request)}`, 3, 60))) {
@@ -52,8 +55,8 @@ export async function POST({ request }) {
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
-    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message})`;
+    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash)
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)})`;
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.

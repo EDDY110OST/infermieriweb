@@ -10,6 +10,7 @@ export default function CandidaturaForm() {
     name: "", email: "", phone: "", profession: "infermiere",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
     city: "", province: "", address: "", message: "", privacy: false,
+    password: "", password2: "",
   });
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
@@ -18,6 +19,8 @@ export default function CandidaturaForm() {
   const avanti = (e) => {
     e.preventDefault();
     setErrore("");
+    if (dati.password.length < 8) return setErrore("Scegli una password di almeno 8 caratteri");
+    if (dati.password !== dati.password2) return setErrore("Le due password non coincidono");
     setPasso(2);
   };
 
@@ -90,6 +93,14 @@ export default function CandidaturaForm() {
         <label htmlFor="cf-tel">Telefono *</label>
         <input id="cf-tel" required type="tel" minLength={6} value={dati.phone} onChange={(e) => setDati({ ...dati, phone: e.target.value })} autoComplete="tel" />
 
+        <label htmlFor="cf-pw">Scegli una password * <span style={{ fontWeight: 400 }}>(almeno 8 caratteri)</span></label>
+        <input id="cf-pw" required type="password" minLength={8} value={dati.password} onChange={(e) => setDati({ ...dati, password: e.target.value })} autoComplete="new-password" />
+
+        <label htmlFor="cf-pw2">Ripeti la password *</label>
+        <input id="cf-pw2" required type="password" minLength={8} value={dati.password2} onChange={(e) => setDati({ ...dati, password2: e.target.value })} autoComplete="new-password" />
+        <p className="pf-note" style={{ marginTop: -6 }}>La userai per entrare nella tua agenda: sceglila tu, così non la dimentichi.</p>
+
+        {errore && <div className="pf-errore">{errore}</div>}
         <button className="pf-btn" style={{ width: "100%" }}>Continua →</button>
         <p className="pf-note" style={{ marginTop: 10 }}>
           Manca solo un passo: i dati del tuo albo, che ci servono per verificare

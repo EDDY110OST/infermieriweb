@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { LISTINO, LISTINO_MAP } from "../data/listino.js";
 
 const oraRoma = (iso) =>
   new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
@@ -257,7 +258,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
 function TabServizi() {
   const [servizi, setServizi] = useState(null);
-  const [nuovo, setNuovo] = useState({ name: "", durata: "30", prezzo: "" });
+  const [nuovo, setNuovo] = useState({ key: "", durata: "", prezzo: "" });
   const [messaggio, setMessaggio] = useState(null);
 
   const carica = useCallback(() => {
@@ -275,11 +276,11 @@ function TabServizi() {
     const r = await fetch("/api/panel/servizi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nuovo.name, duration_min: Number(nuovo.durata), price_cents: centesimi(nuovo.prezzo) }),
+      body: JSON.stringify({ catalog_key: nuovo.key, duration_min: Number(nuovo.durata), price_cents: centesimi(nuovo.prezzo) }),
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
-    setNuovo({ name: "", durata: "30", prezzo: "" });
+    setNuovo({ key: "", durata: "", prezzo: "" });
     avvisa("ok", "Prestazione aggiunta ✅");
     carica();
   };
@@ -304,47 +305,70 @@ function TabServizi() {
   return (
     <div>
       <p className="pf-note" style={{ marginTop: 0 }}>
-        Le prestazioni attive compaiono sulla tua scheda pubblica con prezzo "a partire da".
-        Il compenso resta interamente tuo: zero commissioni.
+        Scegli le tue prestazioni dal listino e imposta il prezzo: non puoi scendere sotto il
+        minimo indicato (per evitare concorrenza sleale), sopra il consigliato sei libero. Il
+        compenso resta interamente tuo: zero commissioni.
       </p>
       {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
 
-      {servizi.map((s) => (
+      {servizi.map((s) => {
+        const voce = LISTINO_MAP[s.catalog_key];
+        return (
         <div className="pf-servizio-edit" key={s.id} style={{ opacity: s.active ? 1 : 0.55 }}>
-          <input className="nome" value={s.name} onChange={(e) => cambia(s.id, "name", e.target.value)} aria-label="Nome prestazione" />
+          <div className="nome" style={{ fontWeight: 700, color: "var(--iw-navy)", padding: "8px 0" }}>{s.name}</div>
           <div className="riga2">
             <label>
               min
               <input type="number" min={5} max={480} step={5} value={s.duration_min} onChange={(e) => cambia(s.id, "duration_min", e.target.value)} aria-label="Durata in minuti" />
             </label>
             <label>
-              da €
-              <input inputMode="decimal" value={s._prezzo !== undefined ? s._prezzo : euro(s.price_cents)} onChange={(e) => cambia(s.id, "_prezzo", e.target.value)} aria-label="Prezzo da" />
+              € 
+              <input inputMode="decimal" value={s._prezzo !== undefined ? s._prezzo : euro(s.price_cents)} onChange={(e) => cambia(s.id, "_prezzo", e.target.value)} aria-label="Prezzo" />
             </label>
             <label className="attivo">
               <input type="checkbox" checked={s.active} onChange={(e) => cambia(s.id, "active", e.target.checked)} /> attiva
             </label>
             {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
           </div>
+          {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {voce.min} € · consigliato {voce.consigliato} €</p>}
         </div>
-      ))}
+      ); })}
 
-      <form className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
-        <h2>+ Nuova prestazione</h2>
-        <label>Nome *</label>
-        <input required minLength={3} placeholder="es. Medicazione post-operatoria" value={nuovo.name} onChange={(e) => setNuovo({ ...nuovo, name: e.target.value })} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div>
-            <label>Durata (minuti) *</label>
-            <input type="number" required min={5} max={480} step={5} value={nuovo.durata} onChange={(e) => setNuovo({ ...nuovo, durata: e.target.value })} />
-          </div>
-          <div>
-            <label>Prezzo "da" (€) *</label>
-            <input required inputMode="decimal" placeholder="30,00" value={nuovo.prezzo} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
-          </div>
-        </div>
-        <button className="pf-btn">Aggiungi</button>
-      </form>
+      {(() => {
+        const gia = new Set(servizi.map((s) => s.catalog_key));
+        const disponibili = LISTINO.filter((v) => !gia.has(v.key));
+        const voceSel = LISTINO_MAP[nuovo.key];
+        if (!disponibili.length) return <p className="pf-note" style={{ marginTop: 18 }}>Hai già aggiunto tutte le prestazioni del listino ✅</p>;
+        return (
+          <form className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
+            <h2>+ Aggiungi una prestazione</h2>
+            <label>Prestazione *</label>
+            <select required value={nuovo.key} onChange={(e) => {
+              const v = LISTINO_MAP[e.target.value];
+              setNuovo({ key: e.target.value, durata: v ? String(v.durata) : "", prezzo: v ? String(v.consigliato).replace(".", ",") : "" });
+            }}>
+              <option value="">Scegli dal listino…</option>
+              {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome}</option>)}
+            </select>
+            {voceSel && (
+              <p className="pf-note" style={{ marginTop: -4 }}>
+                Prezzo minimo <strong>{voceSel.min} €</strong> · consigliato <strong>{voceSel.consigliato} €</strong> — sopra il consigliato sei libero.
+              </p>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label>Durata (minuti) *</label>
+                <input type="number" required min={5} max={480} step={5} value={nuovo.durata} onChange={(e) => setNuovo({ ...nuovo, durata: e.target.value })} />
+              </div>
+              <div>
+                <label>Il tuo prezzo (€) *</label>
+                <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovo.prezzo} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
+              </div>
+            </div>
+            <button className="pf-btn" disabled={!nuovo.key}>Aggiungi</button>
+          </form>
+        );
+      })()}
     </div>
   );
 }

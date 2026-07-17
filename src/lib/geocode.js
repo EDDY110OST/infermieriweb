@@ -44,3 +44,26 @@ export async function geocodeWithFallback({ address, city, province }) {
   }
   return null;
 }
+
+// Scostamento deterministico (~200-450m) per non far sovrapporre i segnaposti
+// di professionisti geocodificati sullo stesso comune (precisione "citta").
+export function jitterPerId(lat, lng, id) {
+  const angolo = (id * 2.399963) % (2 * Math.PI);
+  const raggio = 0.0022 + (id % 3) * 0.0009;
+  return {
+    lat: +(lat + raggio * Math.cos(angolo)).toFixed(6),
+    lng: +(lng + raggio * Math.sin(angolo)).toFixed(6),
+  };
+}
+
+// Geocodifica per la mappa: prova indirizzo/città del profilo, poi ripiega
+// sulle zone coperte (comuni singoli, sempre validi). Ritorna lat/lng o null.
+export async function geocodePerMappa({ address, city, province, zone = [] }) {
+  const preciso = await geocodeWithFallback({ address, city, province });
+  if (preciso) return preciso;
+  for (const z of zone) {
+    const g = await geocodeAddress({ city: z.city, province: z.province });
+    if (g) return { ...g, precision: "citta" };
+  }
+  return null;
+}
