@@ -8,7 +8,7 @@ const PROFESSIONI = ["infermiere", "fisioterapista", "ostetrica", "medico specia
 export default function CandidaturaForm() {
   const [passo, setPasso] = useState(1);
   const [dati, setDati] = useState({
-    name: "", email: "", phone: "", profession: "infermiere",
+    name: "", email: "", phone: "", profession: "infermiere", gender: "",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
     city: "", province: "", region: "", address: "", message: "", privacy: false,
     password: "", password2: "",
@@ -71,6 +71,13 @@ export default function CandidaturaForm() {
         {progresso}
         <label htmlFor="cf-nome">Nome e cognome *</label>
         <input id="cf-nome" required minLength={2} value={dati.name} onChange={(e) => setDati({ ...dati, name: e.target.value })} autoComplete="name" />
+
+        <label htmlFor="cf-sesso">Sesso * <span style={{ fontWeight: 400 }}>(per l'appellativo sulla scheda: Dott. / Dott.ssa)</span></label>
+        <select id="cf-sesso" required value={dati.gender} onChange={(e) => setDati({ ...dati, gender: e.target.value })}>
+          <option value="" disabled>Scegli…</option>
+          <option value="m">Uomo → Dott.</option>
+          <option value="f">Donna → Dott.ssa</option>
+        </select>
 
         <label htmlFor="cf-prof">Professione *</label>
         <select id="cf-prof" value={dati.profession} onChange={(e) => setDati({ ...dati, profession: e.target.value })}>

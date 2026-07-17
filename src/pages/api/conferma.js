@@ -22,7 +22,7 @@ export async function POST({ request }) {
   const [b] = await sql`
     SELECT b.id, b.status, b.created_at, b.start_dt, b.customer_name, b.customer_phone,
            b.customer_email, b.address, b.city, b.cancel_token, b.professional_id,
-           s.name AS service_name, p.name AS professional_name, p.email AS professional_email,
+           s.name AS service_name, p.name AS professional_name, p.full_name AS professional_full_name, p.gender AS professional_gender, p.email AS professional_email,
            p.slug AS professional_slug, p.cancel_hours
     FROM bookings b
     JOIN services s ON s.id = b.service_id
@@ -49,8 +49,11 @@ export async function POST({ request }) {
     name: b.customer_name, phone: b.customer_phone, email: b.customer_email,
     address: b.address, city: b.city, start: new Date(b.start_dt).toISOString(),
   };
+  // Nella conferma il paziente ha diritto al nome COMPLETO di chi verrà a casa
+  const titoloProf = b.professional_gender === "f" ? "Dott.ssa" : "Dott.";
   const professional = {
-    name: b.professional_name, email: b.professional_email,
+    name: b.professional_full_name ? `${titoloProf} ${b.professional_full_name}` : b.professional_name,
+    email: b.professional_email,
     slug: b.professional_slug, cancel_hours: b.cancel_hours,
   };
   const svc = { name: b.service_name };

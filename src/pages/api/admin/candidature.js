@@ -76,13 +76,21 @@ export async function POST({ request }) {
   const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: cand.province, zone: zoneCand });
   const albo = [cand.albo_name, cand.albo_number ? `n. ${cand.albo_number}` : ""].filter(Boolean).join(" ");
   // password scelta dal candidato in registrazione; ripiego a temporanea solo per i vecchi record senza hash
+  // Nome pubblico: "Dott./Dott.ssa Nome I." — il nome completo resta riservato
+  // (va solo nell'email di conferma al paziente prenotato)
+  const parti = String(cand.name).trim().split(/\s+/);
+  const cognome = parti.length > 1 ? parti[parti.length - 1] : "";
+  const nomi = parti.length > 1 ? parti.slice(0, -1).join(" ") : parti[0];
+  const titolo = cand.gender === "f" ? "Dott.ssa" : "Dott.";
+  const nomePubblico = `${titolo} ${nomi}${cognome ? " " + cognome[0].toUpperCase() + "." : ""}`;
+
   const passwordScelta = cand.pass_hash && cand.pass_hash.startsWith("scrypt$");
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
-    INSERT INTO professionals (slug, name, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number)
+    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_number, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number)
     VALUES (
-      ${slug}, ${cand.name}, ${cand.profession}, ${albo},
+      ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${albo},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
       '/professionisti-foto/placeholder.svg',
       ${regione}, ${cand.province}, ${cand.city}, ${cand.address},

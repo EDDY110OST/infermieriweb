@@ -25,6 +25,7 @@ export async function POST({ request }) {
   const email = String(body.email || "").trim();
   const phone = String(body.phone || "").trim();
   const profession = String(body.profession || "infermiere").trim();
+  const gender = String(body.gender || "").trim();
   const alboName = String(body.albo_name || "").trim();
   const alboNumber = String(body.albo_number || "").trim();
   const alboDate = String(body.albo_date || "").trim();
@@ -52,6 +53,7 @@ export async function POST({ request }) {
     return json({ error: "La partita IVA, se indicata, deve avere 11 cifre" }, 400);
   }
   if (password.length < 8) return json({ error: "Scegli una password di almeno 8 caratteri" }, 400);
+  if (!["m", "f"].includes(gender)) return json({ error: "Indica il sesso: serve per l'appellativo (Dott./Dott.ssa) sulla scheda" }, 400);
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
 
   if (!(await consenti(`candidatura:${ipDa(request)}`, 3, 60))) {
@@ -63,8 +65,8 @@ export async function POST({ request }) {
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
-    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)})`;
+    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender)
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender})`;
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
@@ -75,7 +77,7 @@ export async function POST({ request }) {
       html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
         <h2 style="color: #0b3954;">Nuova candidatura da verificare 🩺</h2>
         <table style="width: 100%; font-size: 15px;">
-          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${esc(name)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${gender === "f" ? "Dott.ssa" : "Dott."} ${esc(name)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${esc(profession)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${esc(city)}${province ? " (" + province + ")" : ""}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${esc(alboName)} n. ${esc(alboNumber)} (dal ${esc(alboDate)})</td></tr>
