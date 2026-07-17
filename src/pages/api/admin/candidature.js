@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest, hashPassword } from "../../../lib/auth.js";
 import { geocodePerMappa, jitterPerId } from "../../../lib/geocode.js";
-import { regioneDaProvincia } from "../../../lib/geografia.js";
+import { trovaComune } from "../../../data/comuni.js";
 import { sendEmail, emailBenvenutoProfessionista } from "../../../lib/mailer.js";
 
 const json = (data, status = 200) =>
@@ -68,7 +68,9 @@ export async function POST({ request }) {
     slug = `${base}-${n}`;
   }
 
-  const regione = regioneDaProvincia(cand.province) || "";
+  // regione dal comune vero (elenco ISTAT): più affidabile che dedurla dalla provincia
+  const comuneCand = trovaComune(cand.city);
+  const regione = comuneCand?.regione || "";
   // le zone coperte sono comuni singoli validi: le passo come ripiego per la mappa
   const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: cand.province })).filter((z) => z.city);
   const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: cand.province, zone: zoneCand });

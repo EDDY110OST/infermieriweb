@@ -73,7 +73,8 @@ async function esegui() {
   <p style="text-align:center; margin: 22px 0;">
     <a href="${link}" style="background:#00897b;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-weight:bold;">Gestisci o disdici la prenotazione</a>
   </p>
-  <p style="color:#7b909b;font-size:13px;">Rispondendo a questa email scrivi direttamente al professionista.</p>
+  <p style="color:#7b909b;font-size:13px;">Rispondendo a questa email scrivi direttamente al professionista.
+  Per assistenza sulla piattaforma: <a href="mailto:info@infermieriweb.it" style="color:#00897b;">info@infermieriweb.it</a></p>
 </div>`,
       }),
     });

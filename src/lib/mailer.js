@@ -5,8 +5,23 @@ const API_KEY = process.env.BREVO_API_KEY || "";
 const FROM_EMAIL = process.env.EMAIL_FROM || "prenotazioni@infermieriweb.it";
 const FROM_NAME = process.env.EMAIL_FROM_NAME || "InfermieriWeb";
 const SITE = "https://infermieriweb.it";
+// Casella di assistenza: le email partono da un mittente automatico che NON riceve,
+// quindi ogni email dice a chi scrivere davvero.
+const ASSISTENZA_EMAIL = process.env.EMAIL_ASSISTENZA || "info@infermieriweb.it";
+
+// Piè di pagina delle risposte. Il mittente (prenotazioni@) NON è una casella:
+// se l'email ha un replyTo le risposte arrivano a una persona vera, altrimenti
+// si perderebbero — e allora va detto chiaro dove scrivere.
+const NOTA_CON_RISPOSTA = `Puoi rispondere a questa email: la risposta arriva direttamente alla persona
+  che segue il tuo appuntamento. Per assistenza sulla piattaforma scrivi invece a
+  <a href="mailto:${ASSISTENZA_EMAIL}" style="color: #00897b;">${ASSISTENZA_EMAIL}</a>.`;
+
+const NOTA_NO_REPLY = `<strong style="color: #5c7280;">Questa è un'email automatica: non rispondere a questo
+  indirizzo</strong>, le risposte non vengono lette da nessuno. Per assistenza scrivi a
+  <a href="mailto:${ASSISTENZA_EMAIL}" style="color: #00897b;">${ASSISTENZA_EMAIL}</a>.`;
 
 export async function sendEmail({ to, toName, subject, html, replyTo }) {
+  html = String(html).replace("{{NOTA_RISPOSTE}}", replyTo ? NOTA_CON_RISPOSTA : NOTA_NO_REPLY);
   if (!API_KEY) {
     console.log(`[mailer] BREVO_API_KEY assente: email NON inviata a ${to} ("${subject}")`);
     return false;
@@ -39,6 +54,9 @@ const layout = (contenuto) => `
   <div style="border: 1px solid #e3ecec; border-top: none; border-radius: 0 0 14px 14px; padding: 26px;">
     ${contenuto}
     <p style="color: #7b909b; font-size: 12px; margin-top: 28px; border-top: 1px solid #e3ecec; padding-top: 14px;">
+      {{NOTA_RISPOSTE}}
+    </p>
+    <p style="color: #7b909b; font-size: 12px; margin-top: 10px;">
       InfermieriWeb.it — la piattaforma che mette in contatto pazienti e professionisti sanitari.
       La prenotazione è gratuita: il compenso si regola direttamente con il professionista.
     </p>
