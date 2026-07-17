@@ -2,14 +2,14 @@
 
 export const pageSeo = {
   home: {
-    title: "Infermiere a domicilio a Lucca | Medicazioni, ECG e prelievi",
+    title: "Infermiere a domicilio: trova e prenota online | InfermieriWeb",
     description:
-      "Servizi infermieristici a domicilio a Lucca e provincia: medicazioni, ECG e prelievi a casa. Contatta InfermieriWeb per informazioni o per fissare un intervento.",
+      "Trova un infermiere a domicilio nella tua città: prezzi chiari, recensioni verificate, prenotazione online gratuita. La rete cresce in tutta Italia, una città alla volta.",
   },
   domicilio: {
-    title: "Servizi infermieristici a domicilio a Lucca | InfermieriWeb",
+    title: "Prestazioni infermieristiche a domicilio | InfermieriWeb",
     description:
-      "Assistenza infermieristica domiciliare a Lucca, Capannori, Porcari e Altopascio: medicazioni, prelievi, iniezioni, flebo e monitoraggi direttamente a casa tua, 7 giorni su 7.",
+      "Medicazioni, prelievi, iniezioni, flebo, ECG e monitoraggi direttamente a casa tua, 7 giorni su 7: scopri tutte le prestazioni e prenota online il professionista della tua zona.",
   },
   strutture: {
     title: "Servizi ambulatoriali a Lucca | InfermieriWeb",
@@ -32,7 +32,7 @@ export const pageSeo = {
       "Come funziona un ECG a domicilio, quanto costa un infermiere, come gestire un catetere: guide chiare scritte con i professionisti della rete.",
   },
   lavoraConNoi: {
-    title: "Lavora con noi: infermieri a domicilio a Lucca | InfermieriWeb",
+    title: "Lavora con noi: la rete degli infermieri a domicilio | InfermieriWeb",
     description:
       "Sei un infermiere libero professionista? Entra nella rete InfermieriWeb: richieste già filtrate nella tua zona, libertà di disponibilità e zero costi di iscrizione.",
   },
@@ -45,9 +45,9 @@ import { NOMI_COLLOQUIALI } from "./servizi-extra.js";
 export function serviceSeo(serviceId, service) {
   const nome = NOMI_COLLOQUIALI[serviceId] || `${service.title} a domicilio`;
   return {
-    title: `${nome} a Lucca | InfermieriWeb`,
+    title: `${nome}: prezzi e prenotazione online | InfermieriWeb`,
     description: clip(
-      `${nome} a Lucca e provincia con infermieri iscritti all'albo: prezzi chiari nella scheda, prenoti online l'orario che preferisci e paghi dopo la prestazione.`
+      `${nome} con infermieri iscritti all'albo nella tua zona: prezzi chiari nella scheda, prenoti online l'orario che preferisci e paghi dopo la prestazione.`
     ),
   };
 }

@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // Ricerca in home con suggerimenti visibili: per il nostro pubblico
 // "digito e non succede niente" = "il sito non funziona".
-const CITTA = ["Lucca", "Capannori", "Porcari", "Altopascio", "Montecarlo"];
+// Le città arrivano dal database (la rete cresce, la ricerca la segue da sola)
 const PRESTAZIONI = [
   { nome: "Prelievo del sangue", href: "/servizio/prelievi" },
   { nome: "Medicazioni", href: "/servizio/medicazioni" },
@@ -23,10 +23,18 @@ const norma = (t) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 export default function HomeSearch() {
   const [q, setQ] = useState("");
   const [aperto, setAperto] = useState(false);
+  const [citta, setCitta] = useState([]);
   const box = useRef(null);
 
+  useEffect(() => {
+    fetch("/api/zone-coperte")
+      .then((r) => r.json())
+      .then((d) => setCitta(d.citta || []))
+      .catch(() => {});
+  }, []);
+
   const chiave = norma(q.trim());
-  const cittaMatch = chiave.length >= 2 ? CITTA.filter((c) => norma(c).startsWith(chiave)) : [];
+  const cittaMatch = chiave.length >= 2 ? citta.filter((c) => norma(c).startsWith(chiave)) : [];
   const prestMatch = chiave.length >= 2
     ? PRESTAZIONI.filter((p) => norma(p.nome).includes(chiave) || chiave.split(/\s+/).some((w) => w.length >= 3 && norma(p.nome).includes(w)))
     : [];
