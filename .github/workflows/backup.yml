@@ -1,0 +1,11 @@
+# Ogni notte alle 03:00 (ora italiana): backup del database via endpoint Render.
+name: Backup notturno
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -sf --max-time 120 -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" https://infermieriweb.it/api/cron/backup
