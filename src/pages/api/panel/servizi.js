@@ -1,8 +1,14 @@
 export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
-import { sessionFromRequest } from "../../../lib/auth.js";
+import { sessionFromRequest, pidBersaglio, adminSuAltro } from "../../../lib/auth.js";
 import { LISTINO_MAP, minCentsPerKey } from "../../../data/listino.js";
+
+const tracciaAdmin = async (session, fornito, pid) => {
+  if (adminSuAltro(session, fornito)) {
+    await sql`UPDATE professionals SET edited_by = ${session.name || "admin"}, edited_at = now() WHERE id = ${pid}`;
+  }
+};
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -10,11 +16,13 @@ const json = (data, status = 200) =>
 // GET /api/panel/servizi — tutte le prestazioni del professionista (anche disattivate)
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
+  const url = new URL(request.url);
+  const pid = pidBersaglio(session, url.searchParams.get("pid"));
+  if (!pid) return json({ error: "Non autenticato" }, 401);
 
   const servizi = await sql`
     SELECT id, name, duration_min, price_cents, price_notte_cents, active, sort, catalog_key
-    FROM services WHERE professional_id = ${session.pid} ORDER BY sort, id`;
+    FROM services WHERE professional_id = ${pid} ORDER BY sort, id`;
   return json({ servizi });
 }
 
@@ -45,38 +53,41 @@ const valida = (body, catalogKeyEsistente = "") => {
 // POST /api/panel/servizi — nuova prestazione
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
+  const pid = pidBersaglio(session, body.pid);
+  if (!pid) return json({ error: "Non autenticato" }, 401);
   const v = valida(body);
   if (v.error) return json(v, 400);
 
   const [gia] = await sql`
-    SELECT id FROM services WHERE professional_id = ${session.pid} AND catalog_key = ${v.catalogKey}`;
-  if (gia) return json({ error: "Hai già questa prestazione nel tuo elenco" }, 400);
+    SELECT id FROM services WHERE professional_id = ${pid} AND catalog_key = ${v.catalogKey}`;
+  if (gia) return json({ error: "Questa prestazione è già nell'elenco" }, 400);
 
   const [nuovo] = await sql`
     INSERT INTO services (professional_id, name, duration_min, price_cents, price_notte_cents, active, sort, catalog_key)
-    SELECT ${session.pid}, ${v.name}, ${v.duration}, ${v.price}, ${v.priceNotte}, TRUE, COALESCE(MAX(sort), 0) + 1, ${v.catalogKey}
-    FROM services WHERE professional_id = ${session.pid}
+    SELECT ${pid}, ${v.name}, ${v.duration}, ${v.price}, ${v.priceNotte}, TRUE, COALESCE(MAX(sort), 0) + 1, ${v.catalogKey}
+    FROM services WHERE professional_id = ${pid}
     RETURNING id`;
+  await tracciaAdmin(session, body.pid, pid);
   return json({ ok: true, id: nuovo.id });
 }
 
 // PATCH /api/panel/servizi — modifica prestazione {id, name?, duration_min?, price_cents?, active?}
 export async function PATCH({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
+  const pid = pidBersaglio(session, body.pid);
+  if (!pid) return json({ error: "Non autenticato" }, 401);
   const id = Number(body.id);
   if (!id) return json({ error: "Id mancante" }, 400);
 
   const [attuale] = await sql`
     SELECT name, duration_min, price_cents, price_notte_cents, active, catalog_key FROM services
-    WHERE id = ${id} AND professional_id = ${session.pid}`;
+    WHERE id = ${id} AND professional_id = ${pid}`;
   if (!attuale) return json({ error: "Prestazione non trovata" }, 404);
 
   const v = valida({
@@ -89,14 +100,16 @@ export async function PATCH({ request }) {
 
   await sql`
     UPDATE services SET name = ${v.name}, duration_min = ${v.duration}, price_cents = ${v.price}, price_notte_cents = ${v.priceNotte}, active = ${!!active}
-    WHERE id = ${id} AND professional_id = ${session.pid}`;
+    WHERE id = ${id} AND professional_id = ${pid}`;
+  await tracciaAdmin(session, body.pid, pid);
   return json({ ok: true });
 }
 
 // DELETE /api/panel/servizi?id=3 — elimina (solo se mai prenotata, sennò disattivare)
 export async function DELETE({ request, url }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
+  const pid = pidBersaglio(session, url.searchParams.get("pid"));
+  if (!pid) return json({ error: "Non autenticato" }, 401);
 
   const id = Number(url.searchParams.get("id"));
   if (!id) return json({ error: "Id mancante" }, 400);
@@ -105,6 +118,7 @@ export async function DELETE({ request, url }) {
   if (usato.length) {
     return json({ error: "Questa prestazione ha prenotazioni nello storico: puoi disattivarla ma non eliminarla." }, 409);
   }
-  await sql`DELETE FROM services WHERE id = ${id} AND professional_id = ${session.pid}`;
+  await sql`DELETE FROM services WHERE id = ${id} AND professional_id = ${pid}`;
+  await tracciaAdmin(session, url.searchParams.get("pid"), pid);
   return json({ ok: true });
 }

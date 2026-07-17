@@ -45,6 +45,19 @@ export function sessionFromRequest(request) {
   return match ? readSession(decodeURIComponent(match[1])) : null;
 }
 
+// Un admin può operare su un professionista scelto (pid passato nel body/query);
+// il professionista normale solo su sé stesso. Ritorna il pid effettivo o null.
+export function pidBersaglio(session, fornito) {
+  if (session?.role === "admin" && fornito) return Number(fornito) || null;
+  return session?.pid || null;
+}
+
+// Vero quando un admin sta modificando la scheda di UN ALTRO professionista
+// (serve per la traccia "modificato da").
+export function adminSuAltro(session, fornito) {
+  return !!(session?.role === "admin" && fornito && Number(fornito) !== session?.pid);
+}
+
 export function sessionCookie(token, maxAgeSeconds = 60 * 60 * 24 * 30) {
   return `iw_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
 }

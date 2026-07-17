@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
-import { sessionFromRequest } from "../../../lib/auth.js";
+import { sessionFromRequest, pidBersaglio, adminSuAltro } from "../../../lib/auth.js";
 import { geocodeWithFallback } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
 
@@ -11,12 +11,15 @@ const json = (data, status = 200) =>
 // GET /api/panel/profilo — dati del profilo del professionista loggato
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
+  const url = new URL(request.url);
+  const pid = pidBersaglio(session, url.searchParams.get("pid"));
+  if (!pid) return json({ error: "Non autenticato" }, 401);
 
   const [profilo] = await sql`
-    SELECT slug, name, profession, albo_name, albo_number, albo_date, vat_number,
-           bio, phone, email, address, city, province, region, photo_url, lat, lng
-    FROM professionals WHERE id = ${session.pid}`;
+    SELECT slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, vat_number,
+           bio, phone, email, address, city, province, region, photo_url, lat, lng, status,
+           edited_by, edited_at
+    FROM professionals WHERE id = ${pid}`;
   if (!profilo) return json({ error: "Profilo non trovato" }, 404);
   return json({ profilo });
 }
@@ -25,7 +28,6 @@ export async function GET({ request }) {
 // se cambia indirizzo/città, il segnaposto sulla mappa si aggiorna da solo
 export async function PATCH({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autenticato" }, 401);
 
   let body;
   try {
@@ -34,9 +36,14 @@ export async function PATCH({ request }) {
     return json({ error: "Richiesta non valida" }, 400);
   }
 
+  const pid = pidBersaglio(session, body.pid);
+  if (!pid) return json({ error: "Non autenticato" }, 401);
+  const admin = session?.role === "admin";
+
   const [attuale] = await sql`
-    SELECT bio, phone, address, city, province, region, albo_name, albo_number, albo_date, vat_number
-    FROM professionals WHERE id = ${session.pid}`;
+    SELECT name, full_name, gender, profession, email, bio, phone, address, city, province, region,
+           albo_name, albo_number, albo_date, vat_number
+    FROM professionals WHERE id = ${pid}`;
   if (!attuale) return json({ error: "Profilo non trovato" }, 404);
 
   const bio = body.bio !== undefined ? String(body.bio).trim().slice(0, 1200) : attuale.bio;
@@ -48,6 +55,22 @@ export async function PATCH({ request }) {
   const albo_number = body.albo_number !== undefined ? String(body.albo_number).trim().slice(0, 40) : attuale.albo_number;
   const albo_date = body.albo_date !== undefined ? (String(body.albo_date).trim() || null) : attuale.albo_date;
   const vat_number = body.vat_number !== undefined ? String(body.vat_number).replace(/\D/g, "").slice(0, 11) : attuale.vat_number;
+
+  // Campi identità: modificabili SOLO dall'admin (il professionista non cambia
+  // da solo il proprio nome pubblico, l'appellativo, la professione o l'email di contatto).
+  let name = attuale.name, full_name = attuale.full_name, gender = attuale.gender,
+      profession = attuale.profession, email = attuale.email;
+  if (admin) {
+    if (body.name !== undefined) name = String(body.name).trim().slice(0, 120) || attuale.name;
+    if (body.full_name !== undefined) full_name = String(body.full_name).trim().slice(0, 160);
+    if (body.gender !== undefined) { const g = String(body.gender).trim().toLowerCase(); gender = (g === "f" || g === "m") ? g : ""; }
+    if (body.profession !== undefined) profession = String(body.profession).trim().slice(0, 80) || attuale.profession;
+    if (body.email !== undefined) {
+      const e = String(body.email).trim().toLowerCase().slice(0, 160);
+      if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return json({ error: "Email di contatto non valida" }, 400);
+      email = e;
+    }
+  }
 
   if (vat_number && vat_number.length !== 11) {
     return json({ error: "La partita IVA, se la indichi, deve avere 11 cifre" }, 400);
@@ -85,18 +108,24 @@ export async function PATCH({ request }) {
   if (geocoded) {
     await sql`
       UPDATE professionals
-      SET bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
+      SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
+          bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
           region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
           albo_date = ${albo_date}, vat_number = ${vat_number},
           lat = ${geocoded.lat}, lng = ${geocoded.lng}
-      WHERE id = ${session.pid}`;
+      WHERE id = ${pid}`;
   } else {
     await sql`
       UPDATE professionals
-      SET bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
+      SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
+          bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
           region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
           albo_date = ${albo_date}, vat_number = ${vat_number}
-      WHERE id = ${session.pid}`;
+      WHERE id = ${pid}`;
+  }
+
+  if (adminSuAltro(session, body.pid)) {
+    await sql`UPDATE professionals SET edited_by = ${session.name || "admin"}, edited_at = now() WHERE id = ${pid}`;
   }
 
   return json({

@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import CampoPassword from "./CampoPassword.jsx";
+import CercaComune from "./CercaComune.jsx";
+import { LISTINO, LISTINO_MAP } from "../data/listino.js";
 
 const dataIt = (iso) =>
   new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -197,10 +199,212 @@ function Dashboard({ vai }) {
   );
 }
 
+/* ============================ MODIFICA SCHEDA INFERMIERE ============================ */
+
+const eaCent = (x) => {
+  const n = Math.round(parseFloat(String(x).replace(",", ".")) * 100);
+  return Number.isFinite(n) ? n : 0;
+};
+
+function ModificaScheda({ pid, nome, onIndietro }) {
+  const [prof, setProf] = useState(null);
+  const [servizi, setServizi] = useState(null);
+  const [zone, setZone] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [salvo, setSalvo] = useState(false);
+  const [nuovoServizio, setNuovoServizio] = useState({ key: "", prezzo: "" });
+
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 4500); };
+
+  const carica = useCallback(() => {
+    fetch(`/api/panel/profilo?pid=${pid}`).then((r) => r.json()).then((d) => setProf(d.profilo || null));
+    fetch(`/api/panel/servizi?pid=${pid}`).then((r) => r.json()).then((d) => setServizi(d.servizi || []));
+    fetch(`/api/panel/zone?pid=${pid}`).then((r) => r.json()).then((d) => setZone(d.zone || []));
+  }, [pid]);
+  useEffect(carica, [carica]);
+
+  const salvaProfilo = async () => {
+    setSalvo(true);
+    const r = await fetch("/api/panel/profilo", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pid, name: prof.name, full_name: prof.full_name, gender: prof.gender, profession: prof.profession,
+        email: prof.email, phone: prof.phone, bio: prof.bio, address: prof.address,
+        city: prof.city, sigla: prof._sigla, albo_name: prof.albo_name, albo_number: prof.albo_number,
+        albo_date: prof.albo_date, vat_number: prof.vat_number,
+      }),
+    });
+    const d = await r.json(); setSalvo(false);
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", "Dati salvati ✅" + (d.posizioneCambiata ? " (segnaposto mappa aggiornato)" : "")); carica();
+  };
+
+  const caricaFoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = async () => {
+      const lato = 480;
+      const scala = Math.max(lato / img.width, lato / img.height);
+      const canvas = document.createElement("canvas");
+      canvas.width = lato; canvas.height = lato;
+      canvas.getContext("2d").drawImage(img, (lato - img.width * scala) / 2, (lato - img.height * scala) / 2, img.width * scala, img.height * scala);
+      const data = canvas.toDataURL("image/jpeg", 0.85);
+      const r = await fetch("/api/panel/foto", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pid, data }) });
+      const d = await r.json();
+      if (r.ok) { setProf((p) => ({ ...p, photo_url: d.photo_url })); avvisa("ok", "Foto aggiornata ✅"); }
+      else avvisa("err", d.error);
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  };
+
+  const salvaServizio = async (s, campi) => {
+    const r = await fetch("/api/panel/servizi", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pid, id: s.id, ...campi }) });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    carica();
+  };
+  const rimuoviServizio = async (s) => {
+    if (!window.confirm(`Tolgo "${s.name}" dalla scheda?`)) return;
+    const r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${pid}`, { method: "DELETE" });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    carica();
+  };
+  const aggiungiServizio = async () => {
+    const voce = LISTINO_MAP[nuovoServizio.key];
+    if (!voce) return avvisa("err", "Scegli una prestazione");
+    const r = await fetch("/api/panel/servizi", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pid, catalog_key: nuovoServizio.key, price_cents: eaCent(nuovoServizio.prezzo || voce.consigliato), duration_min: voce.durata }),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    setNuovoServizio({ key: "", prezzo: "" }); avvisa("ok", "Prestazione aggiunta ✅"); carica();
+  };
+
+  const aggiungiZona = async (comune) => {
+    const r = await fetch("/api/panel/zone", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pid, city: comune.nome, sigla: comune.sigla }) });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    carica();
+  };
+  const rimuoviZona = async (z) => {
+    const r = await fetch("/api/panel/zone", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pid, id: z.id }) });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    carica();
+  };
+
+  if (!prof) return <Caricamento />;
+  const disponibili = LISTINO.filter((v) => !(servizi || []).some((s) => s.catalog_key === v.key));
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+        <h2 style={{ margin: 0, color: "var(--iw-navy)" }}>✏️ Modifica scheda — {nome}</h2>
+        <span style={{ display: "flex", gap: 8 }}>
+          <a className="pf-btn secondario compatto" href={`/p/${prof.slug}`} target="_blank" rel="noreferrer">Vedi scheda</a>
+          <button className="pf-btn secondario compatto" onClick={onIndietro}>← Torna all'elenco</button>
+        </span>
+      </div>
+      {prof.edited_by && <p className="pf-note" style={{ marginTop: 0 }}>Ultima modifica da: <strong>{prof.edited_by}</strong>{prof.edited_at ? ` · ${new Date(prof.edited_at).toLocaleString("it-IT")}` : ""}</p>}
+      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
+
+      {/* FOTO */}
+      <div className="pf-panel" style={{ marginBottom: 14, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+        {prof.photo_url && <img src={prof.photo_url} alt="" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover" }} />}
+        <label className="pf-btn secondario compatto" style={{ cursor: "pointer", margin: 0 }}>
+          Cambia foto
+          <input type="file" accept="image/*" onChange={caricaFoto} style={{ display: "none" }} />
+        </label>
+      </div>
+
+      {/* DATI */}
+      <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>Dati e identità</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div><label>Nome pubblico (es. Dott. Mario R.)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} /></div>
+          <div><label>Nome completo (riservato)</label><input value={prof.full_name || ""} onChange={(e) => setProf({ ...prof, full_name: e.target.value })} /></div>
+          <div><label>Sesso (appellativo)</label>
+            <select value={prof.gender || ""} onChange={(e) => setProf({ ...prof, gender: e.target.value })}>
+              <option value="">—</option><option value="m">Dott. (uomo)</option><option value="f">Dott.ssa (donna)</option>
+            </select>
+          </div>
+          <div><label>Professione</label><input value={prof.profession || ""} onChange={(e) => setProf({ ...prof, profession: e.target.value })} /></div>
+          <div><label>Email di contatto</label><input value={prof.email || ""} onChange={(e) => setProf({ ...prof, email: e.target.value })} /></div>
+          <div><label>Telefono</label><input value={prof.phone || ""} onChange={(e) => setProf({ ...prof, phone: e.target.value })} /></div>
+        </div>
+        <label>Comune (base della scheda)</label>
+        <CercaComune id="ms-city" valore={prof.city} onTesto={(t) => setProf({ ...prof, city: t, _sigla: null })} onScegli={(c) => setProf({ ...prof, city: c.nome, province: c.provincia, region: c.regione, _sigla: c.sigla })} />
+        <label>Indirizzo (facoltativo)</label>
+        <input value={prof.address || ""} onChange={(e) => setProf({ ...prof, address: e.target.value })} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          <div><label>Albo/OPI</label><input value={prof.albo_name || ""} onChange={(e) => setProf({ ...prof, albo_name: e.target.value })} /></div>
+          <div><label>N. iscrizione</label><input value={prof.albo_number || ""} onChange={(e) => setProf({ ...prof, albo_number: e.target.value })} /></div>
+          <div><label>Data iscrizione</label><input type="date" value={prof.albo_date || ""} onChange={(e) => setProf({ ...prof, albo_date: e.target.value })} /></div>
+        </div>
+        <label>Partita IVA (11 cifre, oppure vuota)</label>
+        <input value={prof.vat_number || ""} onChange={(e) => setProf({ ...prof, vat_number: e.target.value })} />
+        <label>Presentazione (bio)</label>
+        <textarea rows={4} value={prof.bio || ""} onChange={(e) => setProf({ ...prof, bio: e.target.value })} />
+        <button className="pf-btn" disabled={salvo} onClick={salvaProfilo}>{salvo ? "Salvo…" : "Salva dati"}</button>
+      </div>
+
+      {/* PRESTAZIONI */}
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>Prestazioni e prezzi</h3>
+        {!servizi ? <Caricamento /> : servizi.map((s) => {
+          const voce = LISTINO_MAP[s.catalog_key];
+          return (
+            <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "8px 0", borderBottom: "1px solid var(--iw-line, #eee)" }}>
+              <strong style={{ flex: 1, minWidth: 160 }}>{s.name}{!s.active && <span className="pf-note" style={{ margin: 0 }}> · disattivata</span>}</strong>
+              <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                €<input style={{ width: 80, marginBottom: 0 }} defaultValue={(s.price_cents / 100).toString().replace(".", ",")} onBlur={(e) => { const c = eaCent(e.target.value); if (c && c !== s.price_cents) salvaServizio(s, { price_cents: c }); }} />
+              </label>
+              {voce && <span className="pf-note" style={{ margin: 0 }}>min {voce.min}€</span>}
+              <button className="pf-btn secondario compatto" onClick={() => salvaServizio(s, { active: !s.active })}>{s.active ? "Disattiva" : "Attiva"}</button>
+              <button className="pf-btn pericolo compatto" onClick={() => rimuoviServizio(s)}>Togli</button>
+            </div>
+          );
+        })}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }} className="pf-book">
+          <select style={{ marginBottom: 0, flex: 1, minWidth: 200 }} value={nuovoServizio.key} onChange={(e) => { const v = LISTINO_MAP[e.target.value]; setNuovoServizio({ key: e.target.value, prezzo: v ? String(v.consigliato) : "" }); }}>
+            <option value="">+ Aggiungi prestazione…</option>
+            {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {v.min}€)</option>)}
+          </select>
+          {nuovoServizio.key && <>€<input style={{ width: 80, marginBottom: 0 }} value={nuovoServizio.prezzo} onChange={(e) => setNuovoServizio({ ...nuovoServizio, prezzo: e.target.value })} /></>}
+          <button className="pf-btn compatto" disabled={!nuovoServizio.key} onClick={aggiungiServizio}>Aggiungi</button>
+        </div>
+      </div>
+
+      {/* ZONE */}
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>Zone coperte</h3>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          {(zone || []).map((z) => (
+            <span key={z.id} className="stato done" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              {z.city} ({z.province})
+              <button onClick={() => rimuoviZona(z)} title="Togli" style={{ background: "none", border: 0, cursor: "pointer", fontWeight: 700 }}>×</button>
+            </span>
+          ))}
+          {zone && zone.length === 0 && <span className="pf-note" style={{ margin: 0 }}>Nessuna zona.</span>}
+        </div>
+        <div className="pf-book">
+          <label>Aggiungi un comune coperto</label>
+          <CercaComune id="ms-zona" valore="" onTesto={() => {}} onScegli={aggiungiZona} placeholder="Scrivi e scegli il comune…" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ============================ INFERMIERI ============================ */
 
 function Professionisti({ filtroStato }) {
   const [lista, setLista] = useState(null);
+  const [modifica, setModifica] = useState(null); // { id, nome }
   const carica = useCallback(() => {
     fetch("/api/admin/professionisti").then((r) => r.json()).then((d) => setLista(d.professionisti || []));
   }, []);
@@ -217,6 +421,7 @@ function Professionisti({ filtroStato }) {
     carica();
   };
 
+  if (modifica) return <ModificaScheda pid={modifica.id} nome={modifica.nome} onIndietro={() => { setModifica(null); carica(); }} />;
   if (!lista) return <Caricamento />;
   const visibili = filtroStato ? lista.filter((p) => p.status === filtroStato) : lista;
   const badgeStato = { active: ["done", "Attivo"], pending: ["noshow", "In attesa"], suspended: ["cancelled", "Sospeso"] };
@@ -247,6 +452,7 @@ function Professionisti({ filtroStato }) {
             {p.zone?.length > 0 && <> · 📍 {p.zone.join(", ")}</>}
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="pf-btn compatto" onClick={() => setModifica({ id: p.id, nome: p.name })}>✏️ Modifica scheda</button>
             {p.status !== "suspended"
               ? <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(p, "suspended")}>Sospendi</button>
               : <button className="pf-btn compatto" onClick={() => cambiaStato(p, "active")}>Riattiva</button>}

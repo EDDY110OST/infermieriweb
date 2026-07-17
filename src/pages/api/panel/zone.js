@@ -1,8 +1,14 @@
 export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
-import { sessionFromRequest } from "../../../lib/auth.js";
+import { sessionFromRequest, pidBersaglio, adminSuAltro } from "../../../lib/auth.js";
 import { trovaComune } from "../../../data/comuni.js";
+
+const tracciaAdmin = async (session, fornito, pid) => {
+  if (adminSuAltro(session, fornito)) {
+    await sql`UPDATE professionals SET edited_by = ${session.name || "admin"}, edited_at = now() WHERE id = ${pid}`;
+  }
+};
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -20,21 +26,24 @@ const bello = (testo) =>
 // GET — le zone coperte del professionista loggato
 export async function GET({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autorizzato" }, 401);
+  const url = new URL(request.url);
+  const pid = pidBersaglio(session, url.searchParams.get("pid"));
+  if (!pid) return json({ error: "Non autorizzato" }, 401);
 
   const zone = await sql`
     SELECT id, city, province, region FROM coverage_areas
-    WHERE professional_id = ${session.pid} ORDER BY city`;
+    WHERE professional_id = ${pid} ORDER BY city`;
   return json({ zone });
 }
 
 // POST {city, province} — aggiunge una zona (la regione si ricava dalla provincia)
 export async function POST({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autorizzato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
+  const pid = pidBersaglio(session, body.pid);
+  if (!pid) return json({ error: "Non autorizzato" }, 401);
 
   const scritto = bello(body.city || "");
   if (scritto.length < 2) return json({ error: "Scrivi il nome del comune" }, 400);
@@ -50,8 +59,8 @@ export async function POST({ request }) {
   const region = comune.regione;
 
   const [{ n }] = await sql`
-    SELECT COUNT(*)::int AS n FROM coverage_areas WHERE professional_id = ${session.pid}`;
-  if (n >= MAX_ZONE) return json({ error: `Puoi coprire al massimo ${MAX_ZONE} comuni` }, 400);
+    SELECT COUNT(*)::int AS n FROM coverage_areas WHERE professional_id = ${pid}`;
+  if (n >= MAX_ZONE) return json({ error: `Si possono coprire al massimo ${MAX_ZONE} comuni` }, 400);
 
   // indice UNIQUE (professional_id, lower(city)): il doppione lo blocca il DB,
   // anche con due richieste simultanee
@@ -59,36 +68,39 @@ export async function POST({ request }) {
   try {
     [zona] = await sql`
       INSERT INTO coverage_areas (professional_id, city, province, region)
-      VALUES (${session.pid}, ${city}, ${provinciaNome}, ${region})
+      VALUES (${pid}, ${city}, ${provinciaNome}, ${region})
       RETURNING id, city, province, region`;
   } catch (err) {
-    if (String(err?.code) === "23505") return json({ error: `${city} è già tra le tue zone` }, 400);
+    if (String(err?.code) === "23505") return json({ error: `${city} è già tra le zone` }, 400);
     throw err;
   }
+  await tracciaAdmin(session, body.pid, pid);
   return json({ ok: true, zona });
 }
 
 // DELETE {id} — toglie una zona (mai l'ultima: la scheda deve restare trovabile)
 export async function DELETE({ request }) {
   const session = sessionFromRequest(request);
-  if (!session?.pid) return json({ error: "Non autorizzato" }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
+  const pid = pidBersaglio(session, body.pid);
+  if (!pid) return json({ error: "Non autorizzato" }, 401);
   const id = Number(body.id);
   if (!id) return json({ error: "Zona non indicata" }, 400);
 
   // atomica: cancella solo se dopo resta almeno una zona (niente race)
   const cancellate = await sql`
     DELETE FROM coverage_areas
-    WHERE id = ${id} AND professional_id = ${session.pid}
-      AND (SELECT COUNT(*) FROM coverage_areas WHERE professional_id = ${session.pid}) > 1
+    WHERE id = ${id} AND professional_id = ${pid}
+      AND (SELECT COUNT(*) FROM coverage_areas WHERE professional_id = ${pid}) > 1
     RETURNING id`;
   if (!cancellate.length) {
     const [esiste] = await sql`
-      SELECT 1 FROM coverage_areas WHERE id = ${id} AND professional_id = ${session.pid}`;
-    if (esiste) return json({ error: "Devi coprire almeno un comune: aggiungine un altro prima di togliere questo" }, 400);
+      SELECT 1 FROM coverage_areas WHERE id = ${id} AND professional_id = ${pid}`;
+    if (esiste) return json({ error: "Deve restare almeno un comune coperto: aggiungine un altro prima di togliere questo" }, 400);
     return json({ error: "Zona non trovata" }, 404);
   }
+  await tracciaAdmin(session, body.pid, pid);
   return json({ ok: true });
 }
