@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { LISTINO, LISTINO_MAP, FASCE, fasciaDi } from "../data/listino.js";
+import CercaComune from "./CercaComune.jsx";
 
 const oraRoma = (iso) =>
   new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
@@ -626,7 +627,7 @@ function TabOrari() {
 
 function TabZone() {
   const [zone, setZone] = useState(null);
-  const [nuova, setNuova] = useState({ city: "", province: "" });
+  const [nuova, setNuova] = useState({ city: "", province: "", region: "" });
   const [messaggio, setMessaggio] = useState(null);
 
   const avvisa = (tipo, testo) => {
@@ -637,8 +638,6 @@ function TabZone() {
   const carica = () =>
     fetch("/api/panel/zone").then((r) => r.json()).then((d) => {
       setZone(d.zone || []);
-      // la provincia della prima zona è quasi sempre quella giusta anche per la prossima
-      if (d.zone?.length) setNuova((n) => ({ ...n, province: n.province || d.zone[0].province }));
     });
 
   useEffect(() => { carica(); }, []);
@@ -652,7 +651,7 @@ function TabZone() {
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
-    setNuova((n) => ({ city: "", province: n.province }));
+    setNuova({ city: "", province: "", region: "" });
     avvisa("ok", `${d.zona.city} aggiunta ✅ Da adesso i pazienti di quella zona ti trovano.`);
     carica();
   };
@@ -691,17 +690,23 @@ function TabZone() {
 
       <form className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
         <h2>+ Aggiungi un comune</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-          <div>
-            <label>Comune *</label>
-            <input required minLength={2} placeholder="es. Borgo a Mozzano" value={nuova.city} onChange={(e) => setNuova({ ...nuova, city: e.target.value })} />
-          </div>
-          <div>
-            <label>Provincia *</label>
-            <input required minLength={2} placeholder="es. Lucca o LU" value={nuova.province} onChange={(e) => setNuova({ ...nuova, province: e.target.value })} />
-          </div>
+        <div>
+          <label htmlFor="zona-comune">Comune *</label>
+          <CercaComune
+            id="zona-comune"
+            required
+            placeholder="es. Borgo a Mozzano"
+            valore={nuova.city}
+            onTesto={(t) => setNuova({ city: t, province: "", region: "" })}
+            onScegli={(c) => setNuova({ city: c.nome, province: c.provincia, region: c.regione })}
+          />
+          {nuova.province ? (
+            <p className="pf-note" style={{ margin: "6px 0 0" }}>📍 {nuova.province} · {nuova.region}</p>
+          ) : (
+            <p className="pf-note" style={{ margin: "6px 0 0" }}>Scegli il comune dalla tendina: provincia e regione le mettiamo noi.</p>
+          )}
         </div>
-        <button className="pf-btn">Aggiungi zona</button>
+        <button className="pf-btn" disabled={!nuova.province}>Aggiungi zona</button>
       </form>
     </div>
   );
@@ -734,7 +739,12 @@ function TabProfilo() {
       const r = await fetch("/api/panel/profilo", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bio: profilo.bio, phone: profilo.phone, address: profilo.address, city: profilo.city, province: profilo.province }),
+        body: JSON.stringify({
+          bio: profilo.bio, phone: profilo.phone, address: profilo.address,
+          city: profilo.city, province: profilo.province,
+          albo_name: profilo.albo_name, albo_number: profilo.albo_number,
+          albo_date: profilo.albo_date, vat_number: profilo.vat_number,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
@@ -826,20 +836,53 @@ function TabProfilo() {
         <h2>📍 Dati e segnaposto sulla mappa</h2>
         <label htmlFor="pr-indirizzo">Indirizzo studio/sede <span style={{ fontWeight: 400 }}>(posiziona il tuo segnaposto)</span></label>
         <input id="pr-indirizzo" placeholder="es. Via Roma 12" value={profilo.address || ""} onChange={(e) => setProfilo({ ...profilo, address: e.target.value })} autoComplete="street-address" />
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-          <div>
-            <label htmlFor="pr-citta">Città *</label>
-            <input id="pr-citta" required minLength={2} value={profilo.city || ""} onChange={(e) => setProfilo({ ...profilo, city: e.target.value })} />
-          </div>
-          <div>
-            <label htmlFor="pr-prov">Provincia</label>
-            <input id="pr-prov" value={profilo.province || ""} onChange={(e) => setProfilo({ ...profilo, province: e.target.value })} />
-          </div>
-        </div>
+        <label htmlFor="pr-citta">Comune *</label>
+        <CercaComune
+          id="pr-citta"
+          required
+          valore={profilo.city || ""}
+          onTesto={(t) => setProfilo({ ...profilo, city: t, province: "", region: "" })}
+          onScegli={(c) => setProfilo({ ...profilo, city: c.nome, province: c.provincia, region: c.regione })}
+        />
+        <p className="pf-note" style={{ margin: "6px 0 12px" }}>
+          {profilo.province ? `📍 ${profilo.province}${profilo.region ? " · " + profilo.region : ""}` : "Scegli il comune dalla tendina: provincia e regione le mettiamo noi."}
+        </p>
         <label htmlFor="pr-tel">Telefono</label>
         <input id="pr-tel" type="tel" value={profilo.phone || ""} onChange={(e) => setProfilo({ ...profilo, phone: e.target.value })} />
         <label htmlFor="pr-bio">Presentazione (compare sulla tua scheda pubblica)</label>
         <textarea id="pr-bio" rows={4} maxLength={1200} value={profilo.bio || ""} onChange={(e) => setProfilo({ ...profilo, bio: e.target.value })} />
+
+        <h2 style={{ marginTop: 22 }}>🎓 I tuoi dati professionali</h2>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Puoi completarli o correggerli quando vuoi: la partita IVA spesso arriva dopo
+          l'iscrizione, e il numero OPI può cambiare se ti trasferisci di provincia.
+          Sono dati che vediamo <strong>solo noi</strong> per la verifica: sulla scheda pubblica
+          compare soltanto il numero di iscrizione all'albo.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <label htmlFor="pr-albo">Albo / OPI di appartenenza</label>
+            <input id="pr-albo" placeholder="es. OPI Lucca" value={profilo.albo_name || ""} onChange={(e) => setProfilo({ ...profilo, albo_name: e.target.value })} />
+          </div>
+          <div>
+            <label htmlFor="pr-albonum">Numero di iscrizione</label>
+            <input id="pr-albonum" placeholder="es. 12345" value={profilo.albo_number || ""} onChange={(e) => setProfilo({ ...profilo, albo_number: e.target.value })} />
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <label htmlFor="pr-albodata">Data di iscrizione</label>
+            <input id="pr-albodata" type="date" value={(profilo.albo_date || "").slice(0, 10)} onChange={(e) => setProfilo({ ...profilo, albo_date: e.target.value })} />
+          </div>
+          <div>
+            <label htmlFor="pr-piva">Partita IVA <span style={{ fontWeight: 400 }}>(se ce l'hai)</span></label>
+            <input id="pr-piva" inputMode="numeric" maxLength={11} placeholder="11 cifre" value={profilo.vat_number || ""} onChange={(e) => setProfilo({ ...profilo, vat_number: e.target.value.replace(/\D/g, "") })} />
+          </div>
+        </div>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Senza partita IVA lavori comunque con noi: sei nella rete e i pazienti ti trovano.
+          Quando la apri, torna qui e aggiungila.
+        </p>
         {esito && (
           <div className={esito.tipo === "err" ? "pf-errore" : "pf-successo"} style={esito.tipo === "warn" ? { background: "#fff7ed", color: "#b45309", borderColor: "#fed7aa" } : {}}>
             {esito.testo}

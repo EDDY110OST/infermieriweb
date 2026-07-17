@@ -4,6 +4,7 @@ import { sql } from "../../lib/db.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { sendEmail } from "../../lib/mailer.js";
 import { hashPassword } from "../../lib/auth.js";
+import { trovaComune } from "../../data/comuni.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -28,14 +29,21 @@ export async function POST({ request }) {
   const alboNumber = String(body.albo_number || "").trim();
   const alboDate = String(body.albo_date || "").trim();
   const vatNumber = String(body.vat_number || "").replace(/\D/g, "");
-  const city = String(body.city || "").trim();
+  const cittaScritta = String(body.city || "").trim();
   const address = String(body.address || "").trim().slice(0, 200);
-  const province = String(body.province || "").trim();
+  // Il comune deve stare nell'elenco ufficiale ISTAT: così la zona è collocabile
+  // sulla mappa e nelle ricerche fin dal primo giorno.
+  const comune = trovaComune(cittaScritta, String(body.sigla || "") || null) || trovaComune(cittaScritta);
+  const city = comune ? comune.nome : cittaScritta;
+  const province = comune ? comune.provincia : String(body.province || "").trim();
   const message = String(body.message || "").trim().slice(0, 2000);
   const password = String(body.password || "");
 
   if (name.length < 2 || !email.includes("@") || phone.length < 6 || city.length < 2) {
-    return json({ error: "Compila nome, email, telefono e città" }, 400);
+    return json({ error: "Compila nome, email, telefono e comune" }, 400);
+  }
+  if (!comune) {
+    return json({ error: `"${cittaScritta}" non è un comune italiano: scegli il comune dalla tendina dei suggerimenti` }, 400);
   }
   if (alboName.length < 3 || !alboNumber || !alboDate) {
     return json({ error: "Servono albo di appartenenza, numero e data di iscrizione" }, 400);

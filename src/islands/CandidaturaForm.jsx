@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import CercaComune from "./CercaComune.jsx";
 
 const PROFESSIONI = ["infermiere", "fisioterapista", "ostetrica", "medico specialista", "altro"];
 
@@ -9,7 +10,7 @@ export default function CandidaturaForm() {
   const [dati, setDati] = useState({
     name: "", email: "", phone: "", profession: "infermiere",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
-    city: "", province: "", address: "", message: "", privacy: false,
+    city: "", province: "", region: "", address: "", message: "", privacy: false,
     password: "", password2: "",
   });
   const [invio, setInvio] = useState(false);
@@ -76,16 +77,20 @@ export default function CandidaturaForm() {
           {PROFESSIONI.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
         </select>
 
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-          <div>
-            <label htmlFor="cf-citta">Città in cui operi *</label>
-            <input id="cf-citta" required minLength={2} value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} />
-          </div>
-          <div>
-            <label htmlFor="cf-prov">Provincia</label>
-            <input id="cf-prov" value={dati.province} onChange={(e) => setDati({ ...dati, province: e.target.value })} />
-          </div>
-        </div>
+        <label htmlFor="cf-citta">Comune in cui operi *</label>
+        <CercaComune
+          id="cf-citta"
+          required
+          placeholder="es. Lucca"
+          valore={dati.city}
+          onTesto={(t) => setDati({ ...dati, city: t, province: "", region: "" })}
+          onScegli={(c) => setDati({ ...dati, city: c.nome, province: c.provincia, region: c.regione })}
+        />
+        <p className="pf-note" style={{ margin: "6px 0 12px" }}>
+          {dati.province
+            ? `📍 ${dati.province} · ${dati.region}`
+            : "Scegli il comune dalla tendina: provincia e regione le compiliamo noi. Altri comuni li aggiungi dopo dalla tua area riservata."}
+        </p>
 
         <label htmlFor="cf-email">Email *</label>
         <input id="cf-email" required type="email" value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />

@@ -2,7 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
-import { regioneDaProvincia, provinciaEstesa } from "../../../lib/geografia.js";
+import { trovaComune } from "../../../data/comuni.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -36,14 +36,18 @@ export async function POST({ request }) {
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
 
-  const city = bello(body.city || "");
-  const province = bello(body.province || "");
-  if (city.length < 2) return json({ error: "Scrivi il nome del comune" }, 400);
-  if (province.length < 2) return json({ error: "Scrivi la provincia (es. Lucca o LU)" }, 400);
+  const scritto = bello(body.city || "");
+  if (scritto.length < 2) return json({ error: "Scrivi il nome del comune" }, 400);
 
-  const provinciaNome = provinciaEstesa(province);
-  const region = regioneDaProvincia(province);
-  if (!region || !provinciaNome) return json({ error: `Provincia "${province}" non riconosciuta: controlla il nome (es. Lucca) o la sigla (es. LU)` }, 400);
+  // Il comune deve esistere nell'elenco ufficiale ISTAT: niente zone inventate
+  // tipo "Lucca e dintorni", che poi sulla mappa non si possono collocare.
+  const comune = trovaComune(scritto, body.sigla || null) || trovaComune(scritto);
+  if (!comune) {
+    return json({ error: `"${scritto}" non è un comune italiano: scegli il comune dalla tendina dei suggerimenti` }, 400);
+  }
+  const city = comune.nome;
+  const provinciaNome = comune.provincia;
+  const region = comune.regione;
 
   const [{ n }] = await sql`
     SELECT COUNT(*)::int AS n FROM coverage_areas WHERE professional_id = ${session.pid}`;
