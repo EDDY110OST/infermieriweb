@@ -12,7 +12,7 @@ export async function GET({ request, url }) {
 
 // Backup notturno del database, spedito via email (fuori dal fornitore).
 // Gira ogni notte alle 03:00 UTC (~05:00 in Italia d'estate).
-import { eseguiBackup } from "../../src/lib/backup.js";
+import { eseguiBackup } from "../../../lib/backup.js";
 
 async function esegui() {
   const esito = await eseguiBackup();
