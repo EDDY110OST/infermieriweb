@@ -46,11 +46,22 @@ export async function availableSlots(professionalId, serviceId, dateStr) {
     WHERE id = ${professionalId} AND status = 'active'`;
   if (!prof) return [];
 
-  const weekday = romeWeekday(dateStr);
-  const hours = await sql`
-    SELECT start_min, end_min FROM opening_hours
-    WHERE professional_id = ${professionalId} AND weekday = ${weekday}
-    ORDER BY start_min`;
+  // Eccezione per questo giorno preciso? Se esiste, VINCE sull'orario fisso:
+  // fasce = [] -> giorno chiuso; fasce con orari -> quelli valgono solo per oggi.
+  const [override] = await sql`
+    SELECT fasce FROM day_overrides
+    WHERE professional_id = ${professionalId} AND day = ${dateStr}`;
+
+  let hours;
+  if (override) {
+    hours = (override.fasce || []).map(([start_min, end_min]) => ({ start_min, end_min }));
+  } else {
+    const weekday = romeWeekday(dateStr);
+    hours = await sql`
+      SELECT start_min, end_min FROM opening_hours
+      WHERE professional_id = ${professionalId} AND weekday = ${weekday}
+      ORDER BY start_min`;
+  }
   if (!hours.length) return [];
 
   const dayStart = romeDateTime(dateStr, 0);

@@ -46,7 +46,18 @@ const minutiRoma = (iso) => {
 };
 const giornoRoma = (iso) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(new Date(iso));
 
-function CalendarioMensile({ bookings, onGiorno, meseData, setMeseData }) {
+// minuti dalla mezzanotte <-> "HH:MM" (per l'editor della disponibilità del giorno)
+const minToHHMM = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+const hhmmToMin = (s) => { const [h, m] = String(s).split(":").map(Number); return h * 60 + m; };
+
+// Colore della disponibilità del giorno sul calendario
+const DISPO_COLORE = {
+  aperto:   { bordo: "#16a34a", nome: "Disponibile (orari fissi)" },
+  speciale: { bordo: "#2563eb", nome: "Orari speciali" },
+  chiuso:   { bordo: "#cbd5e1", nome: "Chiuso" },
+};
+
+function CalendarioMensile({ bookings, dispo, onGiorno, giornoSel, meseData, setMeseData }) {
   const anno = meseData.getFullYear();
   const mese = meseData.getMonth();
   const primo = new Date(anno, mese, 1);
@@ -82,26 +93,36 @@ function CalendarioMensile({ bookings, onGiorno, meseData, setMeseData }) {
         {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((g) => (
           <div className="pf-cal-intestazione" key={g}>{g}</div>
         ))}
-        {celle.map((c) => (
-          <button
-            type="button"
-            key={c.chiave}
-            className={`pf-cal-cella${c.fuoriMese ? " fuori" : ""}${c.chiave === oggi ? " oggi" : ""}${c.appuntamenti.length ? " pieno" : ""}`}
-            onClick={() => onGiorno(c.chiave)}
-          >
-            <span className="numero">{c.data.getDate()}</span>
-            <span className="pallini">
-              {c.appuntamenti.slice(0, 4).map((b) => (
-                <span key={b.id} className="pallino" style={{ background: (SEMAFORO[b.status] || SEMAFORO.active).colore }}
-                  title={`${new Date(b.start_dt).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })} ${b.customer_name} — ${(SEMAFORO[b.status] || SEMAFORO.active).nome}`} />
-              ))}
-              {c.appuntamenti.length > 4 && <span className="piu">+{c.appuntamenti.length - 4}</span>}
-            </span>
-          </button>
-        ))}
+        {celle.map((c) => {
+          const stato = dispo?.[c.chiave]?.stato || "aperto";
+          const col = DISPO_COLORE[stato] || DISPO_COLORE.aperto;
+          return (
+            <button
+              type="button"
+              key={c.chiave}
+              className={`pf-cal-cella${c.fuoriMese ? " fuori" : ""}${c.chiave === oggi ? " oggi" : ""}${c.chiave === giornoSel ? " scelto" : ""}${stato === "chiuso" ? " chiuso" : ""}`}
+              style={{ borderBottom: `3px solid ${col.bordo}` }}
+              onClick={() => onGiorno(c.chiave)}
+              title={col.nome}
+            >
+              <span className="numero">{c.data.getDate()}</span>
+              <span className="pallini">
+                {c.appuntamenti.slice(0, 4).map((b) => (
+                  <span key={b.id} className="pallino" style={{ background: (SEMAFORO[b.status] || SEMAFORO.active).colore }}
+                    title={`${new Date(b.start_dt).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })} ${b.customer_name} — ${(SEMAFORO[b.status] || SEMAFORO.active).nome}`} />
+                ))}
+                {c.appuntamenti.length > 4 && <span className="piu">+{c.appuntamenti.length - 4}</span>}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="pf-cal-legenda">
+        {Object.entries(DISPO_COLORE).map(([k, v]) => (
+          <span key={k}><span className="pallino quadrato" style={{ background: v.bordo }} /> {v.nome}</span>
+        ))}
+        <span className="pf-cal-legenda-sep" />
         {Object.entries(SEMAFORO).map(([k, v]) => (
           <span key={k}><span className="pallino" style={{ background: v.colore }} /> {v.nome}</span>
         ))}
@@ -121,6 +142,9 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   const [erroreManuale, setErroreManuale] = useState("");
   const [meseData, setMeseData] = useState(new Date());
   const [giornoSel, setGiornoSel] = useState(() => new Intl.DateTimeFormat("en-CA").format(new Date()));
+  const [dispo, setDispo] = useState({});        // stato disponibilità per giorno (colora il calendario)
+  const [editDispo, setEditDispo] = useState(null); // fasce in modifica per il giorno selezionato
+  const [avvisoDispo, setAvvisoDispo] = useState(null);
 
   const carica = useCallback(() => {
     // carico il mese visualizzato con i bordi (la griglia mostra anche code e teste di mese)
@@ -132,9 +156,43 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setAgenda(d); })
       .catch(() => setErrore("Errore di caricamento agenda"));
+    fetch(`/api/panel/disponibilita?from=${dal}&days=42`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setDispo(Object.fromEntries(d.giorni.map((g) => [g.day, g]))); })
+      .catch(() => {});
   }, [meseData]);
 
   useEffect(carica, [carica]);
+
+  // Salva un'eccezione per il giorno selezionato (fasce vuote = chiuso)
+  const salvaDispo = async (fasce) => {
+    setAvvisoDispo(null);
+    const r = await fetch("/api/panel/disponibilita", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ day: giornoSel, fasce }),
+    });
+    const d = await r.json();
+    if (!r.ok) return setAvvisoDispo({ tipo: "err", testo: d.error || "Errore" });
+    setEditDispo(null);
+    if (d.scoperte?.length) {
+      const righe = d.scoperte.map((s) => `• ${new Date(s.quando).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" })} ${s.cliente} (${s.servizio})`).join("\n");
+      setAvvisoDispo({ tipo: "warn", testo: `Attenzione: hai ancora ${d.scoperte.length} prenotazione/i in questo giorno fuori dalla nuova disponibilità:\n${righe}\nRestano valide: se non puoi più, spostale o annullale qui sotto avvisando il paziente.` });
+    }
+    carica();
+  };
+
+  // Toglie l'eccezione: il giorno torna a seguire l'orario fisso settimanale
+  const tornaAlFisso = async () => {
+    setAvvisoDispo(null);
+    await fetch("/api/panel/disponibilita", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ day: giornoSel }),
+    });
+    setEditDispo(null);
+    carica();
+  };
 
   const apriManuale = async () => {
     setMostraManuale(!mostraManuale);
@@ -294,11 +352,67 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       {agenda && (
         <CalendarioMensile
           bookings={agenda.bookings}
+          dispo={dispo}
           meseData={meseData}
           setMeseData={setMeseData}
-          onGiorno={setGiornoSel}
+          giornoSel={giornoSel}
+          onGiorno={(g) => { setGiornoSel(g); setEditDispo(null); setAvvisoDispo(null); }}
         />
       )}
+
+      {agenda && (() => {
+        const stato = dispo[giornoSel]?.stato || "aperto";
+        const fonte = dispo[giornoSel]?.fonte || "fisso";
+        const fasce = dispo[giornoSel]?.fasce || [];
+        const etichettaGiorno = new Date(giornoSel + "T12:00:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+        const testoStato =
+          stato === "chiuso" ? (fonte === "eccezione" ? "Chiuso (deciso da te per questo giorno)" : "Chiuso (nessun orario fisso questo giorno)")
+          : fonte === "eccezione" ? `Orari speciali solo per oggi: ${fasce.map((f) => `${minToHHMM(f[0])}–${minToHHMM(f[1])}`).join(", ")}`
+          : `Segue i tuoi orari fissi: ${fasce.map((f) => `${minToHHMM(f[0])}–${minToHHMM(f[1])}`).join(", ")}`;
+        return (
+          <div className="pf-panel pf-dispo" style={{ marginTop: 14 }}>
+            <h3 style={{ margin: "0 0 4px", textTransform: "capitalize" }}>Disponibilità di {etichettaGiorno}</h3>
+            <p className="pf-note" style={{ marginTop: 0 }}>
+              {testoStato}
+              {fonte === "eccezione" && <> · <button type="button" className="pf-link" onClick={tornaAlFisso}>torna agli orari fissi</button></>}
+            </p>
+
+            {avvisoDispo && (
+              <div className={avvisoDispo.tipo === "err" ? "pf-errore" : "pf-successo"}
+                style={{ whiteSpace: "pre-line", ...(avvisoDispo.tipo === "warn" ? { background: "#fff7ed", color: "#b45309", borderColor: "#fed7aa" } : {}) }}>
+                {avvisoDispo.testo}
+              </div>
+            )}
+
+            {editDispo === null ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <button type="button" className="pf-btn pericolo compatto" onClick={() => salvaDispo([])}>🚫 Chiudi questo giorno</button>
+                <button type="button" className="pf-btn secondario compatto"
+                  onClick={() => setEditDispo(fasce.length ? fasce.map((f) => ({ da: minToHHMM(f[0]), a: minToHHMM(f[1]) })) : [{ da: "09:00", a: "13:00" }])}>
+                  🕑 Imposta orari solo per oggi
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p className="pf-note" style={{ marginTop: 0 }}>Orari validi <strong>solo per {etichettaGiorno}</strong>. Lascia una sola fascia o aggiungine per la pausa pranzo/cena.</p>
+                {editDispo.map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <input type="time" value={f.da} onChange={(e) => setEditDispo(editDispo.map((x, j) => j === i ? { ...x, da: e.target.value } : x))} />
+                    <span>→</span>
+                    <input type="time" value={f.a} onChange={(e) => setEditDispo(editDispo.map((x, j) => j === i ? { ...x, a: e.target.value } : x))} />
+                    {editDispo.length > 1 && <button type="button" className="pf-btn pericolo compatto" onClick={() => setEditDispo(editDispo.filter((_, j) => j !== i))}>🗑</button>}
+                  </div>
+                ))}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                  <button type="button" className="pf-btn secondario compatto" onClick={() => setEditDispo([...editDispo, { da: "15:00", a: "19:00" }])}>+ Aggiungi fascia</button>
+                  <button type="button" className="pf-btn compatto" onClick={() => salvaDispo(editDispo.map((f) => [hhmmToMin(f.da), hhmmToMin(f.a)]))}>Salva questo giorno</button>
+                  <button type="button" className="pf-btn secondario compatto" onClick={() => { setEditDispo(null); setAvvisoDispo(null); }}>Annulla</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {agenda && eventi.length === 0 && (
         <div className="pf-panel" style={{ marginTop: 14 }}>
@@ -582,6 +696,13 @@ function TabOrari() {
 
   return (
     <div>
+      <div className="pf-info-box">
+        <strong>Questo è il tuo orario fisso settimanale</strong>, quello che si ripete ogni settimana.
+        È perfetto se lavori solo a domicilio. <br />
+        Se invece hai <strong>turni che cambiano</strong> (es. lavori in struttura), imposta qui un
+        orario di base — anche vuoto — e poi vai nella scheda <strong>Agenda</strong>: dal calendario
+        puoi <strong>chiudere o cambiare il singolo giorno</strong>. Così nessuno ti prenota mentre sei in reparto.
+      </div>
       <p className="pf-note" style={{ marginTop: 0 }}>
         I pazienti possono prenotare solo dentro queste fasce (meno le prenotazioni già prese e i blocchi).
         Puoi mettere <strong>più fasce per giorno</strong>: la pausa pranzo o cena è semplicemente il buco
