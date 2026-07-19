@@ -1,20 +1,10 @@
 // Title e description di ogni pagina statica (l'HTML li serve già pronti ai motori).
 
 export const pageSeo = {
-  home: {
-    title: "Infermiere a domicilio: trova e prenota online | InfermieriWeb",
-    description:
-      "Trova un infermiere a domicilio nella tua città: prezzi chiari, recensioni verificate, prenotazione online gratuita. La rete cresce in tutta Italia, una città alla volta.",
-  },
   domicilio: {
     title: "Prestazioni infermieristiche a domicilio | InfermieriWeb",
     description:
       "Medicazioni, prelievi, iniezioni, flebo, ECG e monitoraggi direttamente a casa tua, 7 giorni su 7: scopri tutte le prestazioni e prenota online il professionista della tua zona.",
-  },
-  strutture: {
-    title: "Servizi ambulatoriali a Lucca | InfermieriWeb",
-    description:
-      "Prestazioni infermieristiche anche in ambulatorio a Lucca: Eurofins Lamm, Centro Medico D33 e Farmacia Comunale 24h. Indirizzi, contatti e come raggiungerli.",
   },
   chiSiamo: {
     title: "Chi siamo | InfermieriWeb",
@@ -59,11 +49,3 @@ export function articleSeo(article) {
   };
 }
 
-export function structureSeo(structure) {
-  return {
-    title: `${structure.name} - Lucca | InfermieriWeb`,
-    description: clip(
-      `Prestazioni infermieristiche presso ${structure.name}, ${structure.address}. Telefono ${structure.phone}. Prenota la tua prestazione con InfermieriWeb.`
-    ),
-  };
-}

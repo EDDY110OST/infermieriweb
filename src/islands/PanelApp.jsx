@@ -1083,6 +1083,95 @@ function TabProfilo() {
         {esitoPassword && <div className={esitoPassword.tipo === "ok" ? "pf-successo" : "pf-errore"}>{esitoPassword.testo}</div>}
         <button className="pf-btn">Aggiorna password</button>
       </form>
+
+      <Sicurezza2FA />
+    </div>
+  );
+}
+
+// Verifica in due passaggi (2FA): attiva/disattiva dalla scheda Profilo
+function Sicurezza2FA() {
+  const [enabled, setEnabled] = useState(null);   // null = caricamento
+  const [setup, setSetup] = useState(null);        // { qr, secret } durante l'attivazione
+  const [codice, setCodice] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [fase, setFase] = useState("idle");        // idle | disattiva
+  const [esito, setEsito] = useState(null);
+
+  useEffect(() => {
+    panelFetch("/api/panel/2fa").then((r) => (r.ok ? r.json() : null)).then((d) => d && setEnabled(!!d.enabled));
+  }, []);
+
+  const avvia = async () => {
+    setEsito(null);
+    const r = await panelFetch("/api/panel/2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "setup" }) });
+    const d = await r.json();
+    if (!r.ok) return setEsito({ tipo: "err", testo: d.error });
+    setSetup({ qr: d.qr, secret: d.secret });
+  };
+
+  const conferma = async () => {
+    setEsito(null);
+    const r = await panelFetch("/api/panel/2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "enable", code: codice }) });
+    const d = await r.json();
+    if (!r.ok) return setEsito({ tipo: "err", testo: d.error });
+    setEnabled(true); setSetup(null); setCodice(""); setEsito({ tipo: "ok", testo: "✅ Verifica in due passaggi attivata." });
+  };
+
+  const disattiva = async () => {
+    setEsito(null);
+    const r = await panelFetch("/api/panel/2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "disable", password: pwd, code: codice }) });
+    const d = await r.json();
+    if (!r.ok) return setEsito({ tipo: "err", testo: d.error });
+    setEnabled(false); setFase("idle"); setPwd(""); setCodice(""); setEsito({ tipo: "ok", testo: "Verifica in due passaggi disattivata." });
+  };
+
+  if (enabled === null) return null;
+
+  return (
+    <div className="pf-panel" style={{ marginTop: 18 }}>
+      <h2>🔐 Verifica in due passaggi</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>
+        Un livello di sicurezza in più: oltre alla password, all'accesso ti verrà chiesto un codice a 6 cifre
+        generato da un'app come Google Authenticator o Authy. {enabled ? "È attiva." : "Consigliata: protegge l'agenda e i dati dei pazienti."}
+      </p>
+      {esito && <div className={esito.tipo === "ok" ? "pf-successo" : "pf-errore"}>{esito.testo}</div>}
+
+      {!enabled && !setup && (
+        <button type="button" className="pf-btn secondario" onClick={avvia}>Attiva la verifica in due passaggi</button>
+      )}
+
+      {!enabled && setup && (
+        <div>
+          <p style={{ margin: "6px 0" }}>1. Apri l'app di autenticazione e inquadra questo codice QR:</p>
+          <img src={setup.qr} alt="QR per la verifica in due passaggi" width="200" height="200" style={{ borderRadius: 10 }} />
+          <p className="pf-note" style={{ margin: "6px 0" }}>Non riesci a inquadrarlo? Inserisci a mano questo codice: <code>{setup.secret}</code></p>
+          <label htmlFor="tf-code">2. Scrivi il codice a 6 cifre che vedi nell'app:</label>
+          <input id="tf-code" inputMode="numeric" maxLength={6} placeholder="000000" value={codice} onChange={(e) => setCodice(e.target.value.replace(/\D/g, ""))} style={{ maxWidth: 160 }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button type="button" className="pf-btn" onClick={conferma} disabled={codice.length !== 6}>Conferma e attiva</button>
+            <button type="button" className="pf-btn secondario" onClick={() => { setSetup(null); setCodice(""); }}>Annulla</button>
+          </div>
+        </div>
+      )}
+
+      {enabled && fase === "idle" && (
+        <button type="button" className="pf-btn pericolo" onClick={() => setFase("disattiva")}>Disattiva</button>
+      )}
+
+      {enabled && fase === "disattiva" && (
+        <div>
+          <p className="pf-note" style={{ marginTop: 0 }}>Per disattivarla servono la tua password e un codice valido dell'app.</p>
+          <label htmlFor="tf-pw">Password</label>
+          <input id="tf-pw" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} autoComplete="current-password" />
+          <label htmlFor="tf-dc">Codice a 6 cifre</label>
+          <input id="tf-dc" inputMode="numeric" maxLength={6} placeholder="000000" value={codice} onChange={(e) => setCodice(e.target.value.replace(/\D/g, ""))} style={{ maxWidth: 160 }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button type="button" className="pf-btn pericolo" onClick={disattiva} disabled={!pwd || codice.length !== 6}>Conferma disattivazione</button>
+            <button type="button" className="pf-btn secondario" onClick={() => { setFase("idle"); setPwd(""); setCodice(""); }}>Annulla</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1168,7 +1257,8 @@ function TabStatistiche() {
 // ---------------------------------------------------------------- App
 
 export default function PanelApp() {
-  const [login, setLogin] = useState({ email: "", password: "" });
+  const [login, setLogin] = useState({ email: "", password: "", totp: "" });
+  const [serveTotp, setServeTotp] = useState(false);
   const [recupero, setRecupero] = useState({ aperto: false, email: "", inviato: false });
   const [utente, setUtente] = useState(null);
   const [errore, setErrore] = useState("");
@@ -1240,7 +1330,12 @@ export default function PanelApp() {
       body: JSON.stringify(login),
     });
     const d = await r.json();
-    if (!r.ok) return setErrore(d.error || "Errore di accesso");
+    if (!r.ok) {
+      // l'account ha la verifica in due passaggi: mostra il campo per il codice
+      if (d.need_totp) setServeTotp(true);
+      return setErrore(d.error || "Errore di accesso");
+    }
+    setServeTotp(false);
     setUtente(d);
   };
 
@@ -1299,6 +1394,13 @@ export default function PanelApp() {
           <input id="pl-email" type="email" required value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} autoComplete="username" />
           <label htmlFor="pl-pass">Password</label>
           <CampoPassword id="pl-pass" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} autoComplete="current-password" />
+          {serveTotp && (
+            <>
+              <label htmlFor="pl-totp">Codice di verifica (app di autenticazione)</label>
+              <input id="pl-totp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000"
+                value={login.totp} onChange={(e) => setLogin({ ...login, totp: e.target.value.replace(/\D/g, "") })} autoFocus />
+            </>
+          )}
           {errore && <div className="pf-errore">{errore}</div>}
           <button className="pf-btn" style={{ width: "100%" }}>Entra</button>
         </form>

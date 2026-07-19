@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { getArticleImage } from "../utils/articleImageFallback";
 import { SERVIZIO_PER_ARTICOLO, NOMI_COLLOQUIALI } from "../data/servizi-extra.js";
 
 const formatData = (iso) => {
@@ -78,105 +77,6 @@ export default function Articolo({ article, related = [] }) {
         },
       ];
 
-  useEffect(() => {
-    if (!article) return;
-
-    const meta = {
-      title: `${article.title} | InfermieriWeb`,
-      description: article.excerpt || "Scopri di più su InfermieriWeb.",
-      url: `https://infermieriweb.it/articoli/${article.slug}`,
-      image: getArticleImage(article),
-    };
-
-    document.title = meta.title;
-    const setMeta = (selector, attr, value) => {
-      const element = document.querySelector(selector);
-      if (element) element.setAttribute(attr, value);
-    };
-
-    setMeta("meta[name='description']", "content", meta.description);
-    setMeta("meta[property='og:type']", "content", "article");
-    setMeta("meta[property='og:title']", "content", meta.title);
-    setMeta("meta[property='og:description']", "content", meta.description);
-    setMeta("meta[property='og:url']", "content", meta.url);
-    setMeta("meta[property='og:image']", "content", meta.image);
-    setMeta("meta[name='twitter:title']", "content", meta.title);
-    setMeta("meta[name='twitter:description']", "content", meta.description);
-    setMeta("meta[name='twitter:image']", "content", meta.image);
-
-    const canonical = document.querySelector("link[rel='canonical']");
-    if (canonical) canonical.setAttribute("href", meta.url);
-
-    const jsonLd = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      headline: article.title,
-      description: article.excerpt || "Scopri di più su InfermieriWeb.",
-      image: [meta.image],
-      author: {
-        "@type": "Person",
-        name: "InfermieriWeb"
-      },
-      publisher: {
-        "@type": "Organization",
-        name: "InfermieriWeb",
-        logo: {
-          "@type": "ImageObject",
-          url: "https://infermieriweb.it/logo.jpeg"
-        }
-      },
-      datePublished: article.date || new Date().toISOString().split("T")[0],
-      dateModified: article.date || new Date().toISOString().split("T")[0],
-      mainEntityOfPage: {
-        "@type": "WebPage",
-        "@id": meta.url
-      }
-    };
-
-    const breadcrumb = {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: "Home",
-          item: "https://infermieriweb.it/"
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: "Articoli",
-          item: "https://infermieriweb.it/articoli"
-        },
-        {
-          "@type": "ListItem",
-          position: 3,
-          name: article.title,
-          item: meta.url
-        }
-      ]
-    };
-
-    const scriptArticle = document.createElement("script");
-    scriptArticle.type = "application/ld+json";
-    scriptArticle.id = "article-schema";
-    scriptArticle.text = JSON.stringify(jsonLd);
-    document.head.appendChild(scriptArticle);
-
-    const scriptBreadcrumb = document.createElement("script");
-    scriptBreadcrumb.type = "application/ld+json";
-    scriptBreadcrumb.id = "breadcrumb-schema";
-    scriptBreadcrumb.text = JSON.stringify(breadcrumb);
-    document.head.appendChild(scriptBreadcrumb);
-
-    return () => {
-      const articleScript = document.getElementById("article-schema");
-      const breadcrumbScript = document.getElementById("breadcrumb-schema");
-      if (articleScript) articleScript.remove();
-      if (breadcrumbScript) breadcrumbScript.remove();
-    };
-  }, [article]);
 
   if (!article) {
     return (
