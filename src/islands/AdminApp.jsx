@@ -434,7 +434,9 @@ function Professionisti({ filtroStato }) {
   if (modifica) return <ModificaScheda pid={modifica.id} nome={modifica.nome} onIndietro={() => { setModifica(null); carica(); }} />;
   if (!lista) return <Caricamento />;
   const visibili = filtroStato ? lista.filter((p) => p.status === filtroStato) : lista;
-  const badgeStato = { active: ["done", "Attivo"], pending: ["noshow", "In attesa"], suspended: ["cancelled", "Sospeso"] };
+  const badgeStato = { active: ["done", "Attivo"], pending: ["noshow", "In attesa"], suspended: ["cancelled", "Sospeso"], network: ["active", "In rete (senza P.IVA)"] };
+  // fallback: uno status non previsto non deve MAI far sparire tutta la lista
+  const statoDi = (s) => badgeStato[s] || ["noshow", s || "—"];
 
   return (
     <div>
@@ -450,7 +452,7 @@ function Professionisti({ filtroStato }) {
                 {p.profession} · {p.city} ({p.province}) · <a href={`/p/${p.slug}`} target="_blank" rel="noreferrer">scheda</a>
               </div>
             </div>
-            <span className={`stato ${badgeStato[p.status][0]}`}>{badgeStato[p.status][1]}</span>
+            <span className={`stato ${statoDi(p.status)[0]}`}>{statoDi(p.status)[1]}</span>
           </div>
           <div className="pf-note" style={{ margin: "8px 0" }}>
             🪪 {p.albo_name} n. {p.albo_number} (dal {p.albo_date || "—"}) · P.IVA {p.vat_number || "—"} · 📞 {p.phone}
