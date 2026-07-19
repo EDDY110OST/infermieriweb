@@ -1,124 +1,246 @@
--- Schema motore prenotazioni InfermieriWeb (Postgres / Netlify DB)
--- Porta la logica del motore Prenotazioni Sbarba (shops -> nurses) con le
--- aggiunte per gli infermieri: iscrizione OPI, zone di copertura a domicilio,
--- candidature. Le prenotazioni NON contengono dati clinici (GDPR art. 9).
+-- Schema REALE del database InfermieriWeb (Postgres / Neon, Francoforte).
+-- Rigenerato automaticamente dallo stato di produzione il 2026-07-19 (introspezione diretta di Neon, validata ricreando lo schema da zero).
+-- Fonte di verità dello schema: questo file rispecchia le migrazioni + gli
+-- aggiustamenti applicati a mano su Neon. Le prenotazioni NON contengono dati
+-- clinici (GDPR art. 9): solo nome, contatti e indirizzo di visita.
 
-CREATE TABLE IF NOT EXISTS nurses (
-  id SERIAL PRIMARY KEY,
-  slug TEXT NOT NULL UNIQUE,
-  name TEXT NOT NULL,
-  opi_number TEXT NOT NULL DEFAULT '',
-  bio TEXT NOT NULL DEFAULT '',
-  photo_url TEXT NOT NULL DEFAULT '',
-  region TEXT NOT NULL DEFAULT '',
-  province TEXT NOT NULL DEFAULT '',
-  city TEXT NOT NULL DEFAULT '',
-  phone TEXT NOT NULL DEFAULT '',
-  email TEXT NOT NULL DEFAULT '',
-  cancel_hours SMALLINT NOT NULL DEFAULT 4,
-  lead_minutes SMALLINT NOT NULL DEFAULT 60,
-  status TEXT NOT NULL DEFAULT 'pending', -- pending|active|suspended
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+CREATE TABLE IF NOT EXISTS applications (
+  id SERIAL,
+  name text NOT NULL,
+  email text NOT NULL,
+  phone text NOT NULL DEFAULT ''::text,
+  profession text NOT NULL DEFAULT 'infermiere'::text,
+  albo_number text NOT NULL DEFAULT ''::text,
+  city text NOT NULL DEFAULT ''::text,
+  province text NOT NULL DEFAULT ''::text,
+  message text NOT NULL DEFAULT ''::text,
+  status text NOT NULL DEFAULT 'new'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  albo_name text NOT NULL DEFAULT ''::text,
+  albo_date text NOT NULL DEFAULT ''::text,
+  vat_number text NOT NULL DEFAULT ''::text,
+  address text NOT NULL DEFAULT ''::text,
+  pass_hash text NOT NULL DEFAULT ''::text,
+  gender text NOT NULL DEFAULT ''::text,
+  CONSTRAINT applications_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS nurse_users (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  email TEXT NOT NULL UNIQUE,
-  pass_hash TEXT NOT NULL,
-  remember_token TEXT NOT NULL DEFAULT '',
-  name TEXT NOT NULL DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+CREATE TABLE IF NOT EXISTS articles (
+  id SERIAL,
+  slug text NOT NULL,
+  title text NOT NULL,
+  category text NOT NULL DEFAULT ''::text,
+  excerpt text NOT NULL DEFAULT ''::text,
+  image text NOT NULL DEFAULT ''::text,
+  reading_time text NOT NULL DEFAULT ''::text,
+  body_raw text NOT NULL DEFAULT ''::text,
+  sections jsonb NOT NULL DEFAULT '[]'::jsonb,
+  status text NOT NULL DEFAULT 'draft'::text,
+  published_at date,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  featured boolean NOT NULL DEFAULT false,
+  cover_data text NOT NULL DEFAULT ''::text,
+  CONSTRAINT articles_pkey PRIMARY KEY (id),
+  CONSTRAINT articles_slug_key UNIQUE (slug)
 );
-
-CREATE TABLE IF NOT EXISTS services (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  duration_min SMALLINT NOT NULL,
-  price_cents INT NOT NULL DEFAULT 0,
-  active BOOLEAN NOT NULL DEFAULT TRUE,
-  sort SMALLINT NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS ix_services_nurse ON services (nurse_id);
-
--- Comuni serviti a domicilio: la vera differenza rispetto ai barbieri
-CREATE TABLE IF NOT EXISTS coverage_areas (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  city TEXT NOT NULL,
-  province TEXT NOT NULL DEFAULT '',
-  region TEXT NOT NULL DEFAULT ''
-);
-CREATE INDEX IF NOT EXISTS ix_coverage_city ON coverage_areas (city);
-CREATE INDEX IF NOT EXISTS ix_coverage_nurse ON coverage_areas (nurse_id);
-
-CREATE TABLE IF NOT EXISTS opening_hours (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  weekday SMALLINT NOT NULL, -- 0=lunedì ... 6=domenica
-  start_min SMALLINT NOT NULL, -- minuti da mezzanotte
-  end_min SMALLINT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS ix_hours_nurse ON opening_hours (nurse_id, weekday);
 
 CREATE TABLE IF NOT EXISTS blocks (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  start_dt TIMESTAMPTZ NOT NULL,
-  end_dt TIMESTAMPTZ NOT NULL,
-  reason TEXT NOT NULL DEFAULT ''
+  id SERIAL,
+  professional_id integer NOT NULL,
+  start_dt timestamp with time zone NOT NULL,
+  end_dt timestamp with time zone NOT NULL,
+  reason text NOT NULL DEFAULT ''::text,
+  CONSTRAINT blocks_pkey PRIMARY KEY (id)
 );
-CREATE INDEX IF NOT EXISTS ix_blocks_nurse ON blocks (nurse_id, start_dt);
+CREATE INDEX ix_blocks_prof ON blocks USING btree (professional_id, start_dt);
 
 CREATE TABLE IF NOT EXISTS bookings (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  service_id INT NOT NULL REFERENCES services(id),
-  start_dt TIMESTAMPTZ NOT NULL,
-  end_dt TIMESTAMPTZ NOT NULL,
-  customer_name TEXT NOT NULL,
-  customer_phone TEXT NOT NULL,
-  customer_email TEXT NOT NULL DEFAULT '',
-  address TEXT NOT NULL DEFAULT '', -- indirizzo della visita a domicilio
-  city TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'active', -- active|cancelled|noshow|done
-  source TEXT NOT NULL DEFAULT 'online', -- online|manual
-  cancel_token TEXT NOT NULL DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id SERIAL,
+  professional_id integer NOT NULL,
+  service_id integer NOT NULL,
+  start_dt timestamp with time zone NOT NULL,
+  end_dt timestamp with time zone NOT NULL,
+  customer_name text NOT NULL,
+  customer_phone text NOT NULL,
+  customer_email text NOT NULL DEFAULT ''::text,
+  address text NOT NULL DEFAULT ''::text,
+  city text NOT NULL DEFAULT ''::text,
+  status text NOT NULL DEFAULT 'active'::text,
+  source text NOT NULL DEFAULT 'online'::text,
+  cancel_token text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  reminded_at timestamp with time zone,
+  CONSTRAINT bookings_pkey PRIMARY KEY (id)
 );
-CREATE INDEX IF NOT EXISTS ix_bookings_nurse_start ON bookings (nurse_id, start_dt);
+CREATE INDEX ix_bookings_prof_start ON bookings USING btree (professional_id, start_dt);
 
--- Candidature dal form "Lavora con noi" (approvazione manuale)
-CREATE TABLE IF NOT EXISTS applications (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL DEFAULT '',
-  opi_number TEXT NOT NULL DEFAULT '',
-  city TEXT NOT NULL DEFAULT '',
-  province TEXT NOT NULL DEFAULT '',
-  message TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'new', -- new|approved|rejected
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+CREATE TABLE IF NOT EXISTS coverage_areas (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  city text NOT NULL,
+  province text NOT NULL DEFAULT ''::text,
+  region text NOT NULL DEFAULT ''::text,
+  CONSTRAINT coverage_areas_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX ux_coverage_prof_city ON coverage_areas USING btree (professional_id, lower(city));
+CREATE INDEX ix_coverage_city ON coverage_areas USING btree (city);
+CREATE INDEX ix_coverage_prof ON coverage_areas USING btree (professional_id);
+
+CREATE TABLE IF NOT EXISTS day_overrides (
+  professional_id integer NOT NULL,
+  day date NOT NULL,
+  fasce jsonb NOT NULL DEFAULT jsonb_build_array(),
+  CONSTRAINT day_overrides_pkey PRIMARY KEY (professional_id, day)
 );
 
--- Coordinate per la ricerca su mappa (aggiunte 13/7/26, richiesta Bruno)
-ALTER TABLE nurses ADD COLUMN IF NOT EXISTS lat DOUBLE PRECISION;
-ALTER TABLE nurses ADD COLUMN IF NOT EXISTS lng DOUBLE PRECISION;
+CREATE TABLE IF NOT EXISTS opening_hours (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  weekday smallint NOT NULL,
+  start_min smallint NOT NULL,
+  end_min smallint NOT NULL,
+  CONSTRAINT opening_hours_pkey PRIMARY KEY (id)
+);
+CREATE INDEX ix_hours_prof ON opening_hours USING btree (professional_id, weekday);
 
--- Recensioni verificate: si possono lasciare solo tramite il link inviato
--- dopo una prenotazione completata (anti-recensioni false). Pubblicazione
--- dopo moderazione.
+CREATE TABLE IF NOT EXISTS professional_users (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  email text NOT NULL,
+  pass_hash text NOT NULL,
+  remember_token text NOT NULL DEFAULT ''::text,
+  name text NOT NULL DEFAULT ''::text,
+  role text NOT NULL DEFAULT 'professional'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  totp_secret text NOT NULL DEFAULT ''::text,
+  totp_enabled boolean NOT NULL DEFAULT false,
+  totp_pending text NOT NULL DEFAULT ''::text,
+  CONSTRAINT professional_users_pkey PRIMARY KEY (id),
+  CONSTRAINT professional_users_email_key UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS professionals (
+  id SERIAL,
+  slug text NOT NULL,
+  name text NOT NULL,
+  profession text NOT NULL DEFAULT 'infermiere'::text,
+  albo_number text NOT NULL DEFAULT ''::text,
+  bio text NOT NULL DEFAULT ''::text,
+  photo_url text NOT NULL DEFAULT ''::text,
+  region text NOT NULL DEFAULT ''::text,
+  province text NOT NULL DEFAULT ''::text,
+  city text NOT NULL DEFAULT ''::text,
+  phone text NOT NULL DEFAULT ''::text,
+  email text NOT NULL DEFAULT ''::text,
+  lat double precision,
+  lng double precision,
+  cancel_hours smallint NOT NULL DEFAULT 4,
+  lead_minutes smallint NOT NULL DEFAULT 60,
+  status text NOT NULL DEFAULT 'pending'::text,
+  google_rating text NOT NULL DEFAULT ''::text,
+  google_reviews_url text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  albo_name text NOT NULL DEFAULT ''::text,
+  albo_date text NOT NULL DEFAULT ''::text,
+  vat_number text NOT NULL DEFAULT ''::text,
+  address text NOT NULL DEFAULT ''::text,
+  photo_data text NOT NULL DEFAULT ''::text,
+  gender text NOT NULL DEFAULT ''::text,
+  full_name text NOT NULL DEFAULT ''::text,
+  verified_piva_at timestamp with time zone,
+  verified_albo_at timestamp with time zone,
+  verified_by text NOT NULL DEFAULT ''::text,
+  edited_by text NOT NULL DEFAULT ''::text,
+  edited_at timestamp with time zone,
+  CONSTRAINT professionals_pkey PRIMARY KEY (id),
+  CONSTRAINT professionals_slug_key UNIQUE (slug)
+);
+
+CREATE TABLE IF NOT EXISTS profile_views (
+  professional_id integer NOT NULL,
+  day date NOT NULL,
+  views integer NOT NULL DEFAULT 0,
+  CONSTRAINT profile_views_pkey PRIMARY KEY (professional_id, day)
+);
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  endpoint text NOT NULL,
+  p256dh text NOT NULL,
+  auth text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT push_subscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT push_subscriptions_endpoint_key UNIQUE (endpoint)
+);
+CREATE INDEX ix_push_prof ON push_subscriptions USING btree (professional_id);
+
+CREATE TABLE IF NOT EXISTS rate_events (
+  key text NOT NULL,
+  ts timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_rate_events ON rate_events USING btree (key, ts);
+
 CREATE TABLE IF NOT EXISTS reviews (
-  id SERIAL PRIMARY KEY,
-  nurse_id INT NOT NULL REFERENCES nurses(id) ON DELETE CASCADE,
-  booking_id INT REFERENCES bookings(id),
-  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  text TEXT NOT NULL DEFAULT '',
-  author_name TEXT NOT NULL DEFAULT '',
-  review_token TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'pending', -- pending|published|rejected
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id SERIAL,
+  professional_id integer NOT NULL,
+  booking_id integer,
+  rating smallint NOT NULL,
+  text text NOT NULL DEFAULT ''::text,
+  author_name text NOT NULL DEFAULT ''::text,
+  review_token text NOT NULL DEFAULT ''::text,
+  status text NOT NULL DEFAULT 'pending'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT reviews_rating_check CHECK (((rating >= 1) AND (rating <= 5))),
+  CONSTRAINT reviews_pkey PRIMARY KEY (id)
 );
-CREATE INDEX IF NOT EXISTS ix_reviews_nurse ON reviews (nurse_id, status);
+CREATE INDEX ix_reviews_prof ON reviews USING btree (professional_id, status);
+
+CREATE TABLE IF NOT EXISTS services (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  name text NOT NULL,
+  duration_min smallint NOT NULL,
+  price_cents integer NOT NULL DEFAULT 0,
+  active boolean NOT NULL DEFAULT true,
+  sort smallint NOT NULL DEFAULT 0,
+  catalog_key text NOT NULL DEFAULT ''::text,
+  price_notte_cents integer,
+  CONSTRAINT services_pkey PRIMARY KEY (id)
+);
+CREATE INDEX ix_services_prof ON services USING btree (professional_id);
+
+CREATE TABLE IF NOT EXISTS structure_leads (
+  id SERIAL,
+  name text NOT NULL,
+  type text NOT NULL DEFAULT ''::text,
+  city text NOT NULL DEFAULT ''::text,
+  email text NOT NULL,
+  phone text NOT NULL DEFAULT ''::text,
+  message text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT structure_leads_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS waitlist (
+  id SERIAL,
+  email text NOT NULL,
+  zona text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT waitlist_pkey PRIMARY KEY (id)
+);
+CREATE INDEX ix_waitlist_zona ON waitlist USING btree (zona);
+
+-- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
+ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
+ALTER TABLE bookings ADD CONSTRAINT bookings_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE coverage_areas ADD CONSTRAINT coverage_areas_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE day_overrides ADD CONSTRAINT day_overrides_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE opening_hours ADD CONSTRAINT opening_hours_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE professional_users ADD CONSTRAINT professional_users_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE profile_views ADD CONSTRAINT profile_views_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE push_subscriptions ADD CONSTRAINT push_subscriptions_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE reviews ADD CONSTRAINT reviews_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id);
+ALTER TABLE reviews ADD CONSTRAINT reviews_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE services ADD CONSTRAINT services_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
