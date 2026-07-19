@@ -215,7 +215,7 @@ export default function Articolo({ article, related = [] }) {
 
         {article?.image && (
           <div className="article-hero-image">
-            <img src={article.image} alt={article.title} width="900" height="540" loading="lazy" />
+            <img src={article.image} alt={article.title} width="900" height="540" loading="eager" fetchpriority="high" />
           </div>
         )}
 

@@ -1,7 +1,12 @@
 User-agent: *
 Allow: /
-Disallow: /area-professionisti
 Disallow: /admin
-Disallow: /prenotazione
+Disallow: /area-professionisti
+Disallow: /api/
+
+# Le pagine transazionali (prenotazione, conferma, recensione, reimposta-password,
+# le-mie-prenotazioni) restano scansionabili ma hanno meta noindex: così Google può
+# leggere il noindex ed escluderle davvero dall'indice.
 
 Sitemap: https://infermieriweb.it/sitemap.xml
+Sitemap: https://infermieriweb.it/sitemap-dinamica.xml

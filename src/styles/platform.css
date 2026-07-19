@@ -402,6 +402,8 @@
 .stato.cancelled { background: #fee2e2; color: var(--iw-danger); }
 .stato.done { background: #dcfce7; color: #15803d; }
 .stato.noshow { background: #fef3c7; color: #b45309; }
+.stato.pending { background: #fef9c3; color: #a16207; }
+.stato.expired { background: #e2e8f0; color: #64748b; }
 .pf-agenda-blocco { background: #f1f5f9; border-style: dashed; }
 
 /* ---------- Backoffice a schede ---------- */

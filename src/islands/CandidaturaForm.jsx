@@ -10,7 +10,7 @@ export default function CandidaturaForm() {
   const [dati, setDati] = useState({
     name: "", email: "", phone: "", profession: "", gender: "",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
-    city: "", province: "", region: "", address: "", message: "", privacy: false,
+    city: "", province: "", region: "", sigla: "", address: "", message: "", privacy: false,
     password: "", password2: "",
   });
   const [invio, setInvio] = useState(false);
@@ -91,8 +91,8 @@ export default function CandidaturaForm() {
           required
           placeholder="es. Lucca"
           valore={dati.city}
-          onTesto={(t) => setDati({ ...dati, city: t, province: "", region: "" })}
-          onScegli={(c) => setDati({ ...dati, city: c.nome, province: c.provincia, region: c.regione })}
+          onTesto={(t) => setDati({ ...dati, city: t, province: "", region: "", sigla: "" })}
+          onScegli={(c) => setDati({ ...dati, city: c.nome, province: c.provincia, region: c.regione, sigla: c.sigla })}
         />
         <p className="pf-note" style={{ margin: "6px 0 12px" }}>
           {dati.province

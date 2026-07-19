@@ -67,7 +67,7 @@ const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expi
           )}
           {future.map((r) => (
             <div class="pf-pro-card" style="margin-bottom: 12px;">
-              <img class="foto" src={r.photo_url} alt={`Foto di ${r.professional_name}`} loading="lazy" />
+              <img class="foto" src={r.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${r.professional_name}`} width="80" height="80" loading="lazy" />
               <div class="info">
                 <div class="nome">{r.service_name}</div>
                 <div class="zona">con {r.professional_name}</div>
@@ -83,7 +83,7 @@ const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expi
               <h2 style="color: var(--iw-navy); font-size: 24px; margin: 30px 0 14px;">Storico</h2>
               {passate.map((r) => (
                 <div class="pf-pro-card" style="margin-bottom: 12px;">
-                  <img class="foto" src={r.photo_url} alt={`Foto di ${r.professional_name}`} loading="lazy" />
+                  <img class="foto" src={r.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${r.professional_name}`} width="80" height="80" loading="lazy" />
                   <div class="info">
                     <div class="nome">{r.service_name}</div>
                     <div class="zona">con {r.professional_name} · {quando(r.start_dt)}</div>

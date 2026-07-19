@@ -50,7 +50,6 @@ const schema = {
   name: pro.name,
   url: `${SITE_URL}${path}`,
   image: new URL(pro.photo_url, SITE_URL).href,
-  medicalSpecialty: "Nursing",
   areaServed: zone.map((city) => ({ "@type": "City", name: city })),
   makesOffer: services.map((s) => ({
     "@type": "Offer",
@@ -72,7 +71,7 @@ const schemas = [
   schema,
   breadcrumbSchema([
     { name: "Home", url: `${SITE_URL}/` },
-    { name: "Professionisti", url: `${SITE_URL}/cerca` },
+    { name: "Professionisti", url: `${SITE_URL}/professionisti` },
     { name: pro.name, url: `${SITE_URL}${path}` },
   ]),
 ];
@@ -92,7 +91,7 @@ try {
 <Platform title={titolo} description={descrizione} path={path} ogImage={new URL(pro.photo_url, SITE_URL).href} ogImageAlt={`Foto di ${pro.name}`} schemas={schemas}>
   <section class="pf-profile-hero">
     <div class="pf-profile-card">
-      <img class="foto" src={pro.photo_url} alt={`Foto di ${pro.name}`} width="132" height="132" />
+      <img class="foto" src={pro.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${pro.name}`} width="132" height="132" />
       <div>
         <h1>{pro.name}</h1>
         <p class="prof">{professione} · {pro.city} ({pro.province})</p>

@@ -35,7 +35,8 @@ export function trovaComune(nome, sigla) {
   const candidati = INDICE.filter((v) => v.k === k).map((v) => v.c);
   if (!candidati.length) return null;
   if (sigla) return candidati.find((c) => c.sigla.toUpperCase() === sigla.toUpperCase()) || null;
-  return candidati[0]; // omonimi senza sigla: il primo in ordine alfabetico
+  // omonimi senza sigla (es. Castro BG/LE): scegli il più popoloso, è il più probabile
+  return candidati.sort((a, b) => b.popolazione - a.popolazione)[0];
 }
 
 // Suggerimenti per la tendina: prima chi inizia con quello che si sta scrivendo,

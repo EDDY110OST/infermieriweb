@@ -3,6 +3,17 @@ import { LISTINO, LISTINO_MAP, FASCE, fasciaDi } from "../data/listino.js";
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
 
+// Ogni chiamata del pannello: se torna 401 la sessione è scaduta -> avvisa tutto il pannello,
+// così invece di schede vuote o pagine bianche l'infermiere viene riportato al login.
+function panelFetch(url, opts) {
+  return fetch(url, opts).then((r) => {
+    if (r.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("iw-sessione-scaduta"));
+    }
+    return r;
+  });
+}
+
 const oraRoma = (iso) =>
   new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
 const STATI = { active: "Attiva", cancelled: "Annullata", done: "Completata", noshow: "Non presentato" };
@@ -152,11 +163,11 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     const da = new Date(primo);
     da.setDate(1 - ((primo.getDay() + 6) % 7));
     const dal = new Intl.DateTimeFormat("en-CA").format(da);
-    fetch(`/api/panel/agenda?from=${dal}&days=42`)
+    panelFetch(`/api/panel/agenda?from=${dal}&days=42`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setAgenda(d); })
       .catch(() => setErrore("Errore di caricamento agenda"));
-    fetch(`/api/panel/disponibilita?from=${dal}&days=42`)
+    panelFetch(`/api/panel/disponibilita?from=${dal}&days=42`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setDispo(Object.fromEntries(d.giorni.map((g) => [g.day, g]))); })
       .catch(() => {});
@@ -167,7 +178,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   // Salva un'eccezione per il giorno selezionato (fasce vuote = chiuso)
   const salvaDispo = async (fasce) => {
     setAvvisoDispo(null);
-    const r = await fetch("/api/panel/disponibilita", {
+    const r = await panelFetch("/api/panel/disponibilita", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day: giornoSel, fasce }),
@@ -185,7 +196,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   // Toglie l'eccezione: il giorno torna a seguire l'orario fisso settimanale
   const tornaAlFisso = async () => {
     setAvvisoDispo(null);
-    await fetch("/api/panel/disponibilita", {
+    await panelFetch("/api/panel/disponibilita", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day: giornoSel }),
@@ -198,7 +209,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     setMostraManuale(!mostraManuale);
     setMostraBlocco(false);
     if (!servizi) {
-      const r = await fetch("/api/panel/servizi");
+      const r = await panelFetch("/api/panel/servizi");
       if (r.ok) setServizi((await r.json()).servizi.filter((s) => s.active));
     }
   };
@@ -206,7 +217,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   const salvaManuale = async (e) => {
     e.preventDefault();
     setErroreManuale("");
-    const r = await fetch("/api/panel/prenotazioni", {
+    const r = await panelFetch("/api/panel/prenotazioni", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...manuale, service_id: Number(manuale.service_id) }),
@@ -220,7 +231,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
   const cambiaStato = async (id, status, conferma) => {
     if (conferma && !window.confirm(conferma)) return;
-    const r = await fetch("/api/panel/prenotazioni", {
+    const r = await panelFetch("/api/panel/prenotazioni", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),
@@ -231,7 +242,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   const creaBlocco = async (e) => {
     e.preventDefault();
     if (!blocco.data || !blocco.dalle || !blocco.alle) return;
-    const r = await fetch("/api/panel/blocchi", {
+    const r = await panelFetch("/api/panel/blocchi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -249,7 +260,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   };
 
   const rimuoviBlocco = async (id) => {
-    await fetch(`/api/panel/blocchi?id=${id}`, { method: "DELETE" });
+    await panelFetch(`/api/panel/blocchi?id=${id}`, { method: "DELETE" });
     carica();
   };
 
@@ -311,8 +322,16 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
           <input required minLength={2} value={manuale.customer_name} onChange={(e) => setManuale({ ...manuale, customer_name: e.target.value })} />
           <label>Telefono</label>
           <input type="tel" value={manuale.customer_phone} onChange={(e) => setManuale({ ...manuale, customer_phone: e.target.value })} />
-          <label>Indirizzo visita</label>
-          <input value={manuale.address} onChange={(e) => setManuale({ ...manuale, address: e.target.value })} placeholder="Via, civico, città" />
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+            <div>
+              <label>Indirizzo visita</label>
+              <input value={manuale.address} onChange={(e) => setManuale({ ...manuale, address: e.target.value })} placeholder="Via e civico" />
+            </div>
+            <div>
+              <label>Città</label>
+              <input value={manuale.city} onChange={(e) => setManuale({ ...manuale, city: e.target.value })} placeholder="es. Lucca" />
+            </div>
+          </div>
           {erroreManuale && <div className="pf-errore">{erroreManuale}</div>}
           <button className="pf-btn">Aggiungi in agenda</button>
         </form>
@@ -454,7 +473,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
                 {e.dato.status === "active" && (
                   <span style={{ display: "flex", gap: 6 }}>
                     <button className="pf-btn secondario compatto" onClick={() => cambiaStato(e.dato.id, "done")}>Fatta</button>
-                    <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(e.dato.id, "cancelled", `Annullo la prenotazione di ${e.dato.customer_name}? Il paziente verrà avvisato via email.`)}>Annulla</button>
+                    <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(e.dato.id, "cancelled", `Annullo la prenotazione di ${e.dato.customer_name}? ${e.dato.customer_email ? "Il paziente verrà avvisato via email." : "È una prenotazione telefonica: ricordati di avvisare tu il paziente."}`)}>Annulla</button>
                   </span>
                 )}
               </div>
@@ -492,7 +511,7 @@ function TabServizi() {
   const [messaggio, setMessaggio] = useState(null);
 
   const carica = useCallback(() => {
-    fetch("/api/panel/servizi").then((r) => r.json()).then((d) => setServizi(d.servizi || []));
+    panelFetch("/api/panel/servizi").then((r) => r.json()).then((d) => setServizi(d.servizi || []));
   }, []);
   useEffect(carica, [carica]);
 
@@ -503,7 +522,7 @@ function TabServizi() {
 
   const aggiungi = async (e) => {
     e.preventDefault();
-    const r = await fetch("/api/panel/servizi", {
+    const r = await panelFetch("/api/panel/servizi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ catalog_key: nuovo.key, duration_min: Number(nuovo.durata), price_cents: centesimi(nuovo.prezzo), price_notte_cents: nuovo.prezzoNotte ? centesimi(nuovo.prezzoNotte) : null }),
@@ -516,7 +535,7 @@ function TabServizi() {
   };
 
   const salva = async (s) => {
-    const r = await fetch("/api/panel/servizi", {
+    const r = await panelFetch("/api/panel/servizi", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: s.id, name: s.name, duration_min: Number(s.duration_min), price_cents: s._prezzo !== undefined ? centesimi(s._prezzo) : s.price_cents, price_notte_cents: s._prezzoNotte !== undefined ? (s._prezzoNotte ? centesimi(s._prezzoNotte) : null) : s.price_notte_cents, active: s.active }),
@@ -529,7 +548,7 @@ function TabServizi() {
 
   const elimina = async (s) => {
     if (!confirm(`Eliminare "${s.name}" dalla tua scheda?\n\nSe vuoi solo sospenderla temporaneamente, togli la spunta "attiva" invece di eliminarla.`)) return;
-    const r = await fetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE" });
+    const r = await panelFetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE" });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
     avvisa("ok", `"${s.name}" eliminata dalla tua scheda`);
@@ -636,7 +655,7 @@ function TabOrari() {
   // Ogni giorno ha una LISTA di fasce: mattina/pomeriggio/sera/notte le decide
   // il professionista, e le pause (pranzo, cena) sono i buchi tra una fascia e l'altra.
   useEffect(() => {
-    fetch("/api/panel/orari").then((r) => r.json()).then((d) => {
+    panelFetch("/api/panel/orari").then((r) => r.json()).then((d) => {
       const base = GIORNI.map((nome, weekday) => ({ nome, weekday, fasce: [] }));
       for (const o of d.orari || []) {
         base[o.weekday].fasce.push({ dalle: minutiA(o.start_min), alle: minutiA(o.end_min) });
@@ -656,7 +675,7 @@ function TabOrari() {
         orari.push({ weekday: g.weekday, start_min: aMinuti(f.dalle), end_min: aMinuti(f.alle) });
       }
     }
-    const r = await fetch("/api/panel/orari", {
+    const r = await panelFetch("/api/panel/orari", {
       method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orari }),
     });
     const d = await r.json();
@@ -749,7 +768,7 @@ function TabOrari() {
 
 function TabZone() {
   const [zone, setZone] = useState(null);
-  const [nuova, setNuova] = useState({ city: "", province: "", region: "" });
+  const [nuova, setNuova] = useState({ city: "", province: "", region: "", sigla: "" });
   const [messaggio, setMessaggio] = useState(null);
 
   const avvisa = (tipo, testo) => {
@@ -758,7 +777,7 @@ function TabZone() {
   };
 
   const carica = () =>
-    fetch("/api/panel/zone").then((r) => r.json()).then((d) => {
+    panelFetch("/api/panel/zone").then((r) => r.json()).then((d) => {
       setZone(d.zone || []);
     });
 
@@ -766,21 +785,21 @@ function TabZone() {
 
   const aggiungi = async (e) => {
     e.preventDefault();
-    const r = await fetch("/api/panel/zone", {
+    const r = await panelFetch("/api/panel/zone", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(nuova),
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
-    setNuova({ city: "", province: "", region: "" });
+    setNuova({ city: "", province: "", region: "", sigla: "" });
     avvisa("ok", `${d.zona.city} aggiunta ✅ Da adesso i pazienti di quella zona ti trovano.`);
     carica();
   };
 
   const togli = async (z) => {
     if (!confirm(`Togliere ${z.city} dalle tue zone? Non comparirai più nelle ricerche di quel comune.`)) return;
-    const r = await fetch("/api/panel/zone", {
+    const r = await panelFetch("/api/panel/zone", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: z.id }),
@@ -819,8 +838,8 @@ function TabZone() {
             required
             placeholder="es. Borgo a Mozzano"
             valore={nuova.city}
-            onTesto={(t) => setNuova({ city: t, province: "", region: "" })}
-            onScegli={(c) => setNuova({ city: c.nome, province: c.provincia, region: c.regione })}
+            onTesto={(t) => setNuova({ city: t, province: "", region: "", sigla: "" })}
+            onScegli={(c) => setNuova({ city: c.nome, province: c.provincia, region: c.regione, sigla: c.sigla })}
           />
           {nuova.province ? (
             <p className="pf-note" style={{ margin: "6px 0 0" }}>📍 {nuova.province} · {nuova.region}</p>
@@ -850,7 +869,7 @@ function TabProfilo() {
   const [caricoFoto, setCaricoFoto] = useState(false);
 
   useEffect(() => {
-    fetch("/api/panel/profilo").then((r) => r.json()).then((d) => setProfilo(d.profilo));
+    panelFetch("/api/panel/profilo").then((r) => r.json()).then((d) => setProfilo(d.profilo));
   }, []);
 
   const salva = async (e) => {
@@ -858,12 +877,12 @@ function TabProfilo() {
     setSalvo(true);
     setEsito(null);
     try {
-      const r = await fetch("/api/panel/profilo", {
+      const r = await panelFetch("/api/panel/profilo", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bio: profilo.bio, phone: profilo.phone, address: profilo.address,
-          city: profilo.city, province: profilo.province,
+          city: profilo.city, province: profilo.province, sigla: profilo.sigla,
           albo_name: profilo.albo_name, albo_number: profilo.albo_number,
           albo_date: profilo.albo_date, vat_number: profilo.vat_number,
         }),
@@ -907,7 +926,7 @@ function TabProfilo() {
         img.height * scala
       );
       const data = canvas.toDataURL("image/jpeg", 0.85);
-      const r = await fetch("/api/panel/foto", {
+      const r = await panelFetch("/api/panel/foto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data }),
@@ -925,7 +944,7 @@ function TabProfilo() {
   const cambiaPassword = async (e) => {
     e.preventDefault();
     setEsitoPassword(null);
-    const r = await fetch("/api/panel/password", {
+    const r = await panelFetch("/api/panel/password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(password),
@@ -963,8 +982,8 @@ function TabProfilo() {
           id="pr-citta"
           required
           valore={profilo.city || ""}
-          onTesto={(t) => setProfilo({ ...profilo, city: t, province: "", region: "" })}
-          onScegli={(c) => setProfilo({ ...profilo, city: c.nome, province: c.provincia, region: c.regione })}
+          onTesto={(t) => setProfilo({ ...profilo, city: t, province: "", region: "", sigla: "" })}
+          onScegli={(c) => setProfilo({ ...profilo, city: c.nome, province: c.provincia, region: c.regione, sigla: c.sigla })}
         />
         <p className="pf-note" style={{ margin: "6px 0 12px" }}>
           {profilo.province ? `📍 ${profilo.province}${profilo.region ? " · " + profilo.region : ""}` : "Scegli il comune dalla tendina: provincia e regione le mettiamo noi."}
@@ -1085,10 +1104,15 @@ function TabStatistiche() {
   const [dati, setDati] = useState(null);
   const [meseCsv, setMeseCsv] = useState(() => new Date().toISOString().slice(0, 7));
 
+  const [erroreStat, setErroreStat] = useState(false);
   useEffect(() => {
-    fetch("/api/panel/statistiche").then((r) => r.json()).then(setDati);
+    panelFetch("/api/panel/statistiche")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => (d && d.prenotazioni ? setDati(d) : setErroreStat(true)))
+      .catch(() => setErroreStat(true));
   }, []);
 
+  if (erroreStat) return <p className="pf-note">Statistiche non disponibili al momento. Riprova tra poco.</p>;
   if (!dati) return <p className="pf-note">Caricamento…</p>;
 
   const mese = new Date().toLocaleDateString("it-IT", { month: "long", year: "numeric" });
@@ -1161,7 +1185,7 @@ export default function PanelApp() {
     navigator.serviceWorker.register("/sw-app.js").then(async (reg) => {
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
-        await fetch("/api/panel/push", {
+        await panelFetch("/api/panel/push", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ subscription: sub.toJSON() }),
@@ -1182,7 +1206,7 @@ export default function PanelApp() {
         userVisibleOnly: true,
         applicationServerKey: base64ToUint8(VAPID_PUBLIC),
       });
-      const r = await fetch("/api/panel/push", {
+      const r = await panelFetch("/api/panel/push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscription: sub.toJSON() }),
@@ -1198,6 +1222,13 @@ export default function PanelApp() {
     fetch("/api/panel/agenda?days=1").then((r) => {
       if (r.ok) setUtente({ name: "" });
     });
+  }, []);
+
+  // Sessione scaduta durante l'uso: torna al login con un avviso (niente schede vuote)
+  useEffect(() => {
+    const scaduta = () => { setUtente(null); setErrore("La sessione è scaduta: accedi di nuovo."); };
+    window.addEventListener("iw-sessione-scaduta", scaduta);
+    return () => window.removeEventListener("iw-sessione-scaduta", scaduta);
   }, []);
 
   const accedi = async (e) => {
@@ -1233,7 +1264,7 @@ export default function PanelApp() {
             <form className="pf-book" onSubmit={async (e) => {
               e.preventDefault();
               try {
-                const r = await fetch("/api/panel/recupero", {
+                const r = await panelFetch("/api/panel/recupero", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ email: recupero.email }),

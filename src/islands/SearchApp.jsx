@@ -167,13 +167,13 @@ export default function SearchApp() {
         <div className="pf-pro-list">
           {risultati.map((p) => (
             <div className="pf-pro-card" key={p.id}>
-              <img className="foto" src={p.photo_url} alt={`Foto di ${p.name}`} loading="lazy" />
+              <img className="foto" src={p.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${p.name}`} width="72" height="72" loading="lazy" />
               <div className="info">
                 <a className="nome" href={`/p/${p.slug}`}>{p.name}</a>
                 <div className="prof">{capitalizza(p.profession)}</div>
                 <Stelle pro={p} />
                 <div className="zona">📍 {p.city}{p.coverage?.length > 1 ? ` e altre ${p.coverage.length - 1} zone` : ""} ({p.province})</div>
-                
+                {prezzo(p.min_price_cents) && <div className="prezzo">{prezzo(p.min_price_cents)}</div>}
               </div>
               <a className="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
             </div>

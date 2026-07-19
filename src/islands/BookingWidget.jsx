@@ -141,8 +141,8 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         </p>
         
         <p style={{ margin: "8px 0", fontSize: 16 }}>
-          Per qualsiasi problema dell'ultimo minuto rispondi all'email di conferma:
-          arriva direttamente al professionista.
+          Dopo la convalida riceverai l'email di conferma con il recapito del professionista,
+          per qualsiasi cosa dell'ultimo minuto.
         </p>
       </div>
     );

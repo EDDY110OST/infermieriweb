@@ -37,14 +37,22 @@ export async function GET() {
     urls.push({ loc: `${SITE_URL}/servizio/${serviceId}`, priority: "0.8" });
   }
 
-  const regioni = new Set(), province = new Set(), citta = new Set();
+  // Conto i figli di ogni livello: una regione/provincia con UN solo figlio
+  // fa 301 verso il figlio (vedi [...area].astro), quindi NON va messa in sitemap
+  // (altrimenti Google segnala redirect e spreca crawl budget).
+  const provPerRegione = {}, cittaPerProv = {}, citta = new Set();
   for (const z of zone) {
-    regioni.add(slugify(z.region));
-    province.add(`${slugify(z.region)}/${slugify(z.province)}`);
-    citta.add(`${slugify(z.region)}/${slugify(z.province)}/${slugify(z.city)}`);
+    const r = slugify(z.region), p = `${r}/${slugify(z.province)}`;
+    (provPerRegione[r] ||= new Set()).add(p);
+    (cittaPerProv[p] ||= new Set()).add(`${p}/${slugify(z.city)}`);
+    citta.add(`${p}/${slugify(z.city)}`);
   }
-  for (const r of regioni) urls.push({ loc: `${SITE_URL}/professionisti/${r}`, priority: "0.6" });
-  for (const p of province) urls.push({ loc: `${SITE_URL}/professionisti/${p}`, priority: "0.6" });
+  for (const [r, prov] of Object.entries(provPerRegione)) {
+    if (prov.size > 1) urls.push({ loc: `${SITE_URL}/professionisti/${r}`, priority: "0.6" });
+  }
+  for (const [p, cit] of Object.entries(cittaPerProv)) {
+    if (cit.size > 1) urls.push({ loc: `${SITE_URL}/professionisti/${p}`, priority: "0.6" });
+  }
   for (const c of citta) urls.push({ loc: `${SITE_URL}/professionisti/${c}`, priority: "0.8" });
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

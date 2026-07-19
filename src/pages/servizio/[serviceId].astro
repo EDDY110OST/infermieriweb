@@ -49,7 +49,7 @@ const schemas = [
   faqSchema(faq),
   breadcrumbSchema([
     { name: "Home", url: `${SITE_URL}/` },
-    { name: "Prestazioni", url: `${SITE_URL}/` },
+    { name: "Prestazioni", url: `${SITE_URL}/domicilio` },
     { name: nomeColloquiale, url: `${SITE_URL}${path}` },
   ]),
 ];
@@ -71,7 +71,7 @@ const schemas = [
       <div class="pf-pro-list" style="max-width: 780px; margin: 0 auto;">
         {conDisponibilita.map((p) => (
           <div class="pf-pro-card">
-            <img class="foto" src={p.photo_url} alt={`Foto di ${p.name}`} loading="lazy" />
+            <img class="foto" src={p.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${p.name}`} width="80" height="80" loading="lazy" />
             <div class="info">
               <a class="nome" href={`/p/${p.slug}`}>{p.name}</a>
               <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>

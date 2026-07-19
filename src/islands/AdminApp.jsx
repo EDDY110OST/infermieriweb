@@ -8,7 +8,7 @@ const dataIt = (iso) =>
 const dataOra = (iso) =>
   new Date(iso).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
-const STATI = { active: "Confermata", done: "Completata", cancelled: "Annullata", noshow: "Non presentato" };
+const STATI = { active: "Confermata", done: "Completata", cancelled: "Annullata", noshow: "Non presentato", pending: "In attesa conferma", expired: "Scaduta (non confermata)" };
 
 /* ============================ IL MENÙ (struttura di Bruno) ============================ */
 
@@ -774,11 +774,12 @@ function RecensioniModerazione({ aggiornaBadge }) {
   useEffect(carica, [carica]);
 
   const modera = async (id, action) => {
-    await fetch("/api/admin/recensioni", {
+    const r = await fetch("/api/admin/recensioni", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action, verificaPiva: !!(verifiche[id]||{}).piva, verificaAlbo: !!(verifiche[id]||{}).albo }),
+      body: JSON.stringify({ id, action }),
     });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || "Errore nella moderazione"); return; }
     carica();
   };
 
