@@ -2,6 +2,8 @@
 import Base from "./Base.astro";
 import "../styles/platform.css";
 import logo from "../assets/logo.jpeg";
+import SocialBar from "../islands/SocialBar.jsx";
+import { social } from "../data/social.js";
 
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
@@ -27,8 +29,8 @@ try {
 // "Per i professionisti" si raggiunge dal bottone "Voglio la mia scheda" in fondo alla home
 const nav = [
   { href: "/cerca", label: "Trova un infermiere" },
+  { href: "/come-funziona", label: "Come funziona" },
   { href: "/domicilio", label: "Prestazioni" },
-  { href: "/le-mie-prenotazioni", label: "La mia prenotazione" },
   { href: "/articoli", label: "Blog" },
   { href: "/area-professionisti", label: "Area professionisti", spento: true },
 ];
@@ -49,6 +51,8 @@ const nav = [
             <a href={item.href} class={item.spento ? "pf-nav-spento" : undefined} aria-current={current === item.href ? "page" : undefined}>{item.label}</a>
           ))}
           <a class="pf-cta" href="/cerca">Prenota</a>
+          <a class="pf-cta pf-cta-navy" href="/richiedi-informazioni" aria-current={current === "/richiedi-informazioni" ? "page" : undefined}>Richiedi informazioni</a>
+          <SocialBar links={social} variant="header" size={19} />
         </nav>
       </div>
     </header>
@@ -69,15 +73,16 @@ const nav = [
         <div>
           <h4>Per i pazienti</h4>
           <a href="/cerca">Trova un professionista</a>
+          <a href="/come-funziona">Come funziona</a>
           <a href="/domicilio">Tutte le prestazioni</a>
           <a href="/professionisti">Zone coperte</a>
           <a href="/articoli">Blog salute</a>
-          <a href="/#come-funziona">Come funziona</a>
           <a href="/prenotazione">Gestisci una prenotazione</a>
           <a href="/le-mie-prenotazioni">Le mie prenotazioni</a>
         </div>
         <div>
           <h4>Per i professionisti</h4>
+          <a href="/per-i-professionisti">Perché iscriverti</a>
           <a href="/lavora-con-noi">Unisciti alla piattaforma</a>
           <a href="/area-professionisti">Area professionisti</a>
           <a href="/per-le-strutture">Per le strutture sanitarie</a>

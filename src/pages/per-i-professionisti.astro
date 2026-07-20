@@ -1,0 +1,103 @@
+---
+import Platform from "../layouts/Platform.astro";
+import Icona from "../components/Icona.astro";
+import NewsletterInline from "../islands/NewsletterInline.jsx";
+import { organizationSchema } from "../data/schema.js";
+
+const vantaggi = [
+  { ic: "scudo", titolo: "Le prenotazioni sono tue al 100%", testo: "Zero commissioni: il compenso della prestazione lo incassi tu, per intero, sempre. Noi non tratteniamo nulla." },
+  { ic: "etichetta", titolo: "Controlli tu prezzi, orari e zone", testo: "Decidi le tue tariffe, i tuoi orari reali e i comuni che copri a domicilio. Nessun vincolo, nessun contratto capestro." },
+  { ic: "posizione", titolo: "I pazienti ti trovano", testo: "La tua scheda pubblica è pensata per Google e per la mappa: chi cerca un infermiere nella tua zona vede te." },
+  { ic: "attivita", titolo: "L'agenda in tasca", testo: "Ogni prenotazione ti arriva come notifica sul telefono, come una vera app. Le disdette liberano lo slot da sole." },
+  { ic: "laurea", titolo: "La verifica che dà fiducia", testo: "Controlliamo la tua iscrizione all'OPI: sulla scheda compare il badge \"albo verificato\" che rassicura i pazienti." },
+  { ic: "stella", titolo: "Gratis in fase di lancio", testo: "Entrare adesso non costa nulla e i primi professionisti hanno la vetrina migliore nelle zone in apertura." },
+];
+---
+
+<Platform
+  title="Perché iscriverti a InfermieriWeb: la rete degli infermieri liberi professionisti | InfermieriWeb"
+  description="Sei un infermiere libero professionista? Su InfermieriWeb ricevi prenotazioni a domicilio nella tua zona, senza commissioni: prezzi, orari e zone li decidi tu. Iscrizione gratuita in fase di lancio."
+  path="/per-i-professionisti"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Per gli infermieri</span>
+    <h1>La tua libera professione, senza intermediari</h1>
+    <p class="sottotitolo">
+      InfermieriWeb ti porta i pazienti della tua zona e ti lascia il controllo di tutto:
+      prezzi, orari, zone e compenso. Nessuna commissione, nessun vincolo. La tua scheda,
+      le tue prenotazioni.
+    </p>
+    <p style="margin-top: 22px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a class="pf-btn" href="/lavora-con-noi">Candidati alla rete — è gratis</a>
+      <a class="pf-btn secondario" href="/area-professionisti">Area professionisti</a>
+    </p>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container pf-center" style="margin-bottom: 40px;">
+      <span class="pf-kicker">Perché iscriverti</span>
+      <h2>Fatta dagli infermieri, per gli infermieri</h2>
+    </div>
+    <div class="pf-perche">
+      {vantaggi.map((v) => (
+        <div class="pf-perche-card">
+          <div class="ic"><Icona nome={v.ic} size={28} /></div>
+          <h3>{v.titolo}</h3>
+          <p>{v.testo}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="pf-section alt pf-center">
+    <span class="pf-kicker">In 4 passi</span>
+    <h2>Dall'iscrizione alla prima prenotazione</h2>
+    <div class="pf-steps" style="margin-top: 36px;">
+      <div class="pf-step">
+        <div class="num">1</div>
+        <h3>Candidati</h3>
+        <p>Compili il modulo in due minuti: dati, albo e partita IVA (se ce l'hai).</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">2</div>
+        <h3>Verifichiamo l'albo</h3>
+        <p>Controlliamo la tua iscrizione all'OPI: è la garanzia che rende forte tutta la rete.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">3</div>
+        <h3>Completi la scheda</h3>
+        <p>Foto, prestazioni con i prezzi, orari e comuni coperti: più curi la scheda, più pazienti ti trovano.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">4</div>
+        <h3>Ricevi prenotazioni</h3>
+        <p>I pazienti prenotano sui tuoi orari reali e il compenso lo incassi tu, per intero.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container" style="max-width: 640px;">
+      <div class="pf-panel pf-center">
+        <span class="pf-kicker">Non sei ancora pronto?</span>
+        <h2 style="margin: 6px 0 8px;">Ti teniamo aggiornato</h2>
+        <p class="pf-sub" style="margin-bottom: 18px;">
+          Lascia la tua email: ti scriviamo quando apriamo nuove zone o aggiungiamo funzioni per i
+          professionisti. Niente spam, solo cose utili — e puoi disiscriverti quando vuoi.
+        </p>
+        <NewsletterInline client:load source="reclutamento-infermieri" placeholder="La tua email" cta="Tienimi aggiornato" />
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-band">
+      <div>
+        <h2>Pronto a partire?</h2>
+        <p>L'iscrizione è gratuita in fase di lancio. La tua scheda e la tua agenda sono pronte in pochi minuti.</p>
+      </div>
+      <a class="pf-btn" href="/lavora-con-noi">Voglio la mia scheda</a>
+    </div>
+  </section>
+</Platform>

@@ -231,6 +231,65 @@ CREATE TABLE IF NOT EXISTS waitlist (
 );
 CREATE INDEX ix_waitlist_zona ON waitlist USING btree (zona);
 
+-- Richieste di informazioni dal form pubblico "Richiedi informazioni"
+-- (paziente o professionista). Nessun dato clinico: solo contatti e messaggio.
+CREATE TABLE IF NOT EXISTS info_requests (
+  id SERIAL,
+  reason text NOT NULL DEFAULT ''::text,
+  name text NOT NULL,
+  email text NOT NULL,
+  phone text NOT NULL DEFAULT ''::text,
+  city text NOT NULL DEFAULT ''::text,
+  message text NOT NULL DEFAULT ''::text,
+  newsletter boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'new'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT info_requests_pkey PRIMARY KEY (id)
+);
+
+-- Iscritti che hanno spuntato "Desidero ricevere comunicazioni": consenso
+-- registrato con data (GDPR). Email univoca: un consenso aggiorna la data.
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id SERIAL,
+  email text NOT NULL,
+  source text NOT NULL DEFAULT ''::text,
+  consent_at timestamp with time zone NOT NULL DEFAULT now(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT newsletter_subscribers_pkey PRIMARY KEY (id),
+  CONSTRAINT newsletter_subscribers_email_key UNIQUE (email)
+);
+
+-- DIARIO INFERMIERISTICO — dati sanitari del paziente (GDPR art. 9, categoria
+-- particolare). I contenuti clinici sono CIFRATI a riposo (AES-256-GCM):
+-- data_enc = blob cifrato, iv + tag = vettore e tag di autenticazione. Il DB
+-- non vede mai i dati in chiaro. Accesso ristretto al SOLO professionista
+-- titolare (professional_id dalla sessione, mai override admin). Il consenso
+-- del paziente è obbligatorio (consent + consent_at) prima di salvare.
+CREATE TABLE IF NOT EXISTS patient_records (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  data_enc text NOT NULL,
+  iv text NOT NULL,
+  tag text NOT NULL,
+  consent boolean NOT NULL DEFAULT false,
+  consent_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT patient_records_pkey PRIMARY KEY (id)
+);
+CREATE INDEX ix_patient_records_prof ON patient_records USING btree (professional_id);
+
+-- Registro accessi al diario (audit trail: chi ha fatto cosa e quando).
+CREATE TABLE IF NOT EXISTS diario_audit (
+  id SERIAL,
+  professional_id integer NOT NULL,
+  record_id integer,
+  action text NOT NULL DEFAULT ''::text,
+  at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT diario_audit_pkey PRIMARY KEY (id)
+);
+CREATE INDEX ix_diario_audit_prof ON diario_audit USING btree (professional_id, at);
+
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
@@ -244,3 +303,4 @@ ALTER TABLE push_subscriptions ADD CONSTRAINT push_subscriptions_professional_id
 ALTER TABLE reviews ADD CONSTRAINT reviews_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id);
 ALTER TABLE reviews ADD CONSTRAINT reviews_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE services ADD CONSTRAINT services_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE patient_records ADD CONSTRAINT patient_records_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;

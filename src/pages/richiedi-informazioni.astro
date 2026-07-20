@@ -1,0 +1,45 @@
+---
+import Platform from "../layouts/Platform.astro";
+import RichiediInfoForm from "../islands/RichiediInfoForm.jsx";
+import SocialBar from "../islands/SocialBar.jsx";
+import { organizationSchema } from "../data/schema.js";
+import { social } from "../data/social.js";
+---
+
+<Platform
+  title="Richiedi informazioni | InfermieriWeb"
+  description="Hai una domanda su InfermieriWeb? Scrivici: che tu sia un paziente o un infermiere, ti rispondiamo via email appena possibile."
+  path="/richiedi-informazioni"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 32px;">
+    <span class="pf-hero-occhiello">Parliamone</span>
+    <h1>Richiedi informazioni</h1>
+    <p class="sottotitolo">
+      Che tu sia un paziente o un infermiere, siamo qui per rispondere.
+      Compila il modulo: ti scriviamo via email appena possibile.
+    </p>
+  </section>
+
+  <section class="pf-section" style="padding-top: 20px;">
+    <div class="pf-container" style="max-width: 640px;">
+      <div class="pf-panel">
+        <RichiediInfoForm client:load />
+      </div>
+
+      <div class="pf-panel" style="margin-top: 18px;">
+        <p style="margin: 0; color: var(--iw-slate);">
+          Per spostare o disdire una prenotazione è più rapido il link nell'email di
+          conferma, oppure <a href="/prenotazione" style="color: var(--iw-primary-deep); font-weight: 700;">te lo rimandiamo qui</a>.
+          Per un'<strong>emergenza sanitaria</strong> chiama il <strong>112</strong>: InfermieriWeb non gestisce urgenze.
+        </p>
+      </div>
+
+      <div class="pf-center" style="margin-top: 30px;">
+        <span class="pf-kicker">Seguici</span>
+        <h2 style="margin: 6px 0 16px;">Dove ci trovi</h2>
+        <SocialBar links={social} />
+      </div>
+    </div>
+  </section>
+</Platform>

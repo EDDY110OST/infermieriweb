@@ -1,0 +1,130 @@
+---
+import Platform from "../layouts/Platform.astro";
+import Icona from "../components/Icona.astro";
+import { organizationSchema } from "../data/schema.js";
+
+// Casi concreti in cui l'assistenza a domicilio è la risposta giusta.
+const casi = [
+  {
+    ic: "croce",
+    titolo: "Sei stato dimesso dall'ospedale",
+    testo: "Torni a casa dopo un ricovero e servono medicazioni, flebo, prelievi o controlli: l'infermiere viene da te, senza file e senza far spostare una persona ancora fragile.",
+  },
+  {
+    ic: "attivita",
+    titolo: "Ti serve una prestazione in orari particolari",
+    testo: "La sera, nel weekend o in un giorno festivo? Vedi gli orari davvero liberi dei professionisti della tua zona e prenoti quello comodo per te.",
+  },
+  {
+    ic: "cuore",
+    titolo: "Assisti una persona anziana o non autosufficiente",
+    testo: "Niente viaggio e niente attesa in ambulatorio: la prestazione arriva a casa, con lo stesso professionista di fiducia ogni volta.",
+  },
+  {
+    ic: "goccia",
+    titolo: "Hai una terapia da seguire nel tempo",
+    testo: "Iniezioni, flebo, gestione di cateteri e stomie, terapie continuative: un percorso seguito con continuità, a domicilio.",
+  },
+];
+
+const forza = [
+  { ic: "laurea", titolo: "Solo infermieri verificati", testo: "Ogni professionista è iscritto all'albo OPI e controllato da noi prima di entrare in rete." },
+  { ic: "etichetta", titolo: "Prezzi chiari prima di prenotare", testo: "Vedi la cifra \"a partire da\" nella scheda, accanto a ogni prestazione. Nessun costo nascosto." },
+  { ic: "stella", titolo: "Recensioni vere", testo: "Le può lasciare solo chi ha completato una prenotazione: esperienze reali, non recensioni finte." },
+  { ic: "scudo", titolo: "Gratis e senza vincoli", testo: "La prenotazione è gratuita: paghi la prestazione direttamente all'infermiere, dopo, senza commissioni." },
+];
+---
+
+<Platform
+  title="Come funziona InfermieriWeb: assistenza infermieristica a domicilio | InfermieriWeb"
+  description="Scopri come funziona InfermieriWeb: trovi un infermiere verificato nella tua zona, prenoti online in un minuto senza registrazione e ricevi la prestazione a casa. Prezzi chiari, recensioni vere."
+  path="/come-funziona"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Scopri come funziona</span>
+    <h1>L'infermiere a casa tua, in un minuto</h1>
+    <p class="sottotitolo">
+      InfermieriWeb ti mette in contatto con infermieri liberi professionisti verificati
+      della tua zona. Prenoti online, senza registrazione, e ricevi la prestazione a domicilio:
+      dalla singola medicazione all'assistenza completa dopo un ricovero.
+    </p>
+    <p style="margin-top: 22px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a class="pf-btn" href="/cerca">Trova un infermiere nella tua zona</a>
+      <a class="pf-btn secondario" href="/domicilio">Tutte le prestazioni</a>
+    </p>
+  </section>
+
+  <section class="pf-section pf-center">
+    <span class="pf-kicker">In 4 passi</span>
+    <h2>Prenoti in un minuto, senza account</h2>
+    <div class="pf-steps" style="margin-top: 36px;">
+      <div class="pf-step">
+        <div class="num">1</div>
+        <h3>Cerca nella tua zona</h3>
+        <p>Scrivi la tua città e scopri i professionisti che la coprono, con foto, prezzi e recensioni verificate.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">2</div>
+        <h3>Scegli prestazione e orario</h3>
+        <p>Guarda il calendario con i soli orari realmente liberi e scegli quello comodo per te.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">3</div>
+        <h3>Conferma con nome e telefono</h3>
+        <p>Niente registrazione e niente pagamenti online: ti basta un minuto.</p>
+      </div>
+      <div class="pf-step">
+        <div class="num">4</div>
+        <h3>Ricevi la visita a casa</h3>
+        <p>Il professionista arriva a domicilio. Paghi lui, dopo la prestazione, e puoi lasciare una recensione verificata.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-section alt">
+    <div class="pf-container pf-center" style="margin-bottom: 40px;">
+      <span class="pf-kicker">Quando può servirti</span>
+      <h2>Assistenza infermieristica a 360°, a casa tua</h2>
+      <p class="pf-sub">Non solo la singola prestazione: un aiuto concreto nei momenti in cui uscire di casa è difficile.</p>
+    </div>
+    <div class="pf-perche">
+      {casi.map((c) => (
+        <div class="pf-perche-card">
+          <div class="ic"><Icona nome={c.ic} size={28} /></div>
+          <h3>{c.titolo}</h3>
+          <p>{c.testo}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-container pf-center" style="margin-bottom: 40px;">
+      <span class="pf-kicker">Perché sceglierci</span>
+      <h2>Cosa ci rende diversi</h2>
+    </div>
+    <div class="pf-perche">
+      {forza.map((f) => (
+        <div class="pf-perche-card">
+          <div class="ic"><Icona nome={f.ic} size={28} /></div>
+          <h3>{f.titolo}</h3>
+          <p>{f.testo}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="pf-section">
+    <div class="pf-band">
+      <div>
+        <h2>Pronto a prenotare?</h2>
+        <p>
+          Trova l'infermiere giusto nella tua zona e scegli l'orario che preferisci.
+          Se hai un dubbio prima di prenotare, <a href="/richiedi-informazioni" style="color:#fff; text-decoration: underline;">scrivici pure</a>.
+        </p>
+      </div>
+      <a class="pf-btn" href="/cerca">Trova un infermiere</a>
+    </div>
+  </section>
+</Platform>

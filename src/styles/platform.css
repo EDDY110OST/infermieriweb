@@ -87,6 +87,11 @@
 }
 .pf-cta:hover { background: var(--iw-primary); transform: translateY(-1px); }
 
+/* Secondo CTA header: "Richiedi informazioni" — blu navy del brand,
+   distinto dal verde di "Prenota" ma coerente col gradiente navy→verde. */
+.pf-cta-navy { background: var(--iw-navy); }
+.pf-cta-navy:hover { background: #12557d; }
+
 .pf-burger {
   display: none; margin-left: auto; background: none; border: none; cursor: pointer;
   width: 44px; height: 44px; flex-direction: column; justify-content: center; gap: 6px; padding: 8px;
@@ -351,6 +356,63 @@
 
 .pf-check { display: flex; gap: 14px; align-items: flex-start; font-size: 18px; color: var(--iw-ink); margin-bottom: 14px; }
 .pf-check input { width: auto; margin: 3px 0 0; transform: scale(1.4); transform-origin: left center; }
+
+/* Barra social (pagina "Richiedi informazioni") */
+.pf-social { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.pf-social-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--iw-primary-soft); color: var(--iw-primary-deep);
+  text-decoration: none; font-weight: 700;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.pf-social-link:hover { background: var(--iw-primary-deep); color: #fff; transform: translateY(-2px); }
+
+/* Social nell'header: icone monocromatiche (grigio), a colori solo in hover */
+.pf-social-header { display: inline-flex; align-items: center; gap: 14px; }
+.pf-social-ic { color: var(--iw-slate); display: inline-flex; align-items: center; transition: color 0.2s ease, transform 0.2s ease; }
+.pf-social-ic:hover { color: var(--iw-primary-deep); transform: translateY(-1px); }
+
+/* Badge di fiducia "OPI verificata" sulla scheda infermiere */
+.pf-opi {
+  display: flex; gap: 16px; align-items: flex-start;
+  border: 1.5px solid var(--iw-primary); background: var(--iw-primary-soft);
+}
+.pf-opi-ic {
+  flex: 0 0 auto; width: 54px; height: 54px; border-radius: 50%;
+  background: var(--iw-primary-deep); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.pf-opi-titolo { margin: 0 0 6px; color: var(--iw-primary-deep); font-size: 21px; }
+.pf-opi-testo { margin: 0; color: var(--iw-ink); font-size: 16px; line-height: 1.5; }
+
+/* Box email compatto (mini-newsletter reclutamento) */
+.pf-nl { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.pf-nl input {
+  flex: 1 1 240px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl);
+  padding: 12px 14px; font-size: 17px; font-family: inherit; color: var(--iw-ink); background: #fff;
+}
+.pf-nl .pf-btn { white-space: nowrap; }
+
+/* Diario infermieristico (pannello professionista) */
+.pf-diario-lock {
+  background: var(--iw-primary-soft); border: 1px solid #cceae5; color: var(--iw-primary-deep);
+  border-radius: 12px; padding: 12px 14px; font-size: 15px; margin: 14px 0 16px; line-height: 1.5;
+}
+.pf-diario-sez {
+  margin: 22px 0 10px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--iw-primary-deep); border-bottom: 1px solid var(--iw-line); padding-bottom: 6px;
+}
+.pf-diario-lista { display: flex; flex-direction: column; gap: 10px; }
+.pf-diario-riga {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+  border: 1px solid var(--iw-line); background: #fff; border-radius: var(--iw-r-ctrl); padding: 14px 16px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.pf-diario-riga:hover { border-color: var(--iw-primary); background: var(--iw-primary-soft); }
+.pf-diario-riga .nome { font-weight: 700; font-size: 17px; color: var(--iw-ink); }
+.pf-diario-riga .data { font-size: 14px; color: var(--iw-muted); white-space: nowrap; }
 
 /* ---------- Fascia CTA professionisti ---------- */
 

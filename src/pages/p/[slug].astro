@@ -120,6 +120,16 @@ try {
   <section class="pf-section" style="padding-top: 34px;">
     <div class="pf-profile-grid">
       <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="pf-panel pf-opi">
+          <div class="pf-opi-ic" aria-hidden="true"><Icona nome="scudo" size={30} /></div>
+          <div>
+            <h2 class="pf-opi-titolo">Iscrizione all'albo OPI verificata</h2>
+            <p class="pf-opi-testo">
+              Prima di entrare in rete, abbiamo controllato l'iscrizione di {pro.name} all'<strong>{pro.albo_name || `Ordine delle Professioni Infermieristiche (OPI) di ${pro.province}`}</strong>{pro.albo_number ? <span>, <strong>n. {pro.albo_number}</strong></span> : null}. È la garanzia che stai prenotando un professionista reale e abilitato — non un profilo anonimo.
+            </p>
+          </div>
+        </div>
+
         <div class="pf-panel">
           <h2>Chi è {pro.name}</h2>
           <p style="color: var(--iw-slate); margin: 0;">{pro.bio}</p>
