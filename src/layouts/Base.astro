@@ -13,14 +13,13 @@ const {
   schemas = [],
   manifest = "/manifest.json",
   robots = "index, follow",
-  lang = "it",
 } = Astro.props;
 
 const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path, Astro.site).href.replace(/\/$/, "");
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang="it">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

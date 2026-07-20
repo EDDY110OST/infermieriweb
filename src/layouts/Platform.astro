@@ -4,15 +4,9 @@ import "../styles/platform.css";
 import logo from "../assets/logo.jpeg";
 import SocialBar from "../islands/SocialBar.jsx";
 import { social } from "../data/social.js";
-import { risolviLang, t } from "../i18n/ui.js";
 
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
-
-const lang = risolviLang(Astro);
-// link dello switch lingua: stessa pagina, con ?lang= per fissare la scelta
-const pathCorrente = Astro.url.pathname;
-const linkAltraLingua = `${pathCorrente}?lang=${lang === "it" ? "en" : "it"}`;
 
 // "Dove siamo" nel footer: le città reali della rete, dal database
 // (statiche = aggiornate a ogni deploy; SSR = sempre fresche)
@@ -34,15 +28,15 @@ try {
 // Menu minimale (richiesta soci 16/7): "Come funziona" vive nella home,
 // "Per i professionisti" si raggiunge dal bottone "Voglio la mia scheda" in fondo alla home
 const nav = [
-  { href: "/cerca", label: t(lang, "nav.trova") },
-  { href: "/come-funziona", label: t(lang, "nav.comeFunziona") },
-  { href: "/domicilio", label: t(lang, "nav.prestazioni") },
-  { href: "/articoli", label: t(lang, "nav.blog") },
-  { href: "/area-professionisti", label: t(lang, "nav.area"), spento: true },
+  { href: "/cerca", label: "Trova un infermiere" },
+  { href: "/come-funziona", label: "Come funziona" },
+  { href: "/domicilio", label: "Prestazioni" },
+  { href: "/articoli", label: "Blog" },
+  { href: "/area-professionisti", label: "Area professionisti", spento: true },
 ];
 ---
 
-<Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas} {manifest} {robots} {lang}>
+<Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas} {manifest} {robots}>
   <div class="pf">
     <header class="pf-header">
       <div class="pf-header-inner">
@@ -56,11 +50,8 @@ const nav = [
           {nav.map((item) => (
             <a href={item.href} class={item.spento ? "pf-nav-spento" : undefined} aria-current={current === item.href ? "page" : undefined}>{item.label}</a>
           ))}
-          <a class="pf-cta" href="/cerca">{t(lang, "cta.prenota")}</a>
-          <a class="pf-cta pf-cta-navy" href="/richiedi-informazioni" aria-current={current === "/richiedi-informazioni" ? "page" : undefined}>{t(lang, "cta.richiediInfo")}</a>
-          <a class="pf-lang" href={linkAltraLingua} rel="nofollow" title={t(lang, "lang.switchTo")} aria-label={t(lang, "lang.switchTo")}>
-            <span aria-hidden="true">🌐</span> {lang === "it" ? "EN" : "IT"}
-          </a>
+          <a class="pf-cta" href="/cerca">Prenota</a>
+          <a class="pf-cta pf-cta-navy" href="/richiedi-informazioni" aria-current={current === "/richiedi-informazioni" ? "page" : undefined}>Richiedi informazioni</a>
           <SocialBar links={social} variant="header" size={19} />
         </nav>
       </div>
@@ -74,42 +65,47 @@ const nav = [
       <div class="pf-footer-grid">
         <div>
           <h4>InfermieriWeb.it</h4>
-          <p style="font-size:14.5px; margin:0; max-width:280px;">{t(lang, "footer.tagline")}</p>
+          <p style="font-size:14.5px; margin:0; max-width:280px;">
+            La rete italiana degli infermieri a domicilio: cresce una città alla
+            volta, con professionisti verificati uno per uno.
+          </p>
         </div>
         <div>
-          <h4>{t(lang, "footer.pazienti")}</h4>
-          <a href="/cerca">{t(lang, "footer.trovaPro")}</a>
-          <a href="/come-funziona">{t(lang, "nav.comeFunziona")}</a>
-          <a href="/domicilio">{t(lang, "footer.tutteProt")}</a>
-          <a href="/professionisti">{t(lang, "footer.zone")}</a>
-          <a href="/articoli">{t(lang, "footer.blogSalute")}</a>
-          <a href="/prenotazione">{t(lang, "footer.gestisci")}</a>
-          <a href="/le-mie-prenotazioni">{t(lang, "footer.miePren")}</a>
+          <h4>Per i pazienti</h4>
+          <a href="/cerca">Trova un professionista</a>
+          <a href="/come-funziona">Come funziona</a>
+          <a href="/domicilio">Tutte le prestazioni</a>
+          <a href="/professionisti">Zone coperte</a>
+          <a href="/articoli">Blog salute</a>
+          <a href="/prenotazione">Gestisci una prenotazione</a>
+          <a href="/le-mie-prenotazioni">Le mie prenotazioni</a>
         </div>
         <div>
-          <h4>{t(lang, "footer.professionisti")}</h4>
-          <a href="/per-i-professionisti">{t(lang, "footer.perche")}</a>
-          <a href="/lavora-con-noi">{t(lang, "footer.unisciti")}</a>
-          <a href="/area-professionisti">{t(lang, "footer.areaPro")}</a>
-          <a href="/per-le-strutture">{t(lang, "footer.strutture")}</a>
+          <h4>Per i professionisti</h4>
+          <a href="/per-i-professionisti">Perché iscriverti</a>
+          <a href="/lavora-con-noi">Unisciti alla piattaforma</a>
+          <a href="/area-professionisti">Area professionisti</a>
+          <a href="/per-le-strutture">Per le strutture sanitarie</a>
         </div>
         <div>
-          <h4>{t(lang, "footer.doveSiamo")}</h4>
+          <h4>Dove siamo</h4>
           {cittaFooter.map((c) => (
-            <a href={c.href}>{t(lang, "footer.infermiereA")} {c.city}</a>
+            <a href={c.href}>Infermiere a {c.city}</a>
           ))}
-          <a href="/professionisti">{t(lang, "footer.tutteZone")}</a>
+          <a href="/professionisti">Tutte le zone →</a>
         </div>
         <div>
-          <h4>{t(lang, "footer.info")}</h4>
-          <a href="/chi-siamo">{t(lang, "footer.chiSiamo")}</a>
-          <a href="/recensioni">{t(lang, "footer.recensioni")}</a>
-          <a href="/contatti">{t(lang, "footer.contatti")}</a>
-          <a href="/privacy">{t(lang, "footer.privacy")}</a>
+          <h4>Informazioni</h4>
+          <a href="/chi-siamo">Chi siamo</a>
+          <a href="/recensioni">Recensioni</a>
+          <a href="/contatti">Contatti e assistenza</a>
+          <a href="/privacy">Privacy e cookie</a>
         </div>
       </div>
       <div class="legal">
-        © 2026 InfermieriWeb.it — {t(lang, "footer.legal")}
+        © 2026 InfermieriWeb.it — La prenotazione è gratuita per il paziente. Il compenso della prestazione
+        viene regolato direttamente con il professionista. InfermieriWeb non fornisce prestazioni sanitarie:
+        mette in contatto pazienti e professionisti abilitati.
       </div>
     </footer>
   </div>
