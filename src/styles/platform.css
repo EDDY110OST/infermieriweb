@@ -72,11 +72,11 @@
 
 .pf-logo img { height: 76px; width: auto; display: block; }
 
-.pf-nav { display: flex; align-items: center; gap: 22px; margin-left: auto; }
+.pf-nav { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 
 .pf-nav a {
   text-decoration: none; font-weight: 600; font-size: 20px; color: var(--iw-slate);
-  transition: color 0.2s ease;
+  transition: color 0.2s ease; white-space: nowrap;
 }
 .pf-nav a:hover, .pf-nav a[aria-current="page"] { color: var(--iw-primary-deep); }
 
@@ -1090,21 +1090,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   color: #1e3a5f;
 }
 
-/* ---- Switch lingua IT|EN nell'header ---- */
+/* ---- Switch lingua nell'header (compatto: globo + lingua verso cui passare) ---- */
 .pf-lang {
   display: inline-flex;
   align-items: center;
-  gap: 0;
-  font-size: 14px;
-  font-weight: 600;
+  gap: 4px;
+  font-size: 14.5px;
+  font-weight: 700;
   color: var(--iw-slate, #4a5b66);
   text-decoration: none;
-  padding: 5px 9px;
+  padding: 5px 10px;
   border: 1px solid var(--iw-line, #e2e8f0);
   border-radius: 999px;
   line-height: 1;
   white-space: nowrap;
+  flex: none;
 }
-.pf-lang strong { color: var(--iw-primary-deep, #00695c); }
-.pf-lang span { color: #94a3b8; }
-.pf-lang:hover { border-color: #cbd5e1; background: #f8fafc; }
+.pf-lang:hover { border-color: var(--iw-primary); color: var(--iw-primary-deep); background: #f8fafc; }

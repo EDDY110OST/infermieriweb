@@ -2,7 +2,13 @@
 // Motore: DeepL (ottimo IT<->EN). Senza la chiave DEEPL_API_KEY restituisce il testo
 // originale: il sito NON si rompe, e appena la chiave è presente le traduzioni partono da sole.
 import crypto from "node:crypto";
-import { sql } from "./db.js";
+
+// db importato in modo "pigro": così caricare questo modulo (es. dal middleware in
+// fase di build) NON richiede la connessione al database, che serve solo a runtime.
+async function getSql() {
+  const { sql } = await import("./db.js");
+  return sql;
+}
 
 const KEY = process.env.DEEPL_API_KEY || "";
 // le chiavi del piano gratuito finiscono con ":fx" e usano un endpoint diverso
@@ -17,6 +23,7 @@ const hash = (t) => crypto.createHash("sha256").update(t).digest("hex").slice(0,
 export async function traduci(testo, lang) {
   if (!testo || lang === "it") return testo;
   const h = hash(testo);
+  const sql = await getSql();
   try {
     const [c] = await sql`SELECT text FROM translations WHERE source_hash = ${h} AND lang = ${lang}`;
     if (c) return c.text;
@@ -43,4 +50,19 @@ export async function traduci(testo, lang) {
 export async function traduciTutti(testi, lang) {
   if (lang === "it") return testi;
   return Promise.all(testi.map((x) => traduci(x, lang)));
+}
+
+// Traduce automaticamente il CORPO della pagina (solo <main>...</main>): header e
+// footer sono già tradotti a mano dai dizionari, qui si copre tutto il resto senza
+// keyare file uno per uno. Con cache: ogni contenuto si traduce una volta sola.
+// Senza chiave DeepL o se il <main> è enorme, restituisce l'HTML originale (graceful).
+export async function traduciHtmlMain(fullHtml, lang) {
+  if (lang === "it" || !KEY) return fullHtml;
+  const m = fullHtml.match(/(<main[^>]*>)([\s\S]*?)(<\/main>)/i);
+  if (!m) return fullHtml;
+  const inner = m[2];
+  if (inner.length > 90000) return fullHtml; // oltre il limite pratico di DeepL: lascio l'italiano
+  const tradotto = await traduci(inner, lang);
+  if (tradotto === inner) return fullHtml;
+  return fullHtml.slice(0, m.index) + m[1] + tradotto + m[3] + fullHtml.slice(m.index + m[0].length);
 }
