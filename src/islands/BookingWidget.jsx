@@ -244,12 +244,18 @@ export default function BookingWidget({ professionalId, services, servizioInizia
             </p>
           )}
 
+          <p className="pf-note" style={{ marginTop: 2 }}>
+            Per la tua privacy, <strong>non scrivere informazioni sulla tua salute</strong> (diagnosi,
+            patologie) nei campi qui sopra: i dettagli clinici li darai direttamente al professionista.
+          </p>
+
           <div className="pf-check">
             <input id="bw-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
             <label htmlFor="bw-privacy" style={{ margin: 0, fontWeight: 400 }}>
-              Acconsento al trattamento dei miei dati (nome, telefono, email, indirizzo) al solo fine di gestire
-              la prenotazione, come descritto nell'<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>.
-              Nessun dato clinico viene richiesto o conservato. *
+              Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al
+              professionista scelto. Poiché la prestazione scelta può indicare un'esigenza di salute, presto
+              anche il <strong>consenso esplicito</strong> a questo trattamento. Ho letto l'
+              <a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>. *
             </label>
           </div>
 

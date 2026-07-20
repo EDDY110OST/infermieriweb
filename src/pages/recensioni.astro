@@ -57,10 +57,11 @@ const [primo] = await sql`
           <div style="color: #d97706; margin-bottom: 8px;"><Icona nome="stella" size={44} /></div>
           <h2 style="margin: 0 0 6px;">{primo ? `${primo.name} — ${primo.google_rating}` : "I professionisti della rete"}</h2>
           <div class="pf-stars" style="font-size: 24px;">★★★★★</div>
+          <p class="pf-note" style="max-width: 520px; margin: 6px auto 0;">Valutazione Google — <strong>non verificata da InfermieriWeb</strong></p>
           <p style="color: var(--iw-slate); max-width: 520px; margin: 12px auto 6px;">
             <strong>50 recensioni su Google</strong> per il primo infermiere della rete.
-            Le recensioni native di InfermieriWeb compariranno qui e sulla scheda di ogni
-            professionista: può lasciarle solo chi ha completato una prenotazione.
+            Le recensioni verificate di InfermieriWeb compariranno qui e sulla scheda di ogni
+            professionista: può lasciarle solo chi ha completato una prenotazione tramite il sito.
           </p>
           <a
             class="pf-btn"
@@ -73,11 +74,12 @@ const [primo] = await sql`
       )}
 
       <div class="pf-panel" style="margin-top: 18px;">
-        <h2 style="margin-top: 0;">Come funzionano le recensioni qui</h2>
+        <h2 style="margin-top: 0;">Come verifichiamo le recensioni</h2>
         <ul class="pf-lista">
-          <li>Dopo la prestazione, il paziente riceve via email un link personale per recensire.</li>
-          <li>Solo chi ha completato una prenotazione può lasciare una recensione: niente profili anonimi.</li>
+          <li>Può lasciare una recensione <strong>solo chi ha completato una prenotazione</strong> tramite InfermieriWeb: dopo la prestazione riceve via email un <strong>link personale e monouso</strong>.</li>
+          <li>Non pubblichiamo recensioni anonime né provenienti da altri canali.</li>
           <li>Le recensioni sono del professionista, non della piattaforma: le trovi nella sua scheda.</li>
+          <li>Le eventuali valutazioni <strong>«Google»</strong> mostrate su alcune schede provengono da Google e <strong>non sono verificate</strong> con questo metodo: sono segnalate come tali.</li>
         </ul>
       </div>
     </div>

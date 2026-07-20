@@ -12,7 +12,7 @@ export const organizationSchema = {
   image: `${SITE_URL}/logo.jpeg`,
   email: "info@infermieriweb.it",
   description:
-    "Piattaforma che mette in contatto pazienti e infermieri liberi professionisti per prestazioni a domicilio: prenotazione online gratuita, professionisti verificati, recensioni vere. InfermieriWeb non fornisce prestazioni sanitarie.",
+    "Piattaforma che mette in contatto pazienti e infermieri liberi professionisti per prestazioni a domicilio: prenotazione online gratuita, infermieri iscritti all'Albo (OPI), recensioni verificate. InfermieriWeb non fornisce prestazioni sanitarie.",
   areaServed: { "@type": "Country", name: "Italia" },
 };
 

@@ -62,13 +62,33 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
       <script type="application/ld+json" set:html={JSON.stringify(schema)} />
     ))}
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7M0H77LRX2"></script>
+    <!-- Analytics: Google Analytics 4 caricato SOLO previo consenso (cookie banner).
+         Consent Mode v2 impostato su "denied" di default finché l'utente non sceglie:
+         nessun cookie statistico/di terze parti viene impostato prima del consenso. -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
+      function gtag(){ dataLayer.push(arguments); }
+      window.gtag = gtag;
       gtag('js', new Date());
-      gtag('config', 'G-7M0H77LRX2');
+      gtag('consent', 'default', {
+        ad_storage: 'denied', ad_user_data: 'denied',
+        ad_personalization: 'denied', analytics_storage: 'denied'
+      });
+      window.__iwGaLoaded = false;
+      window.iwLoadGA = function () {
+        if (window.__iwGaLoaded) return;
+        window.__iwGaLoaded = true;
+        gtag('consent', 'update', { analytics_storage: 'granted' });
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-7M0H77LRX2';
+        document.head.appendChild(s);
+        gtag('config', 'G-7M0H77LRX2', { anonymize_ip: true });
+      };
+      try {
+        var iwc = JSON.parse(localStorage.getItem('iw_cookie_consent') || 'null');
+        if (iwc && iwc.statistics) window.iwLoadGA();
+      } catch (e) {}
     </script>
   </head>
 
@@ -76,5 +96,80 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
     <div id="root">
       <slot />
     </div>
+
+    <!-- Cookie banner conforme (Linee guida Garante 10/6/2021): blocco preventivo,
+         "Rifiuta" con lo stesso rilievo di "Accetta", scelta granulare e revoca. -->
+    <div id="iw-cookie" class="iw-cookie" role="dialog" aria-live="polite" aria-label="Preferenze cookie" hidden>
+      <div class="iw-cookie-box">
+        <div class="iw-cookie-text">
+          <strong>Rispettiamo la tua privacy</strong>
+          <p>
+            Usiamo cookie tecnici (indispensabili, sempre attivi) e, <strong>solo con il tuo consenso</strong>,
+            cookie statistici di Google Analytics (con IP anonimizzato) per capire come viene usato il sito.
+            Puoi accettare, rifiutare o scegliere. Dettagli nella <a href="/privacy#cookie">Cookie policy</a>.
+          </p>
+          <label class="iw-cookie-opt" id="iw-cookie-stats-row" hidden>
+            <input type="checkbox" id="iw-cookie-stats" />
+            <span>Cookie statistici — Google Analytics (IP anonimizzato)</span>
+          </label>
+        </div>
+        <div class="iw-cookie-actions">
+          <button type="button" id="iw-cookie-reject" class="iw-cookie-btn">Rifiuta</button>
+          <button type="button" id="iw-cookie-custom" class="iw-cookie-btn iw-cookie-btn-ghost">Personalizza</button>
+          <button type="button" id="iw-cookie-accept" class="iw-cookie-btn iw-cookie-btn-primary">Accetta</button>
+          <button type="button" id="iw-cookie-save" class="iw-cookie-btn iw-cookie-btn-primary" hidden>Salva preferenze</button>
+        </div>
+      </div>
+    </div>
+
+    <style is:global>
+      .iw-cookie { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999; padding: 14px; }
+      .iw-cookie-box { max-width: 960px; margin: 0 auto; background: #0f172a; color: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 10px 40px rgba(0,0,0,.35); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+      .iw-cookie-text { flex: 1 1 320px; }
+      .iw-cookie-text strong { display: block; font-size: 16px; margin-bottom: 4px; }
+      .iw-cookie-text p { margin: 0; font-size: 14px; line-height: 1.5; color: #cbd5e1; }
+      .iw-cookie-text a { color: #5eead4; }
+      .iw-cookie-opt { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; color: #e2e8f0; }
+      .iw-cookie-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .iw-cookie-btn { font: inherit; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer; background: #475569; color: #fff; }
+      .iw-cookie-btn-ghost { background: transparent; color: #cbd5e1; text-decoration: underline; padding: 10px 8px; }
+      .iw-cookie-btn-primary { background: #14b8a6; color: #04302b; }
+      @media (max-width: 640px) { .iw-cookie-actions { width: 100%; } .iw-cookie-actions .iw-cookie-btn { flex: 1; } }
+    </style>
+
+    <script is:inline>
+      (function () {
+        var KEY = 'iw_cookie_consent';
+        var el = document.getElementById('iw-cookie');
+        if (!el) return;
+        var stored = null;
+        try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+        var statsRow = document.getElementById('iw-cookie-stats-row');
+        var statsChk = document.getElementById('iw-cookie-stats');
+        var btnSave = document.getElementById('iw-cookie-save');
+        var btnCustom = document.getElementById('iw-cookie-custom');
+
+        function save(stats) {
+          try { localStorage.setItem(KEY, JSON.stringify({ statistics: !!stats, ts: Date.now(), v: 1 })); } catch (e) {}
+          if (stats && window.iwLoadGA) window.iwLoadGA();
+          el.hidden = true;
+        }
+        function expand() { statsRow.hidden = false; btnSave.hidden = false; btnCustom.hidden = true; }
+
+        document.getElementById('iw-cookie-accept').addEventListener('click', function () { save(true); });
+        document.getElementById('iw-cookie-reject').addEventListener('click', function () { save(false); });
+        btnCustom.addEventListener('click', expand);
+        btnSave.addEventListener('click', function () { save(statsChk.checked); });
+
+        // Riapribile in ogni momento dal link "Preferenze cookie" nel footer (revoca)
+        window.iwOpenCookiePrefs = function () {
+          if (statsChk && stored) statsChk.checked = !!stored.statistics;
+          expand();
+          el.hidden = false;
+        };
+
+        if (!stored) el.hidden = false;
+      })();
+    </script>
   </body>
 </html>

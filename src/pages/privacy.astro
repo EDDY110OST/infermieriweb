@@ -20,21 +20,27 @@ import { organizationSchema } from "../data/schema.js";
 
       <div class="pf-panel" style="margin-bottom: 18px;">
         <h2 style="margin-top: 0;">Chi tratta i tuoi dati (Titolare)</h2>
-        <p style="color: var(--iw-slate); margin: 0;">
-          Il titolare del trattamento è il gestore della piattaforma <strong>InfermieriWeb.it</strong>.
-          Per qualsiasi richiesta relativa ai tuoi dati puoi scrivere a
-          <a href="mailto:info@infermieriweb.it" style="color: var(--iw-primary-deep); font-weight: 700;">info@infermieriweb.it</a>:
+        <p style="color: var(--iw-slate); margin: 0 0 10px;">
+          I titolari del trattamento e gestori di <strong>InfermieriWeb.it</strong> sono
+          <strong>Eduard Gabriel Duduc</strong> e <strong>Bruno Ieppariello</strong>, persone fisiche in
+          contitolarità ai sensi dell'art. 26 GDPR. Per qualsiasi richiesta relativa ai tuoi dati puoi
+          scrivere a <a href="mailto:info@infermieriweb.it" style="color: var(--iw-primary-deep); font-weight: 700;">info@infermieriweb.it</a>:
           rispondiamo entro 30 giorni, come previsto dal GDPR.
+        </p>
+        <p style="color: var(--iw-slate); margin: 0; font-size: 15px;">
+          Non è nominato un Responsabile della protezione dei dati (DPO): la sua necessità è in corso di
+          valutazione con la crescita del servizio.
         </p>
       </div>
 
       <div class="pf-panel" style="margin-bottom: 18px;">
         <h2 style="margin-top: 0;">Una premessa importante</h2>
         <p style="color: var(--iw-slate); margin: 0;">
-          InfermieriWeb <strong>non fornisce prestazioni sanitarie</strong> e, per il servizio di
-          prenotazione, <strong>non tratta dati sanitari</strong>: mette in contatto pazienti e
+          InfermieriWeb <strong>non fornisce prestazioni sanitarie</strong>: mette in contatto pazienti e
           professionisti abilitati. Quando prenoti, ti chiediamo solo i dati necessari a organizzare
-          l'appuntamento. Ti invitiamo a <strong>non inserire informazioni cliniche</strong>
+          l'appuntamento e li riduciamo al minimo. La prestazione che scegli può indicare un'esigenza di
+          salute: per questo, dove serve, ti chiediamo un <strong>consenso specifico</strong> al momento della
+          prenotazione. Ti invitiamo comunque a <strong>non inserire informazioni cliniche</strong>
           (diagnosi, terapie, condizioni di salute) nei campi liberi delle prenotazioni: quelle le
           condividerai direttamente con il professionista, che le tratta come titolare autonomo nell'ambito
           del rapporto di cura, con i propri obblighi di segreto professionale. L'unica eccezione è il
@@ -76,8 +82,10 @@ import { organizationSchema } from "../data/schema.js";
         <h2 style="margin-top: 0;">A chi vengono comunicati</h2>
         <ul class="pf-lista">
           <li>Al <strong>professionista che prenoti</strong>: riceve nome, telefono, indirizzo e prestazione — gli servono per venire da te.</li>
-          <li>Ai <strong>fornitori tecnici</strong> che fanno funzionare la piattaforma: hosting e database (Netlify/Neon) e invio email (Brevo). Trattano i dati solo per nostro conto, come responsabili del trattamento. Alcuni server possono trovarsi fuori dall'Unione Europea: in tal caso il trasferimento è coperto dalle garanzie previste dal GDPR (clausole contrattuali standard); è in corso la migrazione dell'infrastruttura dati in UE.</li>
-          <li>A <strong>nessun altro</strong>: non vendiamo dati, non facciamo profilazione pubblicitaria, non usiamo i tuoi dati per finalità diverse da quelle qui descritte.</li>
+          <li>Ai <strong>fornitori tecnici</strong> che fanno funzionare la piattaforma, come responsabili del trattamento: <strong>Render</strong> (hosting applicativo), <strong>Neon</strong> (database, con server nell'Unione Europea — Francoforte), <strong>Brevo</strong> (invio email, Francia/UE).</li>
+          <li>A <strong>Google</strong>, per il servizio <strong>Google Analytics</strong>, <strong>solo se acconsenti</strong> ai cookie statistici dal banner: in tal caso alcuni dati (con IP anonimizzato) possono essere trasferiti negli Stati Uniti, coperti dalla decisione di adeguatezza UE-USA (Data Privacy Framework) e da clausole contrattuali standard. Se rifiuti, Google Analytics non viene caricato.</li>
+          <li>Se ci contatti via <strong>WhatsApp</strong> (numero pubblicato sul sito), i messaggi transitano sull'infrastruttura di <strong>Meta</strong> secondo le sue condizioni: ti chiediamo di non inviarci dati sulla tua salute in chat.</li>
+          <li>A <strong>nessun altro</strong>: non vendiamo dati e non facciamo profilazione pubblicitaria.</li>
         </ul>
       </div>
 
@@ -103,12 +111,19 @@ import { organizationSchema } from "../data/schema.js";
 
       <div class="pf-panel" style="margin-bottom: 18px;" id="cookie">
         <h2 style="margin-top: 0;">Cookie</h2>
+        <p style="color: var(--iw-slate); margin: 0 0 10px;">
+          <strong>Cookie tecnici</strong> (sempre attivi, non richiedono consenso): il cookie di sessione
+          per l'accesso all'area professionisti/amministrazione e le preferenze tecniche di navigazione.
+        </p>
+        <p style="color: var(--iw-slate); margin: 0 0 10px;">
+          <strong>Cookie statistici — Google Analytics 4</strong> (con IP anonimizzato), che carichiamo
+          <strong>solo dopo il tuo consenso</strong> tramite il banner. Alla prima visita puoi
+          <strong>accettare, rifiutare</strong> (con lo stesso rilievo) o scegliere; se rifiuti, nessun
+          cookie statistico o di terze parti viene impostato. Puoi <strong>modificare o revocare</strong> la
+          scelta in qualsiasi momento dal link <em>«Preferenze cookie»</em> in fondo a ogni pagina.
+          I dati di Analytics possono essere trasferiti a Google negli USA (Data Privacy Framework + clausole standard).
+        </p>
         <p style="color: var(--iw-slate); margin: 0;">
-          Questo sito usa <strong>solo cookie tecnici</strong>, indispensabili al funzionamento:
-          il cookie di sessione per l'accesso all'area professionisti/amministrazione e le preferenze
-          tecniche di navigazione. <strong>Niente cookie di profilazione, niente tracciamento
-          pubblicitario, niente statistiche di terze parti</strong>. Per questo non ti chiediamo
-          il banner dei cookie: per i soli cookie tecnici non è richiesto il consenso.
           La mappa della pagina di ricerca usa OpenStreetMap per mostrare le tessere geografiche:
           il tuo browser scarica le immagini della mappa dai loro server, senza cookie di profilazione.
         </p>

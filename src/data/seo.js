@@ -9,7 +9,7 @@ export const pageSeo = {
   chiSiamo: {
     title: "Chi siamo | InfermieriWeb",
     description:
-      "InfermieriWeb mette in contatto pazienti e infermieri liberi professionisti a domicilio: professionisti verificati, recensioni vere, zero commissioni.",
+      "InfermieriWeb mette in contatto pazienti e infermieri liberi professionisti a domicilio: infermieri iscritti all'Albo, recensioni verificate, zero commissioni.",
   },
   recensioni: {
     title: "Recensioni verificate dei pazienti | InfermieriWeb",

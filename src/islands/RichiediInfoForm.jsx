@@ -68,6 +68,10 @@ export default function RichiediInfoForm() {
 
       <label htmlFor="ri-msg">Messaggio</label>
       <textarea id="ri-msg" rows={4} value={dati.message} onChange={(e) => setDati({ ...dati, message: e.target.value })} placeholder="Scrivici la tua domanda…" />
+      <p className="pf-note" style={{ marginTop: -4 }}>
+        Per la tua privacy, non inserire qui informazioni sulla tua salute, diagnosi o patologie: indica
+        solo di cosa hai bisogno in termini generali. I dettagli clinici li fornirai al professionista.
+      </p>
 
       <div className="pf-check">
         <input id="ri-newsletter" type="checkbox" checked={dati.newsletter} onChange={(e) => setDati({ ...dati, newsletter: e.target.checked })} />
