@@ -9,7 +9,7 @@ const MOTIVI = [
 ];
 
 export default function RichiediInfoForm() {
-  const [dati, setDati] = useState({ reason: MOTIVI[0], name: "", email: "", phone: "", city: "", message: "", newsletter: false });
+  const [dati, setDati] = useState({ reason: MOTIVI[0], name: "", email: "", phone: "", city: "", message: "", newsletter: false, privacy: false });
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
   const [fatto, setFatto] = useState(false);
@@ -17,6 +17,7 @@ export default function RichiediInfoForm() {
   const invia = async (e) => {
     e.preventDefault();
     setErrore("");
+    if (!dati.privacy) { setErrore("Per inviare devi accettare l'informativa sulla privacy."); return; }
     setInvio(true);
     try {
       const r = await fetch("/api/richiedi-informazioni", {
@@ -72,6 +73,13 @@ export default function RichiediInfoForm() {
         <input id="ri-newsletter" type="checkbox" checked={dati.newsletter} onChange={(e) => setDati({ ...dati, newsletter: e.target.checked })} />
         <label htmlFor="ri-newsletter" style={{ margin: 0, fontWeight: 400 }}>
           Desidero ricevere comunicazioni sui servizi di InfermieriWeb.
+        </label>
+      </div>
+
+      <div className="pf-check">
+        <input id="ri-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
+        <label htmlFor="ri-privacy" style={{ margin: 0, fontWeight: 400 }}>
+          Ho letto l'<a href="/privacy" target="_blank" rel="noopener">informativa sulla privacy</a> e acconsento al trattamento dei miei dati per rispondere alla richiesta. *
         </label>
       </div>
 

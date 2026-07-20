@@ -28,6 +28,9 @@ export async function POST({ request }) {
   if (name.length < 2 || !email.includes("@")) {
     return json({ error: "Servono almeno il nome e un'email valida" }, 400);
   }
+  if (body.privacy !== true) {
+    return json({ error: "Devi accettare l'informativa sulla privacy" }, 400);
+  }
   if (!(await consenti(`info:${ipDa(request)}`, 3, 60))) {
     return json({ error: "Troppe richieste: riprova più tardi" }, 429);
   }
