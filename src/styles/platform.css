@@ -1089,3 +1089,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   line-height: 1.5;
   color: #1e3a5f;
 }
+
+/* ---- Switch lingua IT|EN nell'header ---- */
+.pf-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--iw-slate, #4a5b66);
+  text-decoration: none;
+  padding: 5px 9px;
+  border: 1px solid var(--iw-line, #e2e8f0);
+  border-radius: 999px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.pf-lang strong { color: var(--iw-primary-deep, #00695c); }
+.pf-lang span { color: #94a3b8; }
+.pf-lang:hover { border-color: #cbd5e1; background: #f8fafc; }
