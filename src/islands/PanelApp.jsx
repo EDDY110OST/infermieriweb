@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { LISTINO, LISTINO_MAP, FASCE, fasciaDi } from "../data/listino.js";
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
-import DiarioTab from "./DiarioTab.jsx";
 
 // Ogni chiamata del pannello: se torna 401 la sessione è scaduta -> avvisa tutto il pannello,
 // così invece di schede vuote o pagine bianche l'infermiere viene riportato al login.
@@ -1420,7 +1419,6 @@ export default function PanelApp() {
     { id: "servizi", label: "🩺 Servizi" },
     { id: "orari", label: "🕒 Orari" },
     { id: "zone", label: "📍 Zone" },
-    { id: "diario", label: "📋 Diario" },
     { id: "stats", label: "📊 Statistiche" },
     { id: "profilo", label: "👤 Profilo" },
   ];
@@ -1440,7 +1438,6 @@ export default function PanelApp() {
       {tab === "servizi" && <TabServizi />}
       {tab === "orari" && <TabOrari />}
       {tab === "zone" && <TabZone />}
-      {tab === "diario" && <DiarioTab />}
       {tab === "stats" && <TabStatistiche />}
       {tab === "profilo" && <TabProfilo />}
     </div>
