@@ -1,15 +1,13 @@
 import React from "react";
-import { AppSettingsProvider } from "../contexts/AppContext.jsx";
 import { RouteProvider } from "../lib/router-shim.jsx";
 
-// Involucro comune delle isole: fornisce impostazioni app (lingua/tema)
-// e il contesto di route (pathname + params) alle viste React.
+// Involucro comune delle isole del blog: fornisce solo il contesto di route
+// (pathname + params) alle viste React. La vecchia impalcatura multilingua
+// (AppSettingsProvider + translations.js) è stata rimossa: il sito è solo in italiano.
 export default function Shell({ pathname, params, children }) {
   return (
-    <AppSettingsProvider>
-      <RouteProvider pathname={pathname} params={params}>
-        {children}
-      </RouteProvider>
-    </AppSettingsProvider>
+    <RouteProvider pathname={pathname} params={params}>
+      {children}
+    </RouteProvider>
   );
 }
