@@ -17,6 +17,7 @@ try {
   const zone = await sql`
     SELECT c.city, c.province, c.region, COUNT(*) AS n
     FROM coverage_areas c JOIN professionals p ON p.id = c.professional_id AND p.status = 'active'
+      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
     GROUP BY 1, 2, 3 ORDER BY n DESC, c.city LIMIT 6`;
   cittaFooter = zone.map((z) => ({
     city: z.city,
@@ -86,7 +87,6 @@ const nav = [
           <a href="/per-i-professionisti">Perché iscriverti</a>
           <a href="/lavora-con-noi">Unisciti alla piattaforma</a>
           <a href="/area-professionisti">Area professionisti</a>
-          <a href="/per-le-strutture">Per le strutture sanitarie</a>
         </div>
         <div>
           <h4>Dove siamo</h4>

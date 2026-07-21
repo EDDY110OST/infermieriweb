@@ -14,6 +14,8 @@ export async function GET({ request, url }) {
 // Funzione schedulata: gira ogni ora e avvisa i pazienti con appuntamento
 // tra 24 e 25 ore, una sola volta (guardia reminded_at).
 import { neon } from "@neondatabase/serverless";
+import { tokenRecensione } from "../../../lib/recensioni.js";
+import { sendEmail, emailRichiestaRecensione } from "../../../lib/mailer.js";
 
 const SITE = "https://infermieriweb.it";
 const API_KEY = process.env.BREVO_API_KEY || "";
@@ -33,6 +35,32 @@ async function esegui() {
   try {
     await sql`UPDATE bookings SET status = 'expired' WHERE status = 'pending' AND created_at < now() - interval '60 minutes'`;
   } catch { /* la pulizia riprova alla prossima ora */ }
+
+  // Auto-completamento: un appuntamento attivo finito da oltre 3 ore diventa "completato"
+  // e al paziente parte l'invito alla recensione verificata. Il no-show lo segna il
+  // professionista prima di questa finestra. Così le recensioni non dipendono da un click manuale.
+  try {
+    const daCompletare = await sql`
+      SELECT b.id, b.customer_name, b.customer_email,
+             s.name AS service_name, p.name AS professional_name, p.email AS professional_email
+      FROM bookings b
+      JOIN services s ON s.id = b.service_id
+      JOIN professionals p ON p.id = b.professional_id
+      WHERE b.status = 'active' AND b.end_dt < now() - interval '3 hours'`;
+    for (const b of daCompletare) {
+      await sql`UPDATE bookings SET status = 'done' WHERE id = ${b.id}`;
+      if (b.customer_email) {
+        const invito = emailRichiestaRecensione({
+          booking: { name: b.customer_name },
+          professional: { name: b.professional_name },
+          service: { name: b.service_name },
+          reviewUrl: `${SITE}/recensione?token=${tokenRecensione(b.id)}`,
+        });
+        await sendEmail({ to: b.customer_email, toName: b.customer_name, replyTo: b.professional_email || undefined, ...invito });
+      }
+    }
+    if (daCompletare.length) console.log(`[auto-completa] ${daCompletare.length} appuntamenti completati + invito recensione.`);
+  } catch (e) { console.log("[auto-completa] errore:", e?.message || e); }
 
   if (!API_KEY) {
     console.log("[promemoria] BREVO_API_KEY assente: salto il giro.");

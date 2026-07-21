@@ -34,7 +34,7 @@ export async function GET({ url }) {
       SELECT array_agg(name ORDER BY sort) AS nomi FROM services
       WHERE professional_id = p.id AND active
     ) sv ON TRUE
-    WHERE p.status = 'active'
+    WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
     ORDER BY p.name`;
 
   const results = q

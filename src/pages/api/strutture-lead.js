@@ -47,7 +47,7 @@ export async function POST({ request }) {
           <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${esc(email)}${phone ? " · " + esc(phone) : ""}</td></tr>
         </table>
         ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${esc(message)}</p>` : ""}
-        <p style="color: #7b909b; font-size: 13px;">È il segnale che aspettavamo per la fase 2 (vetrina strutture): rispondete entro 24 ore, i primi contatti valgono doppio.</p>
+        <p style="color: #7b909b; font-size: 13px;">Richiesta ricevuta dal modulo strutture.</p>
       </div>`,
     });
   } catch { /* il lead è comunque salvato */ }

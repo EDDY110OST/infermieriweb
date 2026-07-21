@@ -11,7 +11,8 @@ const slugify = (s) =>
 // pagine geografiche): quelle fisse stanno in sitemap-index.xml (build).
 export async function GET() {
   const professionisti = await sql`
-    SELECT slug, created_at FROM professionals WHERE status = 'active'`;
+    SELECT slug, created_at FROM professionals p WHERE status = 'active'
+      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)`;
 
   const zone = await sql`
     SELECT DISTINCT z.region, z.province, z.city
@@ -21,6 +22,7 @@ export async function GET() {
       SELECT region, province, city, id FROM professionals WHERE status = 'active'
     ) z
     JOIN professionals p ON p.id = z.professional_id AND p.status = 'active'
+      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
     WHERE z.region <> '' AND z.city <> ''`;
 
   const articoli = await sql`

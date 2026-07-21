@@ -149,8 +149,8 @@ export default function CandidaturaForm() {
       <input id="cf-piva" pattern="[0-9]{11}" inputMode="numeric" maxLength={11} placeholder="es. 01234567890" value={dati.vat_number} onChange={(e) => setDati({ ...dati, vat_number: e.target.value.replace(/\D/g, "") })} />
       <p className="pf-note" style={{ marginTop: -6 }}>
         <strong>Hai la P.IVA?</strong> La tua scheda sarà prenotabile online dai pazienti a domicilio.{" "}
-        <strong>Non ce l'hai?</strong> Candidati lo stesso: il tuo profilo entrerà nella vetrina riservata
-        alle strutture sanitarie (in preparazione) e potrai attivare le prenotazioni a domicilio quando la aprirai.
+        <strong>Non ce l'hai ancora?</strong> Registrati lo stesso: teniamo da parte la tua richiesta e
+        attiviamo la tua scheda pubblica appena apri la partita IVA.
       </p>
 
       <label htmlFor="cf-indirizzo">Indirizzo studio/sede <span style={{ fontWeight: 400 }}>(per il tuo segnaposto sulla mappa)</span></label>

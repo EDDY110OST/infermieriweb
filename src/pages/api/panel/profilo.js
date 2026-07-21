@@ -42,7 +42,7 @@ export async function PATCH({ request }) {
 
   const [attuale] = await sql`
     SELECT name, full_name, gender, profession, email, bio, phone, address, city, province, region,
-           albo_name, albo_number, albo_date, vat_number
+           albo_name, albo_number, albo_date, vat_number, status, slug
     FROM professionals WHERE id = ${pid}`;
   if (!attuale) return json({ error: "Profilo non trovato" }, 404);
 
@@ -129,11 +129,30 @@ export async function PATCH({ request }) {
     await sql`UPDATE professionals SET edited_by = ${session.name || "admin"}, edited_at = now() WHERE id = ${pid}`;
   }
 
+  // Un profilo "network" (senza P.IVA) che aggiunge ORA una P.IVA valida: avvisa l'admin
+  // perché verifichi la P.IVA e attivi la scheda. Non attivo in automatico (la P.IVA va controllata).
+  let pivaSegnalata = false;
+  const pivaAppenaAggiunta = attuale.status === "network" && !attuale.vat_number && vat_number && vat_number.length === 11;
+  if (pivaAppenaAggiunta) {
+    pivaSegnalata = true;
+    try {
+      const { sendEmail } = await import("../../../lib/mailer.js");
+      const assistenza = process.env.EMAIL_ASSISTENZA || "info@infermieriweb.it";
+      await sendEmail({
+        to: assistenza,
+        subject: `P.IVA da verificare: ${name} vuole attivare la scheda`,
+        html: `<p><strong>${name}</strong> (profilo /p/${attuale.slug}, finora senza P.IVA) ha appena aggiunto la partita IVA <strong>${vat_number}</strong> dal pannello.</p>
+               <p>Verificala sull'Agenzia delle Entrate e, se è in regola, porta lo stato del professionista da <em>network</em> a <em>active</em> dall'admin: da quel momento la sua scheda diventa pubblica e prenotabile.</p>`,
+      });
+    } catch { /* la notifica non deve mai bloccare il salvataggio */ }
+  }
+
   return json({
     ok: true,
     geocoded: geocoded
       ? { precision: geocoded.precision, matched: geocoded.matched, lat: geocoded.lat, lng: geocoded.lng }
       : null,
     posizioneCambiata,
+    pivaSegnalata,
   });
 }

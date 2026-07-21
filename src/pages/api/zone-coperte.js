@@ -9,6 +9,7 @@ export async function GET() {
     SELECT DISTINCT c.city
     FROM coverage_areas c
     JOIN professionals p ON p.id = c.professional_id AND p.status = 'active'
+      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
     ORDER BY c.city`;
   return new Response(JSON.stringify({ citta: zone.map((z) => z.city) }), {
     headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" },

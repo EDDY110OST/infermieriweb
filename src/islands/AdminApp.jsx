@@ -538,7 +538,7 @@ function Candidature({ aggiornaBadge }) {
             </p>
             <label style={{ display: "block", margin: "8px 0" }}>
               <input type="checkbox" checked={!!(verifiche[c.id]||{}).piva} onChange={(e) => setVerifiche((v) => ({ ...v, [c.id]: { ...(v[c.id]||{}), piva: e.target.checked } }))} />{" "}
-              Ho verificato la <strong>partita IVA {c.vat_number}</strong> su Agenzia delle Entrate {c.vat_number ? "(risulta attiva)" : "— ATTENZIONE: candidatura senza P.IVA (solo vetrina strutture)"}
+              Ho verificato la <strong>partita IVA {c.vat_number}</strong> su Agenzia delle Entrate {c.vat_number ? "(risulta attiva)" : "— ATTENZIONE: candidatura SENZA P.IVA (pre-iscrizione: profilo non prenotabile finché non apre la P.IVA)"}
             </label>
             <label style={{ display: "block", margin: "8px 0" }}>
               <input type="checkbox" checked={!!(verifiche[c.id]||{}).albo} onChange={(e) => setVerifiche((v) => ({ ...v, [c.id]: { ...(v[c.id]||{}), albo: e.target.checked } }))} />{" "}

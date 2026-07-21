@@ -889,7 +889,9 @@ function TabProfilo() {
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
-      if (d.geocoded) {
+      if (d.pivaSegnalata) {
+        setEsito({ tipo: "ok", testo: "✅ Partita IVA ricevuta! La verifichiamo e attiviamo la tua scheda pubblica al più presto: ti avviseremo. Da quel momento i pazienti potranno prenotarti online." });
+      } else if (d.geocoded) {
         setEsito({ tipo: "ok", testo: d.geocoded.precision === "indirizzo"
           ? `✅ Salvato. Segnaposto aggiornato al tuo indirizzo: ${d.geocoded.matched}`
           : `✅ Salvato. Indirizzo non trovato con precisione: segnaposto al centro di ${profilo.city}. Controlla via e civico.` });
@@ -1021,8 +1023,9 @@ function TabProfilo() {
           </div>
         </div>
         <p className="pf-note" style={{ marginTop: 0 }}>
-          Senza partita IVA lavori comunque con noi: sei nella rete e i pazienti ti trovano.
-          Quando la apri, torna qui e aggiungila.
+          Senza partita IVA la tua scheda non è ancora pubblica (i pazienti non ti vedono):
+          la prestazione a domicilio richiede la P.IVA. Appena la apri, aggiungila qui sopra
+          e premi Salva: ci arriva la segnalazione e attiviamo la tua scheda.
         </p>
         {esito && (
           <div className={esito.tipo === "err" ? "pf-errore" : "pf-successo"} style={esito.tipo === "warn" ? { background: "#fff7ed", color: "#b45309", borderColor: "#fed7aa" } : {}}>
@@ -1030,11 +1033,19 @@ function TabProfilo() {
           </div>
         )}
         <button className="pf-btn" disabled={salvo}>{salvo ? "Salvo…" : "Salva profilo"}</button>
-        <p className="pf-note" style={{ marginTop: 8 }}>
-          La tua scheda pubblica: <a href={`/p/${profilo.slug}`} target="_blank" rel="noreferrer">infermieriweb.it/p/{profilo.slug}</a>
-        </p>
+        {profilo.status === "active" ? (
+          <p className="pf-note" style={{ marginTop: 8 }}>
+            La tua scheda pubblica: <a href={`/p/${profilo.slug}`} target="_blank" rel="noreferrer">infermieriweb.it/p/{profilo.slug}</a>
+          </p>
+        ) : (
+          <p className="pf-note" style={{ marginTop: 8 }}>
+            🔒 La tua scheda pubblica non è ancora online: la attiviamo quando il profilo è verificato
+            {profilo.status === "network" ? " e hai aggiunto la partita IVA" : ""}. Nel frattempo completa qui tutti i tuoi dati.
+          </p>
+        )}
       </form>
 
+      {profilo.status === "active" && (<>
       <div className="pf-panel" style={{ marginBottom: 18 }}>
         <h2>⭐ Fatti trovare su Google (5 minuti, vale oro)</h2>
         <p className="pf-note" style={{ marginTop: 0 }}>
@@ -1073,6 +1084,7 @@ function TabProfilo() {
           <button type="button" className="pf-btn secondario" onClick={generaQr}>Genera il mio QR</button>
         )}
       </div>
+      </>)}
 
       <form className="pf-panel pf-book" onSubmit={cambiaPassword}>
         <h2>🔑 Cambia password</h2>

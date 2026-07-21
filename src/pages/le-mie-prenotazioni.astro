@@ -6,6 +6,7 @@ import Icona from "../components/Icona.astro";
 import AreaPazienteForm from "../islands/AreaPazienteForm.jsx";
 import { sql } from "../lib/db.js";
 import { readSession } from "../lib/auth.js";
+import { tokenRecensione } from "../lib/recensioni.js";
 
 const token = Astro.url.searchParams.get("token") || "";
 const sessione = readSession(token);
@@ -14,7 +15,7 @@ const email = sessione?.scope === "paziente" ? sessione.email : null;
 let future = [], passate = [];
 if (email) {
   const righe = await sql`
-    SELECT b.start_dt, b.status, b.cancel_token,
+    SELECT b.id, b.start_dt, b.status, b.cancel_token,
            s.name AS service_name, s.id AS service_id,
            p.name AS professional_name, p.slug AS professional_slug, p.photo_url
     FROM bookings b
@@ -89,7 +90,12 @@ const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expi
                     <div class="zona">con {r.professional_name} · {quando(r.start_dt)}</div>
                     <div class="disponibilita" style={r.status === "cancelled" ? "color: var(--iw-muted);" : ""}>{stato(r)}</div>
                   </div>
-                  <a class="pf-btn" href={`/p/${r.professional_slug}?servizio=${r.service_id}`}>Riprenota</a>
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    {r.status === "done" && (
+                      <a class="pf-btn" href={`/recensione?token=${tokenRecensione(r.id)}`}>★ Lascia una recensione</a>
+                    )}
+                    <a class={r.status === "done" ? "pf-btn secondario" : "pf-btn"} href={`/p/${r.professional_slug}?servizio=${r.service_id}`}>Riprenota</a>
+                  </div>
                 </div>
               ))}
             </>

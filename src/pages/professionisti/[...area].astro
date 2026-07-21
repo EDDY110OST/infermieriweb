@@ -24,6 +24,7 @@ const zone = await sql`
     SELECT region, province, city, id FROM professionals WHERE status = 'active'
   ) z
   JOIN professionals p ON p.id = z.professional_id AND p.status = 'active'
+    AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
   WHERE z.region <> '' AND z.city <> ''`;
 
 const [regioneSlug, provinciaSlug, cittaSlug] = segmenti;
