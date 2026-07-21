@@ -13,7 +13,11 @@ function Stelle({ pro }) {
       </span>
     );
   }
-  if (pro.google_rating) return <span className="pf-stars">★★★★★<span className="n">{pro.google_rating}</span></span>;
+  if (pro.google_rating) {
+    const v = parseFloat(String(pro.google_rating).replace(",", ".").match(/\d+(\.\d+)?/)?.[0] || "");
+    const piene = v ? Math.round(v) : 5;
+    return <span className="pf-stars">{"★".repeat(piene)}{"☆".repeat(5 - piene)}<span className="n">{pro.google_rating}</span></span>;
+  }
   return <span className="pf-stars"><span className="n">Nuovo sulla piattaforma</span></span>;
 }
 

@@ -56,10 +56,13 @@ const [primo] = await sql`
         <div class="pf-panel pf-center">
           <div style="color: #d97706; margin-bottom: 8px;"><Icona nome="stella" size={44} /></div>
           <h2 style="margin: 0 0 6px;">{primo ? `${primo.name} — ${primo.google_rating}` : "I professionisti della rete"}</h2>
-          <div class="pf-stars" style="font-size: 24px;">★★★★★</div>
+          {primo && (() => {
+            const v = parseFloat(String(primo.google_rating).replace(",", ".").match(/\d+(\.\d+)?/)?.[0]) || 5;
+            const piene = Math.round(v);
+            return <div class="pf-stars" style="font-size: 24px;">{"★".repeat(piene)}{"☆".repeat(5 - piene)}</div>;
+          })()}
           <p class="pf-note" style="max-width: 520px; margin: 6px auto 0;">Valutazione Google — <strong>non verificata da InfermieriWeb</strong></p>
           <p style="color: var(--iw-slate); max-width: 520px; margin: 12px auto 6px;">
-            <strong>50 recensioni su Google</strong> per il primo infermiere della rete.
             Le recensioni verificate di InfermieriWeb compariranno qui e sulla scheda di ogni
             professionista: può lasciarle solo chi ha completato una prenotazione tramite il sito.
           </p>

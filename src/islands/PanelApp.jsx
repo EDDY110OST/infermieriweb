@@ -214,19 +214,26 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     }
   };
 
+  const [inviando, setInviando] = useState(false);
   const salvaManuale = async (e) => {
     e.preventDefault();
+    if (inviando) return;
     setErroreManuale("");
-    const r = await panelFetch("/api/panel/prenotazioni", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...manuale, service_id: Number(manuale.service_id) }),
-    });
-    const d = await r.json();
-    if (!r.ok) return setErroreManuale(d.error || "Errore");
-    setMostraManuale(false);
-    setManuale({ service_id: "", date: "", time: "", customer_name: "", customer_phone: "", address: "", city: "" });
-    carica();
+    setInviando(true);
+    try {
+      const r = await panelFetch("/api/panel/prenotazioni", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...manuale, service_id: Number(manuale.service_id) }),
+      });
+      const d = await r.json();
+      if (!r.ok) return setErroreManuale(d.error || "Errore");
+      setMostraManuale(false);
+      setManuale({ service_id: "", date: "", time: "", customer_name: "", customer_phone: "", address: "", city: "" });
+      carica();
+    } finally {
+      setInviando(false);
+    }
   };
 
   const cambiaStato = async (id, status, conferma) => {
@@ -241,7 +248,8 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
   const creaBlocco = async (e) => {
     e.preventDefault();
-    if (!blocco.data || !blocco.dalle || !blocco.alle) return;
+    if (!blocco.data || !blocco.dalle || !blocco.alle || inviando) return;
+    setInviando(true);
     const r = await panelFetch("/api/panel/blocchi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -257,6 +265,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       setBlocco({ data: "", dataFine: "", dalle: "", alle: "", reason: "" });
       carica();
     }
+    setInviando(false);
   };
 
   const rimuoviBlocco = async (id) => {
@@ -333,7 +342,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
             </div>
           </div>
           {erroreManuale && <div className="pf-errore">{erroreManuale}</div>}
-          <button className="pf-btn">Aggiungi in agenda</button>
+          <button className="pf-btn" disabled={inviando}>{inviando ? "Aggiungo…" : "Aggiungi in agenda"}</button>
         </form>
       )}
 
@@ -362,7 +371,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
           </div>
           <label>Motivo (facoltativo)</label>
           <input value={blocco.reason} onChange={(e) => setBlocco({ ...blocco, reason: e.target.value })} placeholder="es. ferie" />
-          <button className="pf-btn">Salva blocco</button>
+          <button className="pf-btn" disabled={inviando}>{inviando ? "Salvo…" : "Salva blocco"}</button>
         </form>
       )}
 
@@ -783,18 +792,25 @@ function TabZone() {
 
   useEffect(() => { carica(); }, []);
 
+  const [inCorso, setInCorso] = useState(false);
   const aggiungi = async (e) => {
     e.preventDefault();
-    const r = await panelFetch("/api/panel/zone", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuova),
-    });
-    const d = await r.json();
-    if (!r.ok) return avvisa("err", d.error);
-    setNuova({ city: "", province: "", region: "", sigla: "" });
-    avvisa("ok", `${d.zona.city} aggiunta ✅ Da adesso i pazienti di quella zona ti trovano.`);
-    carica();
+    if (inCorso) return;
+    setInCorso(true);
+    try {
+      const r = await panelFetch("/api/panel/zone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuova),
+      });
+      const d = await r.json();
+      if (!r.ok) return avvisa("err", d.error);
+      setNuova({ city: "", province: "", region: "", sigla: "" });
+      avvisa("ok", `${d.zona.city} aggiunta ✅ Da adesso i pazienti di quella zona ti trovano.`);
+      carica();
+    } finally {
+      setInCorso(false);
+    }
   };
 
   const togli = async (z) => {
@@ -847,7 +863,7 @@ function TabZone() {
             <p className="pf-note" style={{ margin: "6px 0 0" }}>Scegli il comune dalla tendina: provincia e regione le mettiamo noi.</p>
           )}
         </div>
-        <button className="pf-btn" disabled={!nuova.province}>Aggiungi zona</button>
+        <button className="pf-btn" disabled={!nuova.province || inCorso}>{inCorso ? "Aggiungo…" : "Aggiungi zona"}</button>
       </form>
     </div>
   );

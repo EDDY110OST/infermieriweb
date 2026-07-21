@@ -883,7 +883,7 @@ function Contatti() {
   }, []);
   if (!dati) return <Caricamento />;
   const data = (d) => new Date(d).toLocaleDateString("it-IT");
-  const richieste = dati.richieste || [], leadStrutture = dati.leadStrutture || [], newsletter = dati.newsletter || [];
+  const richieste = dati.richieste || [], newsletter = dati.newsletter || [];
 
   return (
     <div>
@@ -909,20 +909,6 @@ function Contatti() {
           <div className="pf-note" style={{ margin: "4px 0" }}>
             ✉️ <a href={`mailto:${r.email}`}>{r.email}</a>{r.phone && <> · 📞 <a href={`tel:${r.phone}`}>{r.phone}</a></>}{r.city && <> · 📍 {r.city}</>}
           </div>
-          {r.message && <div style={{ fontSize: 15.5 }}>{r.message}</div>}
-        </div>
-      ))}
-
-      {/* Lead strutture */}
-      <h3 style={{ margin: "24px 0 8px", color: "var(--iw-navy)" }}>🏥 Richieste dalle strutture ({leadStrutture.length})</h3>
-      {leadStrutture.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna richiesta dalle strutture.</p></div>}
-      {leadStrutture.map((r) => (
-        <div className="pf-panel" key={r.id} style={{ marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-            <strong>{r.name}{r.type && <span className="pf-note"> · {r.type}</span>}</strong>
-            <span className="pf-note">{data(r.created_at)}</span>
-          </div>
-          <div className="pf-note" style={{ margin: "4px 0" }}>✉️ <a href={`mailto:${r.email}`}>{r.email}</a>{r.phone && <> · 📞 {r.phone}</>}{r.city && <> · 📍 {r.city}</>}</div>
           {r.message && <div style={{ fontSize: 15.5 }}>{r.message}</div>}
         </div>
       ))}

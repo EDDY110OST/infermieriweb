@@ -4,7 +4,6 @@ const MOTIVI = [
   "Informazioni generali",
   "Sono un infermiere / voglio entrare in rete",
   "Assistenza su una prenotazione",
-  "Collaborazione / struttura sanitaria",
   "Altro",
 ];
 

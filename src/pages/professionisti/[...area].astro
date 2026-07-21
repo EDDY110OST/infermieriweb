@@ -171,7 +171,7 @@ const intestazioni = {
                 {Number(p.totale) > 0 ? (
                   <span class="pf-stars">{"★".repeat(Math.round(Number(p.media)))}{"☆".repeat(5 - Math.round(Number(p.media)))}<span class="n">{String(p.media).replace(".", ",")} ({p.totale})</span></span>
                 ) : p.google_rating ? (
-                  <span class="pf-stars">★★★★★<span class="n">{p.google_rating}</span></span>
+                  <span class="pf-stars">{"★".repeat(Math.round(parseFloat(String(p.google_rating).replace(",", ".").match(/\d+(\.\d+)?/)?.[0]) || 5))}{"☆".repeat(5 - Math.round(parseFloat(String(p.google_rating).replace(",", ".").match(/\d+(\.\d+)?/)?.[0]) || 5))}<span class="n">{p.google_rating}</span></span>
                 ) : null}
                 <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>
                 {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
