@@ -90,7 +90,7 @@ if (!regione) {
   );
 }
 
-if (livello !== "citta" && voci.length === 1) {
+if (segmenti.length > 0 && livello !== "citta" && voci.length === 1) {
   return Astro.redirect(voci[0].href, 301);
 }
 
@@ -110,6 +110,13 @@ const intestazioni = {
   regione: `Province coperte in ${regione}`,
   provincia: `Città coperte in provincia di ${provincia}`,
   citta: `Professionisti a ${citta}`,
+};
+
+// Stelle da un rating Google testuale, SEMPRE tra 0 e 5 (evita RangeError -> 500
+// se un valore inserito a mano fosse >5 o malformato).
+const stelleGoogle = (g) => {
+  const v = Math.min(5, Math.max(0, Math.round(parseFloat(String(g).replace(",", ".").match(/\d+(\.\d+)?/)?.[0]) || 5)));
+  return "★".repeat(v) + "☆".repeat(5 - v);
 };
 ---
 
@@ -171,7 +178,7 @@ const intestazioni = {
                 {Number(p.totale) > 0 ? (
                   <span class="pf-stars">{"★".repeat(Math.round(Number(p.media)))}{"☆".repeat(5 - Math.round(Number(p.media)))}<span class="n">{String(p.media).replace(".", ",")} ({p.totale})</span></span>
                 ) : p.google_rating ? (
-                  <span class="pf-stars">{"★".repeat(Math.round(parseFloat(String(p.google_rating).replace(",", ".").match(/\d+(\.\d+)?/)?.[0]) || 5))}{"☆".repeat(5 - Math.round(parseFloat(String(p.google_rating).replace(",", ".").match(/\d+(\.\d+)?/)?.[0]) || 5))}<span class="n">{p.google_rating}</span></span>
+                  <span class="pf-stars">{stelleGoogle(p.google_rating)}<span class="n">{p.google_rating}</span></span>
                 ) : null}
                 <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province})</div>
                 {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}

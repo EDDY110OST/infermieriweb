@@ -30,7 +30,7 @@ export default function NewsletterInline({ source = "newsletter", placeholder = 
   if (fatto) {
     return (
       <div className="pf-successo">
-        Perfetto! Ti scriveremo quando ci saranno novità per i professionisti.
+        Perfetto! Ti scriveremo appena ci sono novità.
       </div>
     );
   }

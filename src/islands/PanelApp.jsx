@@ -16,7 +16,7 @@ function panelFetch(url, opts) {
 
 const oraRoma = (iso) =>
   new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
-const STATI = { active: "Attiva", cancelled: "Annullata", done: "Completata", noshow: "Non presentato" };
+const STATI = { active: "Attiva", cancelled: "Annullata", done: "Completata", noshow: "Non presentato", pending: "In attesa conferma", expired: "Scaduta" };
 const GIORNI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
 const euro = (cents) => (cents / 100).toFixed(2).replace(".", ",");

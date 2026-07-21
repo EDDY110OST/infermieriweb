@@ -90,6 +90,9 @@
 /* Secondo CTA header: "Richiedi informazioni" — blu navy del brand,
    distinto dal verde di "Prenota" ma coerente col gradiente navy→verde. */
 .pf-cta-navy { background: var(--iw-navy); }
+/* CTA a contorno (secondaria): non compete col pieno primario "Prenota" */
+.pf-cta-ghost { background: #fff; border: 1.5px solid var(--iw-navy); color: var(--iw-navy) !important; }
+.pf-cta-ghost:hover { background: #f6f9f9; }
 .pf-cta-navy:hover { background: #12557d; }
 
 .pf-burger {
@@ -98,7 +101,7 @@
 }
 .pf-burger span { display: block; height: 3px; border-radius: 99px; background: var(--iw-navy); }
 
-@media (max-width: 960px) {
+@media (max-width: 1040px) {
   .pf-nav {
     display: none; position: absolute; top: 100%; left: 0; right: 0;
     background: #fff; border-bottom: 1px solid var(--iw-line);

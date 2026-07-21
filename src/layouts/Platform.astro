@@ -35,6 +35,7 @@ const nav = [
   { href: "/come-funziona", label: "Come funziona" },
   { href: "/domicilio", label: "Prestazioni" },
   { href: "/articoli", label: "Blog" },
+  { href: "/per-i-professionisti", label: "Sei un infermiere?" },
 ];
 ---
 
@@ -53,7 +54,7 @@ const nav = [
             <a href={item.href} class={item.spento ? "pf-nav-spento" : undefined} aria-current={current === item.href ? "page" : undefined}>{item.label}</a>
           ))}
           <a class="pf-cta" href="/cerca">Prenota</a>
-          <a class="pf-cta pf-cta-navy" href="/richiedi-informazioni" aria-current={current === "/richiedi-informazioni" ? "page" : undefined}>Richiedi informazioni</a>
+          <a class="pf-cta pf-cta-ghost" href="/richiedi-informazioni" aria-current={current === "/richiedi-informazioni" ? "page" : undefined}>Richiedi informazioni</a>
           <SocialBar links={social} variant="header" size={19} />
         </nav>
       </div>
@@ -80,8 +81,7 @@ const nav = [
           <a href="/domicilio">Tutte le prestazioni</a>
           <a href="/professionisti">Zone coperte</a>
           <a href="/articoli">Blog salute</a>
-          <a href="/prenotazione">Gestisci una prenotazione</a>
-          <a href="/le-mie-prenotazioni">Le mie prenotazioni</a>
+          <a href="/le-mie-prenotazioni">Le mie prenotazioni (sposta o disdici)</a>
         </div>
         <div>
           <h4>Per i professionisti</h4>
