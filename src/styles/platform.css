@@ -587,7 +587,7 @@
   .pf-hero-split { grid-template-columns: 1fr; gap: 26px; text-align: center; }
   .pf-hero-split h1, .pf-hero-split .sottotitolo { margin-left: auto; margin-right: auto; }
   .pf-trust { justify-content: center; }
-  .pf-hero-media { order: -1; }
+  .pf-hero-media { order: 2; } /* su mobile la foto va DOPO testo+ricerca (l'azione principale sopra la piega) */
 }
 
 /* ---------- Card fiducia (sezione "perché sceglierci") ---------- */
@@ -1072,3 +1072,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   line-height: 1.5;
   color: #1e3a5f;
 }
+
+/* Ordinamento risultati ricerca */
+.pf-ordina { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; font-size: 15px; color: var(--iw-slate); }
+.pf-ordina select { padding: 8px 12px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl); font: inherit; font-size: 15px; background: #fff; color: var(--iw-ink); cursor: pointer; }

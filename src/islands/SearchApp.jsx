@@ -59,6 +59,7 @@ export default function SearchApp() {
     typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("q") || "" : ""
   );
   const [tutti, setTutti] = useState([]);
+  const [ordina, setOrdina] = useState("consigliati");
   const [caricamento, setCaricamento] = useState(true);
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
@@ -99,6 +100,13 @@ export default function SearchApp() {
       });
     });
   }, [q, tutti]);
+
+  const risultatiOrdinati = useMemo(() => {
+    const arr = [...risultati];
+    if (ordina === "recensioni") arr.sort((a, b) => (Number(b.avg_rating) || 0) - (Number(a.avg_rating) || 0) || (b.review_count || 0) - (a.review_count || 0));
+    else if (ordina === "prezzo") arr.sort((a, b) => (a.min_price_cents || Infinity) - (b.min_price_cents || Infinity));
+    return arr;
+  }, [risultati, ordina]);
 
   // Mappa Leaflet
   useEffect(() => {
@@ -149,6 +157,17 @@ export default function SearchApp() {
           />
         </form>
 
+        {!caricamento && risultati.length > 1 && (
+          <div className="pf-ordina">
+            <label htmlFor="pf-ordina">Ordina per</label>
+            <select id="pf-ordina" value={ordina} onChange={(e) => setOrdina(e.target.value)}>
+              <option value="consigliati">Consigliati</option>
+              <option value="recensioni">Migliori recensioni</option>
+              <option value="prezzo">Prezzo più basso</option>
+            </select>
+          </div>
+        )}
+
         {caricamento && <p className="pf-note">Caricamento professionisti…</p>}
 
         {!caricamento && risultati.length === 0 && (
@@ -169,7 +188,7 @@ export default function SearchApp() {
         )}
 
         <div className="pf-pro-list">
-          {risultati.map((p) => (
+          {risultatiOrdinati.map((p) => (
             <div className="pf-pro-card" key={p.id}>
               <img className="foto" src={p.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${p.name}`} width="72" height="72" loading="lazy" />
               <div className="info">

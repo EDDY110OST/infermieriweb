@@ -20,6 +20,8 @@ export default defineConfig({
       const prefissi = ["/admin", "/area-professionisti", "/struttura/"];
       return !esatte.includes(path) && !prefissi.some((p) => path.startsWith(p));
     },
+    // la home nel sitemap deve avere lo slash finale come il canonical
+    serialize: (item) => { if (item.url === "https://infermieriweb.it") item.url = "https://infermieriweb.it/"; return item; },
   })],
   vite: {
     resolve: {

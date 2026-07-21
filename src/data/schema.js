@@ -8,7 +8,7 @@ export const organizationSchema = {
   "@id": `${SITE_URL}/#organization`,
   name: "InfermieriWeb",
   url: `${SITE_URL}/`,
-  logo: `${SITE_URL}/logo.jpeg`,
+  logo: `${SITE_URL}/logo-512.png`,
   image: `${SITE_URL}/logo.jpeg`,
   email: "info@infermieriweb.it",
   description:
@@ -28,7 +28,7 @@ export function articleSchema(article, imageUrl) {
     publisher: {
       "@type": "Organization",
       name: "InfermieriWeb",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.jpeg` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-512.png` },
     },
     datePublished: article.date,
     dateModified: article.date,

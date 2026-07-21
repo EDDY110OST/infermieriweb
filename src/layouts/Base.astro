@@ -31,6 +31,7 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
 
     <!-- Favicon: è l'icona che Google mostra accanto al risultato di ricerca
          (la vuole quadrata e multipla di 48px) e che si vede nelle schede del browser -->
+    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=2" />
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png?v=2" />
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=2" />
@@ -129,8 +130,10 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
           </div>
         </div>
         <div class="iw-cookie-foot">
-          <button type="button" id="iw-cookie-reject" class="iw-cookie-link">Rifiuta tutto</button>
-          <button type="button" id="iw-cookie-accept" class="iw-cookie-btn iw-cookie-btn-out">Accetta tutto</button>
+          <div class="iw-cookie-row">
+            <button type="button" id="iw-cookie-reject" class="iw-cookie-btn iw-cookie-btn-out">Rifiuta tutto</button>
+            <button type="button" id="iw-cookie-accept" class="iw-cookie-btn iw-cookie-btn-out">Accetta tutto</button>
+          </div>
           <button type="button" id="iw-cookie-save" class="iw-cookie-btn iw-cookie-btn-fill">Salva preferenze</button>
         </div>
       </div>
@@ -145,7 +148,7 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
       .iw-cookie-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px 14px;
         border-bottom: 1px solid #eef2f5; }
       .iw-cookie-head h2 { margin: 0; font-size: 22px; font-weight: 800; color: #0b3954; }
-      .iw-cookie-x { background: none; border: 0; font-size: 26px; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 4px; }
+      .iw-cookie-x { background: none; border: 0; font-size: 26px; line-height: 1; color: #475569; cursor: pointer; padding: 0 4px; }
       .iw-cookie-x:hover { color: #0b3954; }
       .iw-cookie-body { padding: 16px 22px; }
       .iw-cookie-intro { margin: 0 0 16px; font-size: 15px; line-height: 1.55; color: #4a6572; }
@@ -163,6 +166,8 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
       .iw-switch.on > span { left: 23px; }
       .iw-switch.locked { background: #8fb8b2; cursor: default; opacity: 0.9; }
       .iw-cookie-foot { display: flex; flex-direction: column; gap: 10px; padding: 8px 22px 22px; }
+      .iw-cookie-row { display: flex; gap: 10px; }
+      .iw-cookie-row .iw-cookie-btn { flex: 1; }
       .iw-cookie-link { background: none; border: 0; color: #64748b; font: inherit; font-weight: 700; font-size: 14px;
         letter-spacing: 0.03em; text-transform: uppercase; cursor: pointer; padding: 8px; }
       .iw-cookie-link:hover { color: #0b3954; }
@@ -205,10 +210,12 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
         window.iwOpenCookiePrefs = function () {
           setStats(stored && stored.statistics);
           el.hidden = false;
+          var r = document.getElementById('iw-cookie-reject'); if (r) r.focus();
         };
 
         setStats(stored && stored.statistics);
-        if (!stored) el.hidden = false;
+        var apri = function () { el.hidden = false; var r = document.getElementById('iw-cookie-reject'); if (r) r.focus(); };
+        if (!stored) apri();
       })();
     </script>
   </body>
