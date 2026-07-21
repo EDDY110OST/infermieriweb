@@ -311,7 +311,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
         <h2 style={{ margin: 0, color: "var(--iw-navy)" }}>✏️ Modifica scheda — {nome}</h2>
         <span style={{ display: "flex", gap: 8 }}>
-          <a className="pf-btn secondario compatto" href={`/p/${prof.slug}`} target="_blank" rel="noreferrer">Vedi scheda</a>
+          {prof.status === "active" && <a className="pf-btn secondario compatto" href={`/p/${prof.slug}`} target="_blank" rel="noreferrer">Vedi scheda</a>}
           <button className="pf-btn secondario compatto" onClick={onIndietro}>← Torna all'elenco</button>
         </span>
       </div>
@@ -449,7 +449,7 @@ function Professionisti({ filtroStato }) {
             <div style={{ flex: 1, minWidth: 200 }}>
               <strong style={{ fontSize: 19, color: "var(--iw-navy)" }}>{p.name}</strong>
               <div className="pf-note" style={{ margin: 0 }}>
-                {p.profession} · {p.city} ({p.province}) · <a href={`/p/${p.slug}`} target="_blank" rel="noreferrer">scheda</a>
+                {p.profession} · {p.city} ({p.province}){p.status === "active" ? <> · <a href={`/p/${p.slug}`} target="_blank" rel="noreferrer">scheda</a></> : <> · <span style={{ color: "var(--iw-muted)" }}>scheda non pubblica</span></>}
               </div>
             </div>
             <span className={`stato ${statoDi(p.status)[0]}`}>{statoDi(p.status)[1]}</span>
@@ -864,16 +864,83 @@ function RecensioniRichieste() {
 
 /* ============================ CONTATTI ============================ */
 
+// Scarica una tabella come CSV (per newsletter, richieste, ecc.)
+function scaricaCsv(righe, colonne, nomeFile) {
+  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const testo = [colonne.map((c) => esc(c.label)).join(",")]
+    .concat(righe.map((r) => colonne.map((c) => esc(c.get(r))).join(",")))
+    .join("\n");
+  const url = URL.createObjectURL(new Blob(["﻿" + testo], { type: "text/csv;charset=utf-8;" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = nomeFile; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function Contatti() {
   const [dati, setDati] = useState(null);
   useEffect(() => {
     fetch("/api/admin/contatti").then((r) => r.json()).then(setDati);
   }, []);
   if (!dati) return <Caricamento />;
+  const data = (d) => new Date(d).toLocaleDateString("it-IT");
+  const richieste = dati.richieste || [], leadStrutture = dati.leadStrutture || [], newsletter = dati.newsletter || [];
+
   return (
     <div>
-      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>💬 Richieste dal sito — lista d'attesa zone scoperte ({dati.listaAttesa.length})</h2>
-      <p className="pf-note">Chi cerca in una zona senza professionisti lascia l'email: è la mappa di DOVE aprire dopo.</p>
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>💬 Richieste dal sito</h2>
+
+      {/* Modulo "Richiedi informazioni" */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, margin: "18px 0 8px", flexWrap: "wrap" }}>
+        <h3 style={{ margin: 0, color: "var(--iw-navy)" }}>📩 Richiedi informazioni ({richieste.length})</h3>
+        {richieste.length > 0 && <button className="pf-btn secondario compatto" onClick={() => scaricaCsv(richieste, [
+          { label: "Data", get: (r) => data(r.created_at) }, { label: "Tipo", get: (r) => r.reason },
+          { label: "Nome", get: (r) => r.name }, { label: "Email", get: (r) => r.email },
+          { label: "Telefono", get: (r) => r.phone }, { label: "Città", get: (r) => r.city },
+          { label: "Messaggio", get: (r) => r.message }, { label: "Newsletter", get: (r) => r.newsletter ? "sì" : "no" },
+        ], "richieste-info.csv")}>⬇️ CSV</button>}
+      </div>
+      {richieste.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna richiesta di informazioni.</p></div>}
+      {richieste.map((r) => (
+        <div className="pf-panel" key={r.id} style={{ marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+            <strong>{r.name} {r.reason && <span className="stato noshow" style={{ marginLeft: 6 }}>{r.reason}</span>}</strong>
+            <span className="pf-note">{data(r.created_at)}</span>
+          </div>
+          <div className="pf-note" style={{ margin: "4px 0" }}>
+            ✉️ <a href={`mailto:${r.email}`}>{r.email}</a>{r.phone && <> · 📞 <a href={`tel:${r.phone}`}>{r.phone}</a></>}{r.city && <> · 📍 {r.city}</>}
+          </div>
+          {r.message && <div style={{ fontSize: 15.5 }}>{r.message}</div>}
+        </div>
+      ))}
+
+      {/* Lead strutture */}
+      <h3 style={{ margin: "24px 0 8px", color: "var(--iw-navy)" }}>🏥 Richieste dalle strutture ({leadStrutture.length})</h3>
+      {leadStrutture.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna richiesta dalle strutture.</p></div>}
+      {leadStrutture.map((r) => (
+        <div className="pf-panel" key={r.id} style={{ marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+            <strong>{r.name}{r.type && <span className="pf-note"> · {r.type}</span>}</strong>
+            <span className="pf-note">{data(r.created_at)}</span>
+          </div>
+          <div className="pf-note" style={{ margin: "4px 0" }}>✉️ <a href={`mailto:${r.email}`}>{r.email}</a>{r.phone && <> · 📞 {r.phone}</>}{r.city && <> · 📍 {r.city}</>}</div>
+          {r.message && <div style={{ fontSize: 15.5 }}>{r.message}</div>}
+        </div>
+      ))}
+
+      {/* Newsletter */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, margin: "24px 0 8px", flexWrap: "wrap" }}>
+        <h3 style={{ margin: 0, color: "var(--iw-navy)" }}>📰 Iscritti newsletter ({newsletter.length})</h3>
+        {newsletter.length > 0 && <button className="pf-btn secondario compatto" onClick={() => scaricaCsv(newsletter, [
+          { label: "Email", get: (r) => r.email }, { label: "Fonte", get: (r) => r.source },
+          { label: "Consenso del", get: (r) => new Date(r.consent_at).toLocaleString("it-IT") },
+        ], "iscritti-newsletter.csv")}>⬇️ Scarica CSV</button>}
+      </div>
+      {newsletter.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessun iscritto alla newsletter.</p></div>}
+      {newsletter.length > 0 && <div className="pf-panel"><p className="pf-note" style={{ margin: 0 }}>{newsletter.length} consensi raccolti. Scarica il CSV per spedire con lo strumento email.</p></div>}
+
+      {/* Lista d'attesa zone scoperte */}
+      <h3 style={{ margin: "24px 0 8px", color: "var(--iw-navy)" }}>📍 Lista d'attesa — zone scoperte ({dati.listaAttesa.length})</h3>
+      <p className="pf-note" style={{ marginTop: 0 }}>Chi cerca in una zona senza professionisti lascia l'email: è la mappa di DOVE aprire dopo.</p>
       {dati.perZona?.length > 0 && (
         <div className="adm-kpi-grid" style={{ marginBottom: 14 }}>
           {dati.perZona.slice(0, 6).map((z) => (
@@ -885,10 +952,10 @@ function Contatti() {
         <div className="pf-panel adm-riga" key={r.id}>
           <strong style={{ minWidth: 140 }}>📍 {r.zona || "—"}</strong>
           <span style={{ flex: 1 }}>{r.email}</span>
-          <span className="pf-note">{new Date(r.created_at).toLocaleDateString("it-IT")}</span>
+          <span className="pf-note">{data(r.created_at)}</span>
         </div>
       ))}
-      {dati.listaAttesa.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna richiesta per ora.</p></div>}
+      {dati.listaAttesa.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna zona in lista d'attesa.</p></div>}
     </div>
   );
 }
@@ -1195,12 +1262,14 @@ function BlogAdmin() {
       body: JSON.stringify({ id: art.id, [publish ? "publish" : "unpublish"]: true }),
     });
     if (r.ok) { avvisa("ok", publish ? "Pubblicato ✅" : "Riportato in bozza."); carica(); }
+    else { const d = await r.json().catch(() => ({})); avvisa("err", d.error || "Errore nell'operazione"); }
   };
 
   const elimina = async (art) => {
     if (!window.confirm(`Elimino definitivamente "${art.title}"?`)) return;
-    await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE" });
-    carica();
+    const r = await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE" });
+    if (r.ok) { avvisa("ok", "Articolo eliminato."); carica(); }
+    else { const d = await r.json().catch(() => ({})); avvisa("err", d.error || "Errore nell'eliminazione"); }
   };
 
   return (

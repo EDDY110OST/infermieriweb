@@ -5,6 +5,8 @@ const TABELLE = [
   "professionals", "professional_users", "services", "coverage_areas",
   "opening_hours", "blocks", "bookings", "applications", "reviews",
   "articles", "profile_views", "push_subscriptions",
+  // aggiunte 19/7: disponibilità per giorno, lista d'attesa, lead e consensi newsletter
+  "day_overrides", "waitlist", "info_requests", "structure_leads", "newsletter_subscribers",
 ];
 
 const EMAIL_BACKUP = process.env.BACKUP_EMAIL || "brunoieppariello83@gmail.com";

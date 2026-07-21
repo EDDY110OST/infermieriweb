@@ -43,10 +43,17 @@ export async function PATCH({ request }) {
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
   const id = Number(body.id);
-  const status = String(body.status || "");
-  if (!id || !["active", "suspended", "pending"].includes(status)) return json({ error: "Dati non validi" }, 400);
+  let status = String(body.status || "");
+  if (!id || !["active", "suspended", "pending", "network"].includes(status)) return json({ error: "Dati non validi" }, 400);
+
+  // Riattivare un professionista SENZA P.IVA non deve renderlo pubblicamente prenotabile:
+  // torna a "network" (non attivo) invece che ad "active".
+  if (status === "active") {
+    const [p] = await sql`SELECT vat_number FROM professionals WHERE id = ${id}`;
+    if (p && !p.vat_number) status = "network";
+  }
 
   const updated = await sql`UPDATE professionals SET status = ${status} WHERE id = ${id} RETURNING id`;
   if (!updated.length) return json({ error: "Professionista non trovato" }, 404);
-  return json({ ok: true });
+  return json({ ok: true, status });
 }
