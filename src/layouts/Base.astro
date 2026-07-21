@@ -97,44 +97,79 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
       <slot />
     </div>
 
-    <!-- Cookie banner conforme (Linee guida Garante 10/6/2021): blocco preventivo,
-         "Rifiuta" con lo stesso rilievo di "Accetta", scelta granulare e revoca. -->
-    <div id="iw-cookie" class="iw-cookie" role="dialog" aria-live="polite" aria-label="Preferenze cookie" hidden>
-      <div class="iw-cookie-box">
-        <div class="iw-cookie-text">
-          <strong>Rispettiamo la tua privacy</strong>
-          <p>
-            Usiamo cookie tecnici (indispensabili, sempre attivi) e, <strong>solo con il tuo consenso</strong>,
-            cookie statistici di Google Analytics (con IP anonimizzato) per capire come viene usato il sito.
-            Puoi accettare, rifiutare o scegliere. Dettagli nella <a href="/privacy#cookie">Cookie policy</a>.
-          </p>
-          <label class="iw-cookie-opt" id="iw-cookie-stats-row" hidden>
-            <input type="checkbox" id="iw-cookie-stats" />
-            <span>Cookie statistici — Google Analytics (IP anonimizzato)</span>
-          </label>
+    <!-- Preferenze cookie (Linee guida Garante 10/6/2021): blocco preventivo,
+         "Rifiuta tutto" con lo stesso rilievo di "Accetta tutto", scelta granulare e revoca. -->
+    <div id="iw-cookie" class="iw-cookie" role="dialog" aria-modal="true" aria-labelledby="iw-cookie-title" hidden>
+      <div class="iw-cookie-card">
+        <div class="iw-cookie-head">
+          <h2 id="iw-cookie-title">Preferenze cookie</h2>
+          <button type="button" class="iw-cookie-x" id="iw-cookie-close" aria-label="Chiudi">&times;</button>
         </div>
-        <div class="iw-cookie-actions">
-          <button type="button" id="iw-cookie-reject" class="iw-cookie-btn">Rifiuta</button>
-          <button type="button" id="iw-cookie-custom" class="iw-cookie-btn iw-cookie-btn-ghost">Personalizza</button>
-          <button type="button" id="iw-cookie-accept" class="iw-cookie-btn iw-cookie-btn-primary">Accetta</button>
-          <button type="button" id="iw-cookie-save" class="iw-cookie-btn iw-cookie-btn-primary" hidden>Salva preferenze</button>
+        <div class="iw-cookie-body">
+          <p class="iw-cookie-intro">
+            Scegli quali categorie di cookie attivare. Puoi modificare queste impostazioni in qualsiasi
+            momento dal link "Preferenze cookie" nel footer. Dettagli nella <a href="/privacy#cookie">Cookie policy</a>.
+          </p>
+
+          <div class="iw-cookie-cat">
+            <div class="iw-cookie-cat-top">
+              <span class="iw-cookie-cat-nome">Necessari</span>
+              <span class="iw-switch on locked" aria-hidden="true"><span></span></span>
+            </div>
+            <p>Cookie essenziali per il funzionamento del sito (navigazione, sicurezza, memorizzazione preferenze). Non possono essere disattivati.</p>
+          </div>
+
+          <div class="iw-cookie-cat">
+            <div class="iw-cookie-cat-top">
+              <span class="iw-cookie-cat-nome">Analitici</span>
+              <button type="button" class="iw-switch" id="iw-cookie-stats" role="switch" aria-checked="false" aria-label="Attiva cookie analitici"><span></span></button>
+            </div>
+            <p>Ci aiutano a capire come usi il sito (pagine visitate, tempo di permanenza) tramite Google Analytics, con IP anonimizzato. I dati sono aggregati e anonimi.</p>
+          </div>
+        </div>
+        <div class="iw-cookie-foot">
+          <button type="button" id="iw-cookie-reject" class="iw-cookie-link">Rifiuta tutto</button>
+          <button type="button" id="iw-cookie-accept" class="iw-cookie-btn iw-cookie-btn-out">Accetta tutto</button>
+          <button type="button" id="iw-cookie-save" class="iw-cookie-btn iw-cookie-btn-fill">Salva preferenze</button>
         </div>
       </div>
     </div>
 
     <style is:global>
-      .iw-cookie { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999; padding: 14px; }
-      .iw-cookie-box { max-width: 960px; margin: 0 auto; background: #0f172a; color: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 10px 40px rgba(0,0,0,.35); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-      .iw-cookie-text { flex: 1 1 320px; }
-      .iw-cookie-text strong { display: block; font-size: 16px; margin-bottom: 4px; }
-      .iw-cookie-text p { margin: 0; font-size: 14px; line-height: 1.5; color: #cbd5e1; }
-      .iw-cookie-text a { color: #5eead4; }
-      .iw-cookie-opt { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; color: #e2e8f0; }
-      .iw-cookie-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-      .iw-cookie-btn { font: inherit; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer; background: #475569; color: #fff; }
-      .iw-cookie-btn-ghost { background: transparent; color: #cbd5e1; text-decoration: underline; padding: 10px 8px; }
-      .iw-cookie-btn-primary { background: #14b8a6; color: #04302b; }
-      @media (max-width: 640px) { .iw-cookie-actions { width: 100%; } .iw-cookie-actions .iw-cookie-btn { flex: 1; } }
+      .iw-cookie { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        padding: 16px; background: rgba(11, 57, 84, 0.55); backdrop-filter: blur(2px); }
+      .iw-cookie-card { width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; background: #fff;
+        border-radius: 18px; box-shadow: 0 24px 60px rgba(11, 57, 84, 0.35); font-family: 'Inter', -apple-system, sans-serif; }
+      .iw-cookie-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px 14px;
+        border-bottom: 1px solid #eef2f5; }
+      .iw-cookie-head h2 { margin: 0; font-size: 22px; font-weight: 800; color: #0b3954; }
+      .iw-cookie-x { background: none; border: 0; font-size: 26px; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 4px; }
+      .iw-cookie-x:hover { color: #0b3954; }
+      .iw-cookie-body { padding: 16px 22px; }
+      .iw-cookie-intro { margin: 0 0 16px; font-size: 15px; line-height: 1.55; color: #4a6572; }
+      .iw-cookie-intro a { color: #00695c; font-weight: 600; }
+      .iw-cookie-cat { background: #f6f9f9; border: 1px solid #e3ecec; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+      .iw-cookie-cat-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .iw-cookie-cat-nome { font-size: 18px; font-weight: 700; color: #0b3954; }
+      .iw-cookie-cat p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: #5a7280; }
+      /* Interruttore a pillola */
+      .iw-switch { flex: none; width: 46px; height: 26px; border-radius: 999px; border: 0; background: #cbd5e1; position: relative;
+        cursor: pointer; padding: 0; transition: background 0.2s ease; }
+      .iw-switch > span { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: left 0.2s ease; }
+      .iw-switch.on { background: #00897b; }
+      .iw-switch.on > span { left: 23px; }
+      .iw-switch.locked { background: #8fb8b2; cursor: default; opacity: 0.9; }
+      .iw-cookie-foot { display: flex; flex-direction: column; gap: 10px; padding: 8px 22px 22px; }
+      .iw-cookie-link { background: none; border: 0; color: #64748b; font: inherit; font-weight: 700; font-size: 14px;
+        letter-spacing: 0.03em; text-transform: uppercase; cursor: pointer; padding: 8px; }
+      .iw-cookie-link:hover { color: #0b3954; }
+      .iw-cookie-btn { font: inherit; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; text-transform: uppercase;
+        padding: 14px 18px; border-radius: 12px; cursor: pointer; }
+      .iw-cookie-btn-out { background: #fff; border: 1.5px solid #0b3954; color: #0b3954; }
+      .iw-cookie-btn-out:hover { background: #f6f9f9; }
+      .iw-cookie-btn-fill { background: #0b3954; border: 1.5px solid #0b3954; color: #fff; }
+      .iw-cookie-btn-fill:hover { background: #12557d; }
     </style>
 
     <script is:inline>
@@ -144,30 +179,33 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
         if (!el) return;
         var stored = null;
         try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-        var statsRow = document.getElementById('iw-cookie-stats-row');
-        var statsChk = document.getElementById('iw-cookie-stats');
-        var btnSave = document.getElementById('iw-cookie-save');
-        var btnCustom = document.getElementById('iw-cookie-custom');
+        var stats = document.getElementById('iw-cookie-stats'); // interruttore Analitici
 
-        function save(stats) {
-          try { localStorage.setItem(KEY, JSON.stringify({ statistics: !!stats, ts: Date.now(), v: 1 })); } catch (e) {}
-          if (stats && window.iwLoadGA) window.iwLoadGA();
+        function setStats(on) {
+          stats.classList.toggle('on', !!on);
+          stats.setAttribute('aria-checked', on ? 'true' : 'false');
+        }
+        function save(on) {
+          try { localStorage.setItem(KEY, JSON.stringify({ statistics: !!on, ts: Date.now(), v: 2 })); } catch (e) {}
+          if (on && window.iwLoadGA) window.iwLoadGA();
           el.hidden = true;
         }
-        function expand() { statsRow.hidden = false; btnSave.hidden = false; btnCustom.hidden = true; }
 
+        stats.addEventListener('click', function () { setStats(stats.getAttribute('aria-checked') !== 'true'); });
         document.getElementById('iw-cookie-accept').addEventListener('click', function () { save(true); });
         document.getElementById('iw-cookie-reject').addEventListener('click', function () { save(false); });
-        btnCustom.addEventListener('click', expand);
-        btnSave.addEventListener('click', function () { save(statsChk.checked); });
+        document.getElementById('iw-cookie-save').addEventListener('click', function () { save(stats.getAttribute('aria-checked') === 'true'); });
+        // La X chiude senza scegliere: gli analitici restano negati per default (privacy-safe),
+        // e se non c'è ancora una scelta la finestra ricompare alla visita successiva.
+        document.getElementById('iw-cookie-close').addEventListener('click', function () { el.hidden = true; });
 
         // Riapribile in ogni momento dal link "Preferenze cookie" nel footer (revoca)
         window.iwOpenCookiePrefs = function () {
-          if (statsChk && stored) statsChk.checked = !!stored.statistics;
-          expand();
+          setStats(stored && stored.statistics);
           el.hidden = false;
         };
 
+        setStats(stored && stored.statistics);
         if (!stored) el.hidden = false;
       })();
     </script>
