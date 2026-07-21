@@ -980,7 +980,7 @@ function TabProfilo() {
       <div className="pf-panel" style={{ marginBottom: 18 }}>
         <h2>La tua foto</h2>
         <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-          <img src={profilo.photo_url} alt="La tua foto profilo" style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--iw-primary-soft)" }} />
+          <img src={profilo.photo_url || "/avatar-infermiere.svg"} alt="La tua foto profilo" style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--iw-primary-soft)" }} />
           <div>
             <label className="pf-btn secondario" style={{ cursor: "pointer" }}>
               {caricoFoto ? "Carico…" : "📷 Cambia foto"}

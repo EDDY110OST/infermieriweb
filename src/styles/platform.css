@@ -394,26 +394,6 @@
 }
 .pf-nl .pf-btn { white-space: nowrap; }
 
-/* Diario infermieristico (pannello professionista) */
-.pf-diario-lock {
-  background: var(--iw-primary-soft); border: 1px solid #cceae5; color: var(--iw-primary-deep);
-  border-radius: 12px; padding: 12px 14px; font-size: 15px; margin: 14px 0 16px; line-height: 1.5;
-}
-.pf-diario-sez {
-  margin: 22px 0 10px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--iw-primary-deep); border-bottom: 1px solid var(--iw-line); padding-bottom: 6px;
-}
-.pf-diario-lista { display: flex; flex-direction: column; gap: 10px; }
-.pf-diario-riga {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  width: 100%; text-align: left; cursor: pointer; font-family: inherit;
-  border: 1px solid var(--iw-line); background: #fff; border-radius: var(--iw-r-ctrl); padding: 14px 16px;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-.pf-diario-riga:hover { border-color: var(--iw-primary); background: var(--iw-primary-soft); }
-.pf-diario-riga .nome { font-weight: 700; font-size: 17px; color: var(--iw-ink); }
-.pf-diario-riga .data { font-size: 14px; color: var(--iw-muted); white-space: nowrap; }
-
 /* ---------- Fascia CTA professionisti ---------- */
 
 .pf-band {
