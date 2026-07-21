@@ -1,0 +1,113 @@
+---
+import Platform from "../layouts/Platform.astro";
+import { organizationSchema } from "../data/schema.js";
+---
+
+<Platform
+  title="Condizioni generali d'uso | InfermieriWeb"
+  description="Le condizioni generali d'uso della piattaforma InfermieriWeb: natura del servizio, prenotazioni, prezzi e pagamento, obblighi di pazienti e professionisti, responsabilità."
+  path="/condizioni"
+  schemas={[organizationSchema]}
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Trasparenza</span>
+    <h1>Condizioni generali d'uso</h1>
+    <p class="sottotitolo">Le regole che disciplinano l'uso della piattaforma InfermieriWeb, spiegate in modo chiaro.</p>
+  </section>
+
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container pf-legale" style="max-width: 760px;">
+
+      <p>
+        Le presenti Condizioni Generali ("<strong>Condizioni</strong>") regolano l'accesso e l'uso della
+        piattaforma <strong>InfermieriWeb.it</strong> ("<strong>Piattaforma</strong>") da parte dei Pazienti e
+        dei Professionisti, come di seguito definiti. Il Gestore della Piattaforma è costituito da
+        <strong>Eduard Gabriel Duduc</strong> e <strong>Bruno Ieppariello</strong> (di seguito il "<strong>Gestore</strong>") —
+        contatto: <a href="mailto:info@infermieriweb.it">info@infermieriweb.it</a>. L'uso della Piattaforma comporta
+        l'accettazione delle presenti Condizioni.
+      </p>
+
+      <h2>1. Definizioni</h2>
+      <ul>
+        <li><strong>Piattaforma</strong>: il sito InfermieriWeb.it e i relativi servizi tecnologici.</li>
+        <li><strong>Paziente</strong>: chi utilizza la Piattaforma per cercare e prenotare una prestazione infermieristica a domicilio.</li>
+        <li><strong>Professionista</strong>: l'infermiere libero professionista, iscritto all'Ordine (OPI), che pubblica la propria scheda e riceve prenotazioni tramite la Piattaforma.</li>
+        <li><strong>Prestazione</strong>: la prestazione infermieristica a domicilio erogata dal Professionista al Paziente.</li>
+        <li><strong>Scheda</strong>: il profilo pubblico del Professionista (foto, presentazione, prestazioni, prezzi indicativi, zone coperte, recensioni).</li>
+        <li><strong>Prenotazione</strong>: la richiesta di appuntamento inoltrata dal Paziente al Professionista tramite la Piattaforma.</li>
+      </ul>
+
+      <h2>2. Natura del servizio</h2>
+      <p>2.1. La Piattaforma è una piattaforma digitale che facilita il contatto e la prenotazione tra Pazienti e Professionisti. Il Gestore non eroga prestazioni sanitarie, non impiega i Professionisti, non seleziona il Professionista al posto del Paziente, non determina i prezzi delle Prestazioni e non interviene nella loro esecuzione.</p>
+      <p>2.2. Il rapporto relativo alla Prestazione intercorre direttamente ed esclusivamente tra Paziente e Professionista. Il Professionista opera in piena autonomia, è l'unico responsabile della Prestazione e degli obblighi di legge connessi (deontologici, fiscali, di fatturazione, assicurativi).</p>
+      <p>2.3. Il Gestore non è parte del contratto di Prestazione.</p>
+
+      <h2>3. La Piattaforma non è un servizio di emergenza</h2>
+      <p>La Piattaforma non fornisce assistenza in situazioni di emergenza o urgenza. In caso di sintomi gravi o pericolo per la vita o la salute, il Paziente deve chiamare immediatamente il numero unico di emergenza <strong>112</strong>. Per le esigenze non urgenti fuori orario, il Paziente può rivolgersi al <strong>servizio di continuità assistenziale</strong> (ex guardia medica) della propria zona. Il Paziente non deve in alcun modo fare affidamento sulla Piattaforma come sostituto di un intervento d'emergenza.</p>
+
+      <h2>4. Prenotazione e formazione dell'appuntamento</h2>
+      <p>4.1. Per prenotare non è richiesta la registrazione: il Paziente sceglie autonomamente un Professionista e un orario tra quelli liberi resi disponibili dal Professionista stesso, e inserisce i dati necessari (nome, contatti, indirizzo della visita).</p>
+      <p>4.2. Il Paziente riceve un'email di convalida da confermare entro il tempo indicato (attualmente 60 minuti); in mancanza, la Prenotazione decade e l'orario torna disponibile.</p>
+      <p>4.3. Una volta convalidata dal Paziente, la Prenotazione si intende accettata automaticamente sulla base delle disponibilità preventivamente inserite dal Professionista, che ne riceve notifica. La convalida dell'email non costituisce di per sé esecuzione della Prestazione, che resta soggetta agli adempimenti professionali di cui all'art. 5.</p>
+      <p>4.4. Il Paziente è responsabile della veridicità dei dati inseriti e si impegna a non inserire, nei campi liberi, dati sanitari o particolari non necessari alla Prenotazione.</p>
+      <p>4.5. La prenotazione tramite la Piattaforma è gratuita per il Paziente. Nessun corrispettivo è dovuto al Gestore.</p>
+
+      <h2>5. Adempimenti professionali</h2>
+      <p>La Prenotazione effettuata tramite la Piattaforma non sostituisce gli adempimenti professionali, informativi, documentali o relativi al consenso che il Professionista è tenuto a svolgere direttamente nei confronti del Paziente secondo la normativa e le regole deontologiche applicabili (presa in carico, informativa, consenso/assenso, documentazione, ecc.).</p>
+
+      <h2>6. Prezzo e pagamento della Prestazione</h2>
+      <p>6.1. Il compenso è stabilito dal Professionista e indicato in via orientativa ("a partire da") sulla sua Scheda.</p>
+      <p>6.2. Il Professionista comunica e concorda con il Paziente eventuali variazioni rispetto al prezzo indicativo prima dell'esecuzione della Prestazione, così che il Paziente conosca preventivamente il costo o i criteri per determinarlo.</p>
+      <p>6.3. Il pagamento è effettuato dal Paziente direttamente al Professionista, di norma dopo la Prestazione. Il Gestore non incassa, non gestisce e non processa alcun pagamento e non applica commissioni. L'obbligo di emettere idoneo documento fiscale è a carico del Professionista.</p>
+
+      <h2>7. Disdetta</h2>
+      <p>Il Paziente può disdire tramite l'apposito link ricevuto via email; la disdetta è gratuita fino al termine indicato dal Professionista sulla propria Scheda.</p>
+
+      <h2>8. Recensioni</h2>
+      <p>Le recensioni possono essere lasciate solo da chi ha completato una Prenotazione tramite la Piattaforma. Il Gestore può moderare o rimuovere recensioni contrarie alla legge, offensive, false o non pertinenti. Il Paziente è responsabile del contenuto delle proprie recensioni.</p>
+
+      <h2>9. Accesso e obblighi del Professionista</h2>
+      <p>9.1. <strong>Requisito di accesso.</strong> L'accesso alla Piattaforma in qualità di Professionista, ai fini della pubblicazione della Scheda e della ricezione di prenotazioni pubbliche, è riservato agli infermieri che esercitano attività libero-professionale dotati di partita IVA.</p>
+      <p>9.2. All'atto dell'accettazione, il Gestore verifica l'<strong>identità</strong>, l'<strong>iscrizione all'OPI</strong> e la <strong>partita IVA</strong> del Professionista. Il Gestore non verifica né garantisce l'esperienza dichiarata, le competenze ulteriori, i titoli aggiuntivi, il curriculum e, in generale, la qualità concreta della Prestazione.</p>
+      <p>9.3. Il Professionista garantisce di essere abilitato all'esercizio della professione, iscritto all'OPI e in regola con gli obblighi di legge, inclusa — come previsto dalla normativa vigente — una propria copertura assicurativa di responsabilità civile professionale.</p>
+      <p>9.4. Il Professionista gestisce in autonomia disponibilità, prezzi e zone coperte, ed è responsabile di mantenerli aggiornati.</p>
+      <p>9.5. L'iscrizione del Professionista è gratuita in fase di lancio. Un'eventuale futura introduzione di un abbonamento sarà comunicata con adeguato preavviso e senza penali di uscita.</p>
+      <p>9.6. Il Gestore si riserva di rifiutare o sospendere l'iscrizione in presenza di motivi relativi alla sicurezza, all'affidabilità, alla completezza della documentazione, al rispetto delle presenti Condizioni o alla tutela degli utenti.</p>
+
+      <h2>10. Cessazione, cancellazione e sospensione del Professionista</h2>
+      <p>10.1. Il Professionista può in ogni momento chiedere la cancellazione della propria Scheda.</p>
+      <p>10.2. In caso di cancellazione o sospensione, il Professionista è tenuto a onorare le Prenotazioni già accettate oppure a disdirle tempestivamente avvisando il Paziente.</p>
+      <p>10.3. Alcuni dati possono essere conservati per il tempo necessario ad adempimenti di legge (vedi <a href="/privacy">Informativa Privacy</a>).</p>
+      <p>10.4. La sospensione comporta l'immediata non prenotabilità della Scheda.</p>
+
+      <h2>11. Responsabilità</h2>
+      <p>11.1. Il Professionista è responsabile della valutazione della propria competenza, dell'appropriatezza della Prestazione, del rispetto delle disposizioni professionali e deontologiche applicabili e della veridicità delle informazioni inserite nella Scheda.</p>
+      <p>11.2. Il Gestore, compatibilmente con i limiti inderogabili di legge, non risponde: (i) della qualità o dell'esito delle Prestazioni; (ii) delle informazioni non oggetto della verifica di cui all'art. 9.2; (iii) delle condotte di Pazienti e Professionisti; (iv) di danni derivanti da malfunzionamenti o indisponibilità della Piattaforma non imputabili al Gestore (rete, hosting di terzi, forza maggiore). La Piattaforma può contenere link a siti di terzi, dei cui contenuti il Gestore non risponde.</p>
+
+      <h2>12. Contenuti dei Professionisti e proprietà intellettuale</h2>
+      <p>12.1. La Piattaforma, il software, la grafica e il marchio "InfermieriWeb" appartengono al Gestore. È vietato estrarne, copiarne o riprodurne contenuti o codice.</p>
+      <p>12.2. I contenuti forniti dal Professionista (foto, testi, logo, curriculum, ecc.) restano di sua titolarità; con l'iscrizione, il Professionista concede al Gestore una licenza non esclusiva e gratuita di utilizzarli e pubblicarli sulla Piattaforma ai fini dell'erogazione del servizio, per la durata della pubblicazione della Scheda.</p>
+
+      <h2>13. Dati personali</h2>
+      <p>Il trattamento dei dati personali è disciplinato dall'<a href="/privacy">Informativa Privacy</a> disponibile sulla Piattaforma, in conformità al Regolamento (UE) 2016/679.</p>
+
+      <h2>14. Uso corretto, modifiche, legge applicabile</h2>
+      <p>14.1. Pazienti e Professionisti si impegnano a usare la Piattaforma correttamente, senza condotte illecite, fraudolente o lesive.</p>
+      <p>14.2. Il Gestore può modificare le presenti Condizioni pubblicando la versione aggiornata sulla Piattaforma; le modifiche non si applicano alle Prenotazioni già in corso. Il Gestore può sospendere o cessare, in tutto o in parte, la Piattaforma, dandone comunicazione quando possibile.</p>
+      <p>14.3. Le presenti Condizioni sono regolate dalla legge italiana. Per le controversie con i Pazienti che rivestono la qualità di consumatori si applica il foro inderogabile del luogo di residenza o domicilio del consumatore.</p>
+
+      <h2>15. Contatti</h2>
+      <p>Per qualsiasi comunicazione: <a href="mailto:info@infermieriweb.it">info@infermieriweb.it</a>.</p>
+
+      <p class="pf-note" style="margin-top: 24px;">Ultimo aggiornamento: 19 luglio 2026.</p>
+    </div>
+  </section>
+</Platform>
+
+<style>
+  .pf-legale h2 { color: var(--iw-navy); font-size: 22px; margin: 28px 0 8px; }
+  .pf-legale p { color: var(--iw-slate); margin: 0 0 12px; line-height: 1.65; }
+  .pf-legale ul { color: var(--iw-slate); line-height: 1.65; padding-left: 20px; margin: 0 0 12px; }
+  .pf-legale li { margin-bottom: 6px; }
+  .pf-legale a { color: var(--iw-primary-deep); font-weight: 600; }
+</style>
