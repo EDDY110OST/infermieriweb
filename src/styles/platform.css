@@ -114,19 +114,19 @@
 .pf-dd.open > .pf-dd-btn .pf-dd-freccia { transform: rotate(180deg); }
 
 .pf-dd-menu {
-  display: none; position: absolute; top: calc(100% + 12px); left: 0; z-index: 1300;
+  display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 1300;
   background: #fff; border: 1px solid var(--iw-line); border-radius: 14px;
   box-shadow: var(--iw-shadow-lg); padding: 10px; min-width: 260px;
   max-height: calc(100vh - 110px); overflow-y: auto;
 }
-/* ponte invisibile: passando dal bottone al menu non si chiude */
-.pf-dd-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -14px; height: 14px; }
-.pf-dd.open > .pf-dd-menu { display: block; }
-.pf-dd.open > .pf-dd-menu-2col { display: grid; }
-@media (hover: hover) and (min-width: 1041px) {
-  .pf-dd:hover > .pf-dd-menu, .pf-dd:focus-within > .pf-dd-menu { display: block; }
-  .pf-dd:hover > .pf-dd-menu-2col, .pf-dd:focus-within > .pf-dd-menu-2col { display: grid; }
-}
+/* Apertura: la classe .open la mette il JS (mouse col ritardo di chiusura, click,
+   tocco); :focus-within tiene aperto chi naviga da tastiera. NIENTE :hover puro:
+   tra bottone e menu ci sono 12px di stacco e il menu, avendo overflow-y per le
+   finestre basse, non può fare da ponte — il puntatore li attraversava e il menu
+   spariva. Il ritardo di chiusura in Platform.astro risolve anche i movimenti in
+   diagonale. */
+.pf-dd.open > .pf-dd-menu, .pf-dd:focus-within > .pf-dd-menu { display: block; }
+.pf-dd.open > .pf-dd-menu-2col, .pf-dd:focus-within > .pf-dd-menu-2col { display: grid; }
 .pf-dd-menu-2col {
   grid-template-columns: 1fr 1fr; gap: 6px 22px; min-width: 620px; padding: 14px 16px;
   left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px);
@@ -168,7 +168,6 @@
     border: 0; border-left: 3px solid var(--iw-primary-soft); border-radius: 0;
     padding: 4px 0 6px 12px; margin: -6px 0 4px 6px;
   }
-  .pf-dd-menu::before { display: none; }
   .pf-dd.open > .pf-dd-menu-2col { display: block; }
   .pf-dd-col + .pf-dd-col { margin-top: 10px; }
   .pf-nav .pf-dd-menu a { font-size: 17px; padding: 9px 8px; }

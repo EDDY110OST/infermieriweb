@@ -166,29 +166,47 @@ const attivoArea = dentro(["/area-professionisti", "/lavora-con-noi", "/per-i-pr
           burger.setAttribute("aria-expanded", open ? "true" : "false");
         });
       }
-      // Tendine del menu: click/tocco apre e chiude (sul desktop si aprono anche al
-      // passaggio del mouse, via CSS); click fuori o Esc chiudono tutto.
+      // Tendine del menu. Col mouse si aprono al passaggio e si chiudono con un
+      // RITARDO di mezzo secondo: tra bottone e menu ci sono 8px di stacco e la
+      // gente ci passa sopra in diagonale — senza ritardo la tendina sparisce in
+      // faccia (era il difetto segnalato il 17/8).
+      // Col dito/click funzionano a toggle. Click fuori o Esc chiudono tutto.
       var tendine = Array.prototype.slice.call(document.querySelectorAll(".pf-dd"));
+      var conMouse = window.matchMedia("(hover: hover) and (min-width: 1041px)");
+      var timerChiusura = null;
+      function mostra(dd, apri) {
+        dd.classList.toggle("open", apri);
+        var b = dd.querySelector(".pf-dd-btn");
+        if (b) b.setAttribute("aria-expanded", apri ? "true" : "false");
+      }
       function chiudiTutte(tranne) {
-        tendine.forEach(function (dd) {
-          if (dd === tranne) return;
-          dd.classList.remove("open");
-          var b = dd.querySelector(".pf-dd-btn");
-          if (b) b.setAttribute("aria-expanded", "false");
-        });
+        tendine.forEach(function (dd) { if (dd !== tranne) mostra(dd, false); });
       }
       tendine.forEach(function (dd) {
         var btn = dd.querySelector(".pf-dd-btn");
         if (!btn) return;
         btn.addEventListener("click", function (e) {
           e.stopPropagation();
-          var open = dd.classList.toggle("open");
-          btn.setAttribute("aria-expanded", open ? "true" : "false");
+          clearTimeout(timerChiusura);
+          var apri = !dd.classList.contains("open");
+          mostra(dd, apri);
           chiudiTutte(dd);
         });
         dd.addEventListener("click", function (e) { e.stopPropagation(); });
+        // Il menu è dentro .pf-dd: entrandoci si annulla la chiusura in corso.
+        dd.addEventListener("mouseenter", function () {
+          if (!conMouse.matches) return;
+          clearTimeout(timerChiusura);
+          mostra(dd, true);
+          chiudiTutte(dd);
+        });
+        dd.addEventListener("mouseleave", function () {
+          if (!conMouse.matches) return;
+          clearTimeout(timerChiusura);
+          timerChiusura = setTimeout(function () { mostra(dd, false); }, 500);
+        });
       });
-      document.addEventListener("click", function () { chiudiTutte(null); });
+      document.addEventListener("click", function () { clearTimeout(timerChiusura); chiudiTutte(null); });
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") chiudiTutte(null); });
     })();
   </script>
