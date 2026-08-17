@@ -298,6 +298,33 @@ CREATE TABLE IF NOT EXISTS diario_audit (
 );
 CREATE INDEX ix_diario_audit_prof ON diario_audit USING btree (professional_id, at);
 
+-- LISTINO delle prestazioni (17/8/26): l'elenco fra cui i professionisti possono
+-- scegliere. Lo gestiscono gli AMMINISTRATORI dal pannello (prima era scritto nel
+-- codice, src/data/listino.js, che resta solo come seme iniziale).
+-- professional_id NULL = voce per tutti; valorizzato = prestazione "su misura",
+-- visibile e utilizzabile solo da quel professionista.
+-- Convenzione: le consulenze per i colleghi hanno la chiave che inizia per
+-- "consulenza-" — su quel prefisso si regge il resto del sito (ricerca pazienti,
+-- pagine geografiche, sitemap), quindi le chiavi si generano da nome+categoria.
+CREATE TABLE IF NOT EXISTS catalog_services (
+  id SERIAL,
+  key text NOT NULL,
+  nome text NOT NULL,
+  categoria text NOT NULL DEFAULT 'domicilio',  -- domicilio | consulenza
+  min_cents integer NOT NULL DEFAULT 0,         -- prezzo minimo invalicabile
+  sugg_cents integer NOT NULL DEFAULT 0,        -- prezzo consigliato
+  durata_min smallint NOT NULL DEFAULT 30,
+  icona text NOT NULL DEFAULT 'croce'::text,
+  sort smallint NOT NULL DEFAULT 0,
+  active boolean NOT NULL DEFAULT true,         -- false = ritirata dal listino
+  professional_id integer,
+  created_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT catalog_services_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX ux_catalog_key_globale ON catalog_services (key) WHERE professional_id IS NULL;
+CREATE UNIQUE INDEX ux_catalog_key_prof ON catalog_services (professional_id, key) WHERE professional_id IS NOT NULL;
+
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
@@ -312,3 +339,4 @@ ALTER TABLE reviews ADD CONSTRAINT reviews_booking_id_fkey FOREIGN KEY (booking_
 ALTER TABLE reviews ADD CONSTRAINT reviews_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE services ADD CONSTRAINT services_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE patient_records ADD CONSTRAINT patient_records_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE catalog_services ADD CONSTRAINT catalog_services_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;

@@ -1,3 +1,11 @@
+// ⚠️ DAL 17/8/26 QUESTO FILE NON È PIÙ LA FONTE DI VERITÀ DEL LISTINO.
+// Le prestazioni fra cui i professionisti possono scegliere stanno nella tabella
+// `catalog_services` su Neon e le gestiscono gli amministratori dal pannello
+// (admin → Prestazioni → «Listino»). Questi elenchi restano solo come SEME della
+// prima migrazione (scripts/migrate-listino-db.mjs) e come riferimento storico:
+// modificarli qui non cambia nulla nel sito. Restano invece VIVI, e vanno usati,
+// i pezzi qui sotto: eConsulenza(), TIPI_ATTIVITA, le fasce orarie e la notte.
+//
 // Listino ufficiale delle prestazioni (deciso dai soci, 17/7/26).
 // Il professionista sceglie da QUESTA lista: min = prezzo minimo invalicabile
 // (anti-concorrenza sleale), consigliato = riferimento (sopra è libero).

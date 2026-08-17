@@ -2,7 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest, pidBersaglio, adminSuAltro } from "../../../lib/auth.js";
-import { LISTINO_MAP, minCentsPerKey, eConsulenza } from "../../../data/listino.js";
+import { voceDiListino, eConsulenza } from "../../../lib/listino.js";
 
 const tracciaAdmin = async (session, fornito, pid) => {
   if (adminSuAltro(session, fornito)) {
@@ -27,19 +27,24 @@ export async function GET({ request }) {
   return json({ servizi });
 }
 
-const valida = (body, catalogKeyEsistente = "") => {
+// Controlla la prestazione contro il LISTINO (tabella catalog_services, gestita
+// dagli amministratori): il professionista può inserire solo voci del listino
+// generale o create su misura per lui, e non sotto il prezzo minimo deciso.
+const valida = async (body, pid, catalogKeyEsistente = "") => {
   const catalogKey = String(body.catalog_key || catalogKeyEsistente || "").trim();
-  const voce = LISTINO_MAP[catalogKey];
-  if (!voce) return { error: "Scegli una prestazione dal listino" };
+  const voce = await voceDiListino(catalogKey, pid);
+  if (!voce) return { error: "Questa prestazione non è (più) nel listino: scegline una dall'elenco" };
   const name = voce.nome; // il nome lo detta il listino (niente testo libero)
-  const consulenza = eConsulenza(catalogKey);
+  const consulenza = eConsulenza(catalogKey) || voce.categoria === "consulenza";
   // Le consulenze durano un'ora fissa (sono "a ora"): la durata non si tocca.
-  const duration = consulenza ? voce.durata : Math.round(Number(body.duration_min));
+  const duration = consulenza ? voce.durata_min : Math.round(Number(body.duration_min));
   const price = Math.round(Number(body.price_cents));
   if (!Number.isFinite(duration) || duration < 5 || duration > 480) return { error: "Durata non valida (5-480 minuti)" };
   if (!Number.isFinite(price) || price > 100000000) return { error: "Prezzo non valido" };
-  const min = minCentsPerKey(catalogKey);
-  if (price < min) return { error: `Per "${voce.nome}" il prezzo minimo è ${voce.min} €${consulenza ? " all'ora" : ""} (consigliato ${voce.consigliato} €)` };
+  if (price < voce.min_cents) {
+    const eu = (c) => (c / 100).toFixed(2).replace(".", ",");
+    return { error: `Per "${voce.nome}" il prezzo minimo è ${eu(voce.min_cents)} €${consulenza ? " all'ora" : ""} (consigliato ${eu(voce.sugg_cents)} €)` };
+  }
 
   // Prezzo notturno (22:00-07:00): facoltativo. Vuoto = questa prestazione di notte non si fa.
   // Se indicato è una MAGGIORAZIONE, quindi non può essere inferiore al prezzo di giorno.
@@ -62,7 +67,7 @@ export async function POST({ request }) {
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
   const pid = pidBersaglio(session, body.pid);
   if (!pid) return json({ error: "Non autenticato" }, 401);
-  const v = valida(body);
+  const v = await valida(body, pid);
   if (v.error) return json(v, 400);
 
   const [gia] = await sql`
@@ -108,11 +113,11 @@ export async function PATCH({ request }) {
     WHERE id = ${id} AND professional_id = ${pid} AND deleted_at IS NULL`;
   if (!attuale) return json({ error: "Prestazione non trovata" }, 404);
 
-  const v = valida({
+  const v = await valida({
     duration_min: body.duration_min ?? attuale.duration_min,
     price_cents: body.price_cents ?? attuale.price_cents,
     price_notte_cents: body.price_notte_cents !== undefined ? body.price_notte_cents : attuale.price_notte_cents,
-  }, attuale.catalog_key);
+  }, pid, attuale.catalog_key);
   if (v.error) return json(v, 400);
   const active = body.active ?? attuale.active;
 

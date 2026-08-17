@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import CampoPassword from "./CampoPassword.jsx";
 import CercaComune from "./CercaComune.jsx";
-import { LISTINO, LISTINO_CONSULENZA, LISTINO_MAP, eConsulenza, TIPI_ATTIVITA } from "../data/listino.js";
+import { eConsulenza, TIPI_ATTIVITA } from "../data/listino.js";
 
 const dataIt = (iso) =>
   new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -48,6 +48,7 @@ const MENU = [
   },
   {
     icona: "💉", titolo: "Prestazioni", voci: [
+      { k: "srv-listino", label: "Listino (lo decidiamo noi)" },
       { k: "srv-catalogo", label: "Catalogo servizi" },
       { k: "srv-prezzi", label: "Prezzi e durata" },
       { k: "srv-materiale", label: "Materiale necessario", todo: true },
@@ -213,13 +214,19 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   const [msg, setMsg] = useState(null);
   const [salvo, setSalvo] = useState(false);
   const [nuovoServizio, setNuovoServizio] = useState({ key: "", prezzo: "" });
+  // Listino disponibile per QUESTO professionista: le voci generali + le sue su misura
+  const [listino, setListino] = useState(null);
+  const [suMisura, setSuMisura] = useState({ aperto: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
 
   const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 4500); };
+  const inScheda = (k) => (servizi || []).some((s) => s.catalog_key === k);
+  const vocePerKey = (k) => (listino || []).find((v) => v.key === k);
 
   const carica = useCallback(() => {
     fetch(`/api/panel/profilo?pid=${pid}`).then((r) => r.json()).then((d) => setProf(d.profilo || null));
     fetch(`/api/panel/servizi?pid=${pid}`).then((r) => r.json()).then((d) => setServizi(d.servizi || []));
     fetch(`/api/panel/zone?pid=${pid}`).then((r) => r.json()).then((d) => setZone(d.zone || []));
+    fetch(`/api/panel/listino?pid=${pid}`).then((r) => r.json()).then((d) => setListino(d.voci || []));
   }, [pid]);
   useEffect(carica, [carica]);
 
@@ -271,6 +278,22 @@ function ModificaScheda({ pid, nome, onIndietro }) {
     if (!r.ok) return avvisa("err", d.error);
     carica();
   };
+  const creaSuMisura = async () => {
+    const r = await fetch("/api/admin/listino", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        professional_id: pid, nome: suMisura.nome, categoria: suMisura.categoria,
+        min_cents: eaCent(suMisura.min || "0"), sugg_cents: eaCent(suMisura.sugg || suMisura.min || "0"),
+        durata_min: suMisura.categoria === "consulenza" ? 60 : Number(suMisura.durata) || 30,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", `"${suMisura.nome}" creata: ora la trovi nell'elenco qui sopra, pronta da aggiungere alla sua scheda.`);
+    setSuMisura({ aperto: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
+    carica();
+  };
+
   const rimuoviServizio = async (s) => {
     if (!window.confirm(`Tolgo "${s.name}" dalla scheda?`)) return;
     const r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${pid}`, { method: "DELETE" });
@@ -279,11 +302,11 @@ function ModificaScheda({ pid, nome, onIndietro }) {
     carica();
   };
   const aggiungiServizio = async () => {
-    const voce = LISTINO_MAP[nuovoServizio.key];
+    const voce = vocePerKey(nuovoServizio.key);
     if (!voce) return avvisa("err", "Scegli una prestazione");
     const r = await fetch("/api/panel/servizi", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pid, catalog_key: nuovoServizio.key, price_cents: eaCent(nuovoServizio.prezzo || voce.consigliato), duration_min: voce.durata }),
+      body: JSON.stringify({ pid, catalog_key: nuovoServizio.key, price_cents: nuovoServizio.prezzo ? eaCent(nuovoServizio.prezzo) : voce.sugg_cents, duration_min: voce.durata_min }),
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
@@ -304,8 +327,8 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   };
 
   if (!prof) return <Caricamento />;
-  const disponibili = LISTINO.filter((v) => !(servizi || []).some((s) => s.catalog_key === v.key));
-  const disponibiliConsulenze = LISTINO_CONSULENZA.filter((v) => !(servizi || []).some((s) => s.catalog_key === v.key));
+  const disponibili = (listino || []).filter((v) => v.categoria !== "consulenza" && !inScheda(v.key));
+  const disponibiliConsulenze = (listino || []).filter((v) => v.categoria === "consulenza" && !inScheda(v.key));
 
   return (
     <div>
@@ -367,31 +390,65 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       <div className="pf-panel" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Prestazioni e prezzi</h3>
         {!servizi ? <Caricamento /> : servizi.map((s) => {
-          const voce = LISTINO_MAP[s.catalog_key];
+          const voce = vocePerKey(s.catalog_key);
           return (
             <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "8px 0", borderBottom: "1px solid var(--iw-line, #eee)" }}>
               <strong style={{ flex: 1, minWidth: 160 }}>{s.name}{eConsulenza(s.catalog_key) && <span className="pf-note" style={{ margin: 0 }}> · consulenza/ora</span>}{!s.active && <span className="pf-note" style={{ margin: 0 }}> · disattivata</span>}</strong>
               <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
                 €<input style={{ width: 80, marginBottom: 0 }} defaultValue={(s.price_cents / 100).toString().replace(".", ",")} onBlur={(e) => { const c = eaCent(e.target.value); if (c && c !== s.price_cents) salvaServizio(s, { price_cents: c }); }} />
               </label>
-              {voce && <span className="pf-note" style={{ margin: 0 }}>min {voce.min}€</span>}
+              {voce && <span className="pf-note" style={{ margin: 0 }}>min {euro(voce.min_cents)}{voce.su_misura ? " · su misura" : ""}</span>}
               <button className="pf-btn secondario compatto" onClick={() => salvaServizio(s, { active: !s.active })}>{s.active ? "Disattiva" : "Attiva"}</button>
               <button className="pf-btn pericolo compatto" onClick={() => rimuoviServizio(s)}>Togli</button>
             </div>
           );
         })}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }} className="pf-book">
-          <select style={{ marginBottom: 0, flex: 1, minWidth: 200 }} value={nuovoServizio.key} onChange={(e) => { const v = LISTINO_MAP[e.target.value]; setNuovoServizio({ key: e.target.value, prezzo: v ? String(v.consigliato) : "" }); }}>
+          <select style={{ marginBottom: 0, flex: 1, minWidth: 200 }} value={nuovoServizio.key} onChange={(e) => { const v = vocePerKey(e.target.value); setNuovoServizio({ key: e.target.value, prezzo: v ? (v.sugg_cents / 100).toFixed(2).replace(".", ",") : "" }); }}>
             <option value="">+ Aggiungi prestazione…</option>
             <optgroup label="A domicilio (per i pazienti)">
-              {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {v.min}€)</option>)}
+              {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {euro(v.min_cents)}){v.su_misura ? " ·su misura" : ""}</option>)}
             </optgroup>
             <optgroup label="Consulenze a ora (per i colleghi)">
-              {disponibiliConsulenze.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {v.min}€/ora)</option>)}
+              {disponibiliConsulenze.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {euro(v.min_cents)}/ora){v.su_misura ? " ·su misura" : ""}</option>)}
             </optgroup>
           </select>
           {nuovoServizio.key && <>€<input style={{ width: 80, marginBottom: 0 }} value={nuovoServizio.prezzo} onChange={(e) => setNuovoServizio({ ...nuovoServizio, prezzo: e.target.value })} /></>}
           <button className="pf-btn compatto" disabled={!nuovoServizio.key} onClick={aggiungiServizio}>Aggiungi</button>
+        </div>
+
+        {/* Prestazione SU MISURA: la creiamo noi per questo professionista soltanto.
+            Lui non può inventarsene: sceglie solo dal listino che gli diamo. */}
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed var(--iw-line, #ddd)" }}>
+          {!suMisura.aperto ? (
+            <button className="pf-btn secondario compatto" onClick={() => setSuMisura({ ...suMisura, aperto: true })}>
+              ✚ Crea una prestazione su misura solo per {nome}
+            </button>
+          ) : (
+            <div className="pf-book" style={{ maxWidth: 520 }}>
+              <strong style={{ color: "var(--iw-navy)" }}>Prestazione su misura (la vedrà solo {nome})</strong>
+              <p className="pf-note" style={{ marginTop: 4 }}>
+                Serve per i casi particolari: la voce non entra nel listino generale e nessun altro
+                professionista potrà sceglierla. La trovi poi qui sopra, pronta da aggiungere alla sua scheda.
+              </p>
+              <label>Nome della prestazione *</label>
+              <input value={suMisura.nome} onChange={(e) => setSuMisura({ ...suMisura, nome: e.target.value })} placeholder="es. Gestione drenaggio toracico" />
+              <label>Tipo</label>
+              <select value={suMisura.categoria} onChange={(e) => setSuMisura({ ...suMisura, categoria: e.target.value })}>
+                <option value="domicilio">A domicilio (per i pazienti)</option>
+                <option value="consulenza">Consulenza a ora (per i colleghi)</option>
+              </select>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                <div><label>Minimo (€)</label><input inputMode="decimal" value={suMisura.min} onChange={(e) => setSuMisura({ ...suMisura, min: e.target.value })} /></div>
+                <div><label>Consigliato (€)</label><input inputMode="decimal" value={suMisura.sugg} onChange={(e) => setSuMisura({ ...suMisura, sugg: e.target.value })} /></div>
+                <div><label>Durata (min)</label><input type="number" min={5} max={480} step={5} disabled={suMisura.categoria === "consulenza"} value={suMisura.categoria === "consulenza" ? 60 : suMisura.durata} onChange={(e) => setSuMisura({ ...suMisura, durata: e.target.value })} /></div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="pf-btn compatto" onClick={creaSuMisura} disabled={!suMisura.nome.trim()}>Crea</button>
+                <button className="pf-btn secondario compatto" onClick={() => setSuMisura({ aperto: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" })}>Annulla</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -706,7 +763,10 @@ function Servizi() {
   return (
     <div>
       <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>💉 Catalogo prestazioni ({servizi.length})</h2>
-      <p className="pf-note">Ogni professionista gestisce le sue prestazioni e i suoi prezzi dal proprio pannello (autonomia = zero colli di bottiglia).</p>
+      <p className="pf-note">
+        Qui vedi cosa ha scelto ciascun professionista dal listino, col suo prezzo. Il <strong>listino</strong> —
+        cioè quali prestazioni possono scegliere — lo decidiamo noi dalla sezione «Listino (lo decidiamo noi)».
+      </p>
       {Object.entries(perProfessionista).map(([nome, rows]) => (
         <div className="pf-panel" key={nome} style={{ marginBottom: 14 }}>
           <strong style={{ color: "var(--iw-navy)", fontSize: 18 }}>{nome} <span className="pf-note">· {rows[0].city}</span></strong>
@@ -725,7 +785,176 @@ function Servizi() {
   );
 }
 
+
+/* ============================ LISTINO (gestito da noi) ============================ */
+
+// Il listino è l'elenco di prestazioni fra cui il professionista può scegliere.
+// Lo decidono gli amministratori (Bruno ed Eduard): l'infermiere non può
+// inventarsi voci nuove. Le voci "su misura" valgono per un solo professionista.
+function Listino() {
+  const [voci, setVoci] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [modifica, setModifica] = useState(null); // {id, nome, min, sugg, durata}
+  const [nuova, setNuova] = useState({ aperta: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
+
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+  const carica = useCallback(() => {
+    fetch("/api/admin/listino").then((r) => r.json()).then((d) => setVoci(d.voci || []));
+  }, []);
+  useEffect(carica, [carica]);
+
+  const crea = async () => {
+    const r = await fetch("/api/admin/listino", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome: nuova.nome, categoria: nuova.categoria,
+        min_cents: eaCent(nuova.min || "0"), sugg_cents: eaCent(nuova.sugg || nuova.min || "0"),
+        durata_min: nuova.categoria === "consulenza" ? 60 : Number(nuova.durata) || 30,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", `"${nuova.nome}" aggiunta al listino: da ora i professionisti possono sceglierla.`);
+    setNuova({ aperta: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
+    carica();
+  };
+
+  const salva = async (v) => {
+    const r = await fetch("/api/admin/listino", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: v.id, nome: modifica.nome, min_cents: eaCent(modifica.min), sugg_cents: eaCent(modifica.sugg), durata_min: Number(modifica.durata) || v.durata_min }),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", d.rinominate ? `Salvato. Il nome nuovo è stato aggiornato anche su ${d.rinominate} scheda/e.` : "Salvato ✅");
+    setModifica(null); carica();
+  };
+
+  const ritira = async (v) => {
+    const r = await fetch("/api/admin/listino", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: v.id, active: !v.active }),
+    });
+    const d = await r.json();
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", v.active
+      ? `"${v.nome}" ritirata: nessuno può più aggiungerla. Chi ce l'ha già la mantiene.`
+      : `"${v.nome}" di nuovo disponibile nel listino.`);
+    carica();
+  };
+
+  const elimina = async (v) => {
+    if (!window.confirm(`Eliminare "${v.nome}" dal listino?`)) return;
+    let r = await fetch(`/api/admin/listino?id=${v.id}`, { method: "DELETE" });
+    let d = await r.json();
+    if (r.status === 409) {
+      if (!window.confirm(`${d.error}\n\nOK = toglila anche dalle loro schede. Annulla = non faccio nulla.`)) return;
+      r = await fetch(`/api/admin/listino?id=${v.id}&anche_dalle_schede=1`, { method: "DELETE" });
+      d = await r.json();
+    }
+    if (!r.ok) return avvisa("err", d.error);
+    avvisa("ok", `"${v.nome}" eliminata dal listino${d.archiviate || d.cancellate ? ` (tolta da ${(d.archiviate || 0) + (d.cancellate || 0)} scheda/e)` : ""}.`);
+    carica();
+  };
+
+  if (!voci) return <Caricamento />;
+  const generali = voci.filter((v) => !v.professional_id);
+  const perGruppo = (cat) => generali.filter((v) => v.categoria === cat);
+  const suMisura = voci.filter((v) => v.professional_id);
+
+  const riga = (v) => (
+    <div key={v.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "10px 0", borderBottom: "1px solid var(--iw-line, #eee)", opacity: v.active ? 1 : 0.55 }}>
+      {modifica && modifica.id === v.id ? (
+        <>
+          <input style={{ flex: 1, minWidth: 200, marginBottom: 0 }} value={modifica.nome} onChange={(e) => setModifica({ ...modifica, nome: e.target.value })} />
+          <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 4 }}>min €<input style={{ width: 76, marginBottom: 0 }} value={modifica.min} onChange={(e) => setModifica({ ...modifica, min: e.target.value })} /></label>
+          <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 4 }}>cons. €<input style={{ width: 76, marginBottom: 0 }} value={modifica.sugg} onChange={(e) => setModifica({ ...modifica, sugg: e.target.value })} /></label>
+          {v.categoria !== "consulenza" && (
+            <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 4 }}>min.<input type="number" min={5} max={480} step={5} style={{ width: 76, marginBottom: 0 }} value={modifica.durata} onChange={(e) => setModifica({ ...modifica, durata: e.target.value })} /></label>
+          )}
+          <button className="pf-btn compatto" onClick={() => salva(v)}>Salva</button>
+          <button className="pf-btn secondario compatto" onClick={() => setModifica(null)}>Annulla</button>
+        </>
+      ) : (
+        <>
+          <strong style={{ flex: 1, minWidth: 180, color: "var(--iw-navy)" }}>
+            {v.nome}
+            {!v.active && <span className="pf-note" style={{ margin: 0 }}> · ritirata</span>}
+            {v.professional_name && <span className="pf-note" style={{ margin: 0 }}> · solo per {v.professional_name}</span>}
+          </strong>
+          <span className="pf-note" style={{ margin: 0 }}>
+            min {euro(v.min_cents)} · consigliato {euro(v.sugg_cents)}{v.categoria === "consulenza" ? "/ora" : ` · ${v.durata_min} min`}
+          </span>
+          <span className="pf-note" style={{ margin: 0 }}>{Number(v.in_uso) > 0 ? `usata da ${v.in_uso}` : "non usata"}</span>
+          <button className="pf-btn secondario compatto" onClick={() => setModifica({ id: v.id, nome: v.nome, min: (v.min_cents / 100).toFixed(2).replace(".", ","), sugg: (v.sugg_cents / 100).toFixed(2).replace(".", ","), durata: String(v.durata_min) })}>Modifica</button>
+          <button className="pf-btn secondario compatto" onClick={() => ritira(v)}>{v.active ? "Ritira" : "Rimetti"}</button>
+          <button className="pf-btn pericolo compatto" onClick={() => elimina(v)}>Elimina</button>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div>
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>💉 Listino prestazioni</h2>
+      <p className="pf-note">
+        Questo è l'elenco fra cui i professionisti possono scegliere: lo decidiamo noi.
+        Loro scelgono le voci e il proprio prezzo (mai sotto il minimo), ma non possono aggiungerne di nuove.
+        <br /><strong>Ritira</strong> = nessuno può più sceglierla, chi ce l'ha già la mantiene.
+        <strong> Elimina</strong> = via del tutto (se è in uso te lo diciamo prima).
+        Per una prestazione destinata a <strong>un solo infermiere</strong>, aprila da Infermieri → «✏️ Modifica scheda».
+      </p>
+      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
+
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        {!nuova.aperta ? (
+          <button className="pf-btn" onClick={() => setNuova({ ...nuova, aperta: true })}>✚ Aggiungi una prestazione al listino</button>
+        ) : (
+          <div className="pf-book" style={{ maxWidth: 560 }}>
+            <label>Nome della prestazione *</label>
+            <input value={nuova.nome} onChange={(e) => setNuova({ ...nuova, nome: e.target.value })} placeholder="es. Terapia iniettiva intramuscolo" />
+            <label>Tipo</label>
+            <select value={nuova.categoria} onChange={(e) => setNuova({ ...nuova, categoria: e.target.value })}>
+              <option value="domicilio">A domicilio (per i pazienti)</option>
+              <option value="consulenza">Consulenza a ora (per i colleghi)</option>
+            </select>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div><label>Prezzo minimo (€) *</label><input inputMode="decimal" value={nuova.min} onChange={(e) => setNuova({ ...nuova, min: e.target.value })} /></div>
+              <div><label>Consigliato (€)</label><input inputMode="decimal" value={nuova.sugg} onChange={(e) => setNuova({ ...nuova, sugg: e.target.value })} /></div>
+              <div><label>Durata (min)</label><input type="number" min={5} max={480} step={5} disabled={nuova.categoria === "consulenza"} value={nuova.categoria === "consulenza" ? 60 : nuova.durata} onChange={(e) => setNuova({ ...nuova, durata: e.target.value })} /></div>
+            </div>
+            <p className="pf-note" style={{ marginTop: -4 }}>Le consulenze durano sempre un'ora e il prezzo si intende all'ora.</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="pf-btn compatto" onClick={crea} disabled={!nuova.nome.trim()}>Aggiungi al listino</button>
+              <button className="pf-btn secondario compatto" onClick={() => setNuova({ aperta: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" })}>Annulla</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>🏠 A domicilio, per i pazienti ({perGruppo("domicilio").length})</h3>
+        {perGruppo("domicilio").map(riga)}
+      </div>
+
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>🎓 Consulenze a ora, per i colleghi ({perGruppo("consulenza").length})</h3>
+        {perGruppo("consulenza").map(riga)}
+      </div>
+
+      {suMisura.length > 0 && (
+        <div className="pf-panel">
+          <h3 style={{ marginTop: 0 }}>✚ Prestazioni su misura ({suMisura.length})</h3>
+          <p className="pf-note" style={{ marginTop: 0 }}>Valgono per un solo professionista: nessun altro le vede nel proprio pannello.</p>
+          {suMisura.map(riga)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ============================ COPERTURA ============================ */
+
 
 function Copertura() {
   const [professionisti, setProfessionisti] = useState(null);
@@ -1451,6 +1680,7 @@ export default function AdminApp() {
     "pre-confermate": <Prenotazioni stato="active" titolo="Confermate" />,
     "pre-completate": <Prenotazioni stato="done" titolo="Completate" />,
     "pre-annullate": <Prenotazioni stato="cancelled" titolo="Annullate" />,
+    "srv-listino": <Listino />,
     "srv-catalogo": <Servizi />,
     "srv-prezzi": <Servizi />,
     "srv-zone": <Copertura />,

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { LISTINO, LISTINO_CONSULENZA, LISTINO_MAP, FASCE, fasciaDi, eConsulenza, TIPI_ATTIVITA, offreDomicilio, offreConsulenza } from "../data/listino.js";
+import { FASCE, fasciaDi, eConsulenza, TIPI_ATTIVITA, offreDomicilio, offreConsulenza } from "../data/listino.js";
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
 
@@ -516,11 +516,15 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
 function TabServizi({ tipo, onCambiaTipo }) {
   const [servizi, setServizi] = useState(null);
+  // Il listino lo decidono gli amministratori (pannello admin): qui si legge e basta.
+  // Comprende le voci per tutti + quelle eventualmente create su misura per me.
+  const [listino, setListino] = useState(null);
   const [nuovo, setNuovo] = useState({ key: "", durata: "", prezzo: "", prezzoNotte: "" });
   const [messaggio, setMessaggio] = useState(null);
 
   const carica = useCallback(() => {
     panelFetch("/api/panel/servizi").then((r) => r.json()).then((d) => setServizi(d.servizi || []));
+    panelFetch("/api/panel/listino").then((r) => r.json()).then((d) => setListino(d.voci || []));
   }, []);
   useEffect(carica, [carica]);
 
@@ -531,14 +535,14 @@ function TabServizi({ tipo, onCambiaTipo }) {
 
   const aggiungi = async (e) => {
     e.preventDefault();
-    const voce = LISTINO_MAP[nuovo.key];
-    const consulenza = eConsulenza(nuovo.key);
+    const voce = (listino || []).find((v) => v.key === nuovo.key);
+    const consulenza = voce ? voce.categoria === "consulenza" : eConsulenza(nuovo.key);
     const r = await panelFetch("/api/panel/servizi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         catalog_key: nuovo.key,
-        duration_min: consulenza ? (voce?.durata || 60) : Number(nuovo.durata),
+        duration_min: consulenza ? (voce?.durata_min || 60) : Number(nuovo.durata),
         price_cents: centesimi(nuovo.prezzo),
         price_notte_cents: !consulenza && nuovo.prezzoNotte ? centesimi(nuovo.prezzoNotte) : null,
       }),
@@ -574,18 +578,24 @@ function TabServizi({ tipo, onCambiaTipo }) {
   const cambia = (id, campo, valore) =>
     setServizi(servizi.map((s) => (s.id === id ? { ...s, [campo]: valore, _mod: true } : s)));
 
-  if (!servizi) return <p className="pf-note">Caricamento…</p>;
+  if (!servizi || !listino) return <p className="pf-note">Caricamento…</p>;
+
+  const vocePerKey = (k) => listino.find((v) => v.key === k);
+  const eUnaConsulenza = (k) => { const v = vocePerKey(k); return v ? v.categoria === "consulenza" : eConsulenza(k); };
+  const euroDaCent = (c) => (c / 100).toFixed(2).replace(".", ",");
 
   // Cosa mostrare: dipende dal tipo di attività scelto (Profilo). Le prestazioni
   // già inserite si vedono SEMPRE, anche se il tipo è cambiato dopo.
-  const mostraDomicilio = offreDomicilio(tipo) || servizi.some((s) => !eConsulenza(s.catalog_key));
-  const mostraConsulenze = offreConsulenza(tipo) || servizi.some((s) => eConsulenza(s.catalog_key));
-  const serviziDomicilio = servizi.filter((s) => !eConsulenza(s.catalog_key));
-  const serviziConsulenza = servizi.filter((s) => eConsulenza(s.catalog_key));
+  const mostraDomicilio = offreDomicilio(tipo) || servizi.some((s) => !eUnaConsulenza(s.catalog_key));
+  const mostraConsulenze = offreConsulenza(tipo) || servizi.some((s) => eUnaConsulenza(s.catalog_key));
+  const serviziDomicilio = servizi.filter((s) => !eUnaConsulenza(s.catalog_key));
+  const serviziConsulenza = servizi.filter((s) => eUnaConsulenza(s.catalog_key));
+  const listinoDomicilio = listino.filter((v) => v.categoria !== "consulenza");
+  const listinoConsulenze = listino.filter((v) => v.categoria === "consulenza");
 
   const rigaServizio = (s) => {
-    const voce = LISTINO_MAP[s.catalog_key];
-    const consulenza = eConsulenza(s.catalog_key);
+    const voce = vocePerKey(s.catalog_key);
+    const consulenza = eUnaConsulenza(s.catalog_key);
     return (
       <div className="pf-servizio-edit" key={s.id} style={{ opacity: s.active ? 1 : 0.55 }}>
         <div className="nome" style={{ fontWeight: 700, color: "var(--iw-navy)", padding: "8px 0" }}>{s.name}{consulenza && <span className="pf-note" style={{ margin: 0, fontWeight: 400 }}> · 1 ora, online o telefono</span>}</div>
@@ -612,37 +622,37 @@ function TabServizi({ tipo, onCambiaTipo }) {
           {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
           <button className="pf-elimina" onClick={() => elimina(s)} type="button" title={`Elimina ${s.name}`} aria-label={`Elimina ${s.name}`}>🗑</button>
         </div>
-        {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {voce.min} € · consigliato {voce.consigliato} €{consulenza ? " all'ora" : ""}</p>}
+        {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {euroDaCent(voce.min_cents)} € · consigliato {euroDaCent(voce.sugg_cents)} €{consulenza ? " all'ora" : ""}{voce.su_misura ? " · prestazione riservata a te" : ""}</p>}
       </div>
     );
   };
 
-  const formAggiungi = (listino, consulenza) => {
+  const formAggiungi = (elenco, consulenza) => {
     const gia = new Set(servizi.map((s) => s.catalog_key));
-    const disponibili = listino.filter((v) => !gia.has(v.key));
-    const voceSel = LISTINO_MAP[nuovo.key];
-    const nuovoEQui = nuovo.key && eConsulenza(nuovo.key) === consulenza;
+    const disponibili = elenco.filter((v) => !gia.has(v.key));
+    const voceSel = vocePerKey(nuovo.key);
+    const nuovoEQui = nuovo.key && eUnaConsulenza(nuovo.key) === consulenza;
     if (!disponibili.length) return <p className="pf-note" style={{ marginTop: 18 }}>{consulenza ? "Hai già aggiunto tutte le consulenze del listino ✅" : "Hai già aggiunto tutte le prestazioni del listino ✅"}</p>;
     return (
       <form key={consulenza ? "form-consulenza" : "form-domicilio"} className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
         <h2>{consulenza ? "+ Aggiungi una consulenza" : "+ Aggiungi una prestazione"}</h2>
         <label>{consulenza ? "Consulenza *" : "Prestazione *"}</label>
         <select required value={nuovoEQui ? nuovo.key : ""} onChange={(e) => {
-          const v = LISTINO_MAP[e.target.value];
-          setNuovo({ key: e.target.value, durata: v ? String(v.durata) : "", prezzo: v ? String(v.consigliato).replace(".", ",") : "", prezzoNotte: "" });
+          const v = vocePerKey(e.target.value);
+          setNuovo({ key: e.target.value, durata: v ? String(v.durata_min) : "", prezzo: v ? euroDaCent(v.sugg_cents) : "", prezzoNotte: "" });
         }}>
           <option value="">Scegli dal listino…</option>
-          {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome}</option>)}
+          {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome}{v.su_misura ? " (riservata a te)" : ""}</option>)}
         </select>
         {nuovoEQui && voceSel && (
           <p className="pf-note" style={{ marginTop: -4 }}>
-            Prezzo minimo <strong>{voceSel.min} €</strong> · consigliato <strong>{voceSel.consigliato} €</strong>{consulenza ? " all'ora" : ""} — sopra il consigliato sei libero.
+            Prezzo minimo <strong>{euroDaCent(voceSel.min_cents)} €</strong> · consigliato <strong>{euroDaCent(voceSel.sugg_cents)} €</strong>{consulenza ? " all'ora" : ""} — sopra il consigliato sei libero.
           </p>
         )}
         {consulenza ? (
           <>
             <label>Il tuo prezzo all'ora (€) *</label>
-            <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovoEQui ? nuovo.prezzo : ""} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
+            <input required inputMode="decimal" placeholder={voceSel ? euroDaCent(voceSel.sugg_cents) : "€"} value={nuovoEQui ? nuovo.prezzo : ""} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
             <p className="pf-note" style={{ marginTop: -4 }}>
               Ogni consulenza dura <strong>un'ora</strong> e si svolge <strong>online o per telefono</strong>: il collega
               la prenota dalla tua agenda come una normale prestazione, tu lo contatti col recapito che ricevi.
@@ -657,7 +667,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
               </div>
               <div>
                 <label>Il tuo prezzo di giorno (€) *</label>
-                <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovoEQui ? nuovo.prezzo : ""} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
+                <input required inputMode="decimal" placeholder={voceSel ? euroDaCent(voceSel.sugg_cents) : "€"} value={nuovoEQui ? nuovo.prezzo : ""} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
               </div>
             </div>
             <label>🌙 Prezzo di notte (€) <span style={{ fontWeight: 400 }}>— facoltativo</span></label>
@@ -689,7 +699,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
         <section style={{ marginBottom: 26 }}>
           {mostraConsulenze && <h2 style={{ margin: "0 0 8px", fontSize: 24 }}>🏠 Prestazioni a domicilio (per i pazienti)</h2>}
           {serviziDomicilio.map((s) => rigaServizio(s))}
-          {formAggiungi(LISTINO, false)}
+          {formAggiungi(listinoDomicilio, false)}
         </section>
       )}
 
@@ -701,7 +711,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
             prenota un'ora con te. Scegli quali offrire e il tuo prezzo all'ora; compaiono nella tua scheda e su <a href="/consulenza" target="_blank" rel="noreferrer">/consulenza</a>.
           </p>
           {serviziConsulenza.map((s) => rigaServizio(s))}
-          {formAggiungi(LISTINO_CONSULENZA, true)}
+          {formAggiungi(listinoConsulenze, true)}
         </section>
       )}
 
