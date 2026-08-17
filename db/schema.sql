@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS applications (
   address text NOT NULL DEFAULT ''::text,
   pass_hash text NOT NULL DEFAULT ''::text,
   gender text NOT NULL DEFAULT ''::text,
+  tipo text NOT NULL DEFAULT ''::text, -- attività dichiarata: '' | domicilio | consulenza | entrambi (17/8/26)
   CONSTRAINT applications_pkey PRIMARY KEY (id)
 );
 
@@ -152,6 +153,9 @@ CREATE TABLE IF NOT EXISTS professionals (
   verified_by text NOT NULL DEFAULT ''::text,
   edited_by text NOT NULL DEFAULT ''::text,
   edited_at timestamp with time zone,
+  -- Tipo di attività scelto dal professionista (17/8/26): '' = non ancora scelto
+  -- (si comporta come domicilio), 'domicilio' | 'consulenza' | 'entrambi'
+  tipo text NOT NULL DEFAULT ''::text,
   CONSTRAINT professionals_pkey PRIMARY KEY (id),
   CONSTRAINT professionals_slug_key UNIQUE (slug)
 );
@@ -204,8 +208,12 @@ CREATE TABLE IF NOT EXISTS services (
   price_cents integer NOT NULL DEFAULT 0,
   active boolean NOT NULL DEFAULT true,
   sort smallint NOT NULL DEFAULT 0,
-  catalog_key text NOT NULL DEFAULT ''::text,
+  catalog_key text NOT NULL DEFAULT ''::text, -- chiave del listino; 'consulenza-*' = consulenza per colleghi
   price_notte_cents integer,
+  -- Eliminazione morbida (17/8/26): una prestazione con prenotazioni nello storico
+  -- non si può cancellare (FK bookings.service_id) → active=false + deleted_at.
+  -- Sparisce da pannello e sito, lo storico resta leggibile.
+  deleted_at timestamp with time zone,
   CONSTRAINT services_pkey PRIMARY KEY (id)
 );
 CREATE INDEX ix_services_prof ON services USING btree (professional_id);

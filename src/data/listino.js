@@ -31,7 +31,37 @@ export const LISTINO = [
   { key: "lavaggio-auricolare", nome: "Lavaggio auricolare",              min: 20,  consigliato: 40,  durata: 20, icona: "goccia" },
 ];
 
-export const LISTINO_MAP = Object.fromEntries(LISTINO.map((p) => [p.key, p]));
+// ---- Consulenze per infermieri liberi professionisti (richiesta soci 17/8/26) ----
+// Sono prestazioni "a ora" rivolte ai COLLEGHI (non ai pazienti): le offre
+// l'infermiere consulente, che sceglie quali proporre e a che prezzo. Durata
+// fissa 60 min = 1 ora; niente prezzo notturno. Le chiavi iniziano tutte con
+// "consulenza-": è così che il resto del sito le distingue da quelle a domicilio.
+export const LISTINO_CONSULENZA = [
+  { key: "consulenza-avvio",           nome: "Avvio della libera professione",            min: 30, consigliato: 60, durata: 60, icona: "laurea",   slug: "avvio-libera-professione" },
+  { key: "consulenza-competenze",      nome: "Analisi delle competenze e posizionamento", min: 30, consigliato: 60, durata: 60, icona: "cartella", slug: "analisi-competenze-posizionamento" },
+  { key: "consulenza-tariffario",      nome: "Creazione dei servizi e del tariffario",    min: 30, consigliato: 60, durata: 60, icona: "etichetta", slug: "servizi-e-tariffario" },
+  { key: "consulenza-organizzazione",  nome: "Organizzazione e sviluppo dell'attività",   min: 30, consigliato: 60, durata: 60, icona: "attivita", slug: "organizzazione-sviluppo-attivita" },
+  { key: "consulenza-personalizzata",  nome: "Consulenza personalizzata individuale",     min: 30, consigliato: 60, durata: 60, icona: "cuore",    slug: "consulenza-personalizzata" },
+];
+
+export const LISTINO_CONSULENZA_MAP = Object.fromEntries(LISTINO_CONSULENZA.map((p) => [p.key, p]));
+
+// Mappa UNICA (domicilio + consulenze): la usano le validazioni delle API,
+// che devono accettare qualsiasi prestazione lecita.
+export const LISTINO_MAP = Object.fromEntries([...LISTINO, ...LISTINO_CONSULENZA].map((p) => [p.key, p]));
+
+// Una prestazione è una consulenza per colleghi (e non a domicilio)?
+export const eConsulenza = (catalogKey) => String(catalogKey || "").startsWith("consulenza-");
+
+// Tipo di attività scelto dal professionista (professionals.tipo):
+// '' = non ha ancora scelto (si comporta come "domicilio"), oppure uno dei tre.
+export const TIPI_ATTIVITA = [
+  { key: "domicilio",  nome: "Infermiere a domicilio",  breve: "Prestazioni ai pazienti a casa loro (medicazioni, iniezioni, prelievi…)" },
+  { key: "consulenza", nome: "Infermiere consulente",   breve: "Consulenze a ora per colleghi che avviano o sviluppano la libera professione" },
+  { key: "entrambi",   nome: "Entrambe le cose",        breve: "Prestazioni a domicilio ai pazienti e consulenze ai colleghi" },
+];
+export const offreDomicilio = (tipo) => !tipo || tipo === "domicilio" || tipo === "entrambi";
+export const offreConsulenza = (tipo) => tipo === "consulenza" || tipo === "entrambi";
 
 // prezzo minimo (in centesimi) ammesso per una prestazione del listino
 export function minCentsPerKey(key) {

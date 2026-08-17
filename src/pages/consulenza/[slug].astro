@@ -1,0 +1,137 @@
+---
+export const prerender = false;
+
+import Platform from "../../layouts/Platform.astro";
+import Icona from "../../components/Icona.astro";
+import { sql } from "../../lib/db.js";
+import { CONSULENZE, CONSULENZE_PER_SLUG, FAQ_CONSULENZE } from "../../data/consulenze.js";
+import { organizationSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
+import { nextAvailability } from "../../lib/slots.js";
+
+const { slug } = Astro.params;
+const c = CONSULENZE_PER_SLUG[slug];
+if (!c) return new Response(null, { status: 404 });
+
+// Chi offre QUESTA consulenza (una card per consulente, col suo prezzo/ora)
+const righe = await sql`
+  SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents
+  FROM professionals p
+  JOIN services s ON s.professional_id = p.id AND s.active AND s.catalog_key = ${c.key}
+  WHERE p.status = 'active'
+  ORDER BY p.name`;
+const consulenti = await Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
+const altre = CONSULENZE.filter((x) => x.key !== c.key);
+
+const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+const path = `/consulenza/${c.slug}`;
+const titolo = `${c.titolo}: consulenza a ora per infermieri liberi professionisti | InfermieriWeb`;
+const descrizione = `${c.breve} Consulenza di un'ora, online o per telefono, con un infermiere libero professionista iscritto all'albo. Prenotazione online, prezzo del consulente.`;
+const schemas = [
+  organizationSchema,
+  faqSchema(FAQ_CONSULENZE),
+  breadcrumbSchema([
+    { name: "Home", url: `${SITE_URL}/` },
+    { name: "Consulenze per infermieri", url: `${SITE_URL}/consulenza` },
+    { name: c.titolo, url: `${SITE_URL}${path}` },
+  ]),
+];
+---
+
+<Platform title={titolo} description={descrizione} path={path} schemas={schemas}>
+  <section class="pf-hero pf-hero-centro">
+    <span class="pf-hero-occhiello">Consulenza per infermieri · 1 ora</span>
+    <h1>{c.titolo}</h1>
+    <p class="sottotitolo">{c.breve} Online o per telefono, con un collega che la libera professione la fa davvero.</p>
+  </section>
+
+  {consulenti.length > 0 ? (
+    <section class="pf-section alt">
+      <div class="pf-container pf-center" style="margin-bottom: 28px;">
+        <span class="pf-kicker">Prenota</span>
+        <h2>Chi offre questa consulenza</h2>
+      </div>
+      <div class="pf-pro-list" style="max-width: 780px; margin: 0 auto;">
+        {consulenti.map((p) => (
+          <div class="pf-pro-card">
+            <img class="foto" src={p.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${p.name}`} width="80" height="80" loading="lazy" />
+            <div class="info">
+              <a class="nome" href={`/p/${p.slug}#consulenze`}>{p.name}</a>
+              <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province}) · online o telefono</div>
+              {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
+              <div class="prezzo">{euro(p.price_cents)}/ora</div>
+            </div>
+            <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}#prenota`}>Vedi orari e prenota</a>
+          </div>
+        ))}
+      </div>
+    </section>
+  ) : (
+    <section class="pf-section alt pf-center">
+      <div class="pf-container" style="max-width: 620px;">
+        <h2>Nessun consulente ha ancora attivato questa consulenza</h2>
+        <p class="pf-sub">Guarda le altre consulenze disponibili o scrivici: ti mettiamo in contatto noi.</p>
+        <p style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <a class="pf-btn" href="/consulenza#consulenti">Tutte le consulenze</a>
+          <a class="pf-btn secondario" href="/richiedi-informazioni">Richiedi informazioni</a>
+        </p>
+      </div>
+    </section>
+  )}
+
+  <section class="pf-section" style="padding-top: 40px;">
+    <div class="pf-container" style="max-width: 880px;">
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Di cosa si parla</h2>
+        <p style="color: var(--iw-slate); margin: 0;">{c.descrizione}</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin-bottom: 18px;">
+        <div class="pf-panel">
+          <h2 style="margin-top: 0;">Cosa comprende</h2>
+          <ul class="pf-lista">
+            {c.comprende.map((d) => <li>{d}</li>)}
+          </ul>
+        </div>
+        <div class="pf-panel">
+          <h2 style="margin-top: 0;">Per chi è</h2>
+          <ul class="pf-lista">
+            {c.perChi.map((i) => <li>{i}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Quanto costa e come si svolge</h2>
+        <p style="color: var(--iw-slate);">
+          Ogni consulenza dura <strong>un'ora</strong>. Il prezzo all'ora lo decide il consulente ed è indicato
+          nella sua scheda, accanto alla consulenza. Si svolge <strong>online (videochiamata) o per telefono</strong>:
+          dopo la conferma ricevi il suo recapito e vi accordate sul canale.
+        </p>
+        <p class="pf-note" style="margin: 0;">
+          Nessun pagamento online e nessuna carta richiesta: il compenso si regola direttamente con il consulente.
+          I consulenti sono infermieri, non commercialisti né avvocati: per gli aspetti fiscali o legali di dettaglio
+          ti indicheranno quando serve un professionista specifico.
+        </p>
+      </div>
+
+      <div class="pf-panel" style="margin-bottom: 18px;">
+        <h2 style="margin-top: 0;">Domande frequenti</h2>
+        {FAQ_CONSULENZE.map((f) => (
+          <details class="pf-faq">
+            <summary>{f.question}</summary>
+            <p>{f.answer}</p>
+          </details>
+        ))}
+      </div>
+
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">Le altre consulenze</h2>
+        <ul class="pf-lista">
+          {altre.map((x) => (
+            <li><a href={`/consulenza/${x.slug}`} style="color: var(--iw-primary-deep); font-weight: 700;">{x.titolo}</a> — {x.breve}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+</Platform>

@@ -13,9 +13,12 @@ const recensioni = await sql`
   FROM reviews r JOIN professionals p ON p.id = r.professional_id
   WHERE r.status = 'published' ORDER BY r.created_at DESC LIMIT 12`;
 const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+// Eventuale valutazione Google di un professionista (campo facoltativo, oggi
+// nessuno lo usa: Eduard l'ha tolta dalla sua scheda il 17/8/26). Si mostra
+// SOLO se qualcuno ha davvero un rating (il default è '' e non NULL).
 const [primo] = await sql`
-  SELECT name, google_rating FROM professionals
-  WHERE status = 'active' AND google_rating IS NOT NULL ORDER BY id LIMIT 1`;
+  SELECT name, google_rating, google_reviews_url FROM professionals
+  WHERE status = 'active' AND google_rating <> '' ORDER BY id LIMIT 1`;
 ---
 
 <Platform
@@ -61,18 +64,22 @@ const [primo] = await sql`
             const piene = Math.round(v);
             return <div class="pf-stars" style="font-size: 24px;">{"★".repeat(piene)}{"☆".repeat(5 - piene)}</div>;
           })()}
-          <p class="pf-note" style="max-width: 520px; margin: 6px auto 0;">Valutazione Google — <strong>non verificata da InfermieriWeb</strong></p>
+          {primo && <p class="pf-note" style="max-width: 520px; margin: 6px auto 0;">Valutazione Google — <strong>non verificata da InfermieriWeb</strong></p>}
           <p style="color: var(--iw-slate); max-width: 520px; margin: 12px auto 6px;">
             Le recensioni verificate di InfermieriWeb compariranno qui e sulla scheda di ogni
             professionista: può lasciarle solo chi ha completato una prenotazione tramite il sito.
           </p>
-          <a
-            class="pf-btn"
-            href="https://g.page/r/CblrQcuM1y1GEBM/review"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="margin-top: 12px;"
-          >Lascia una recensione su Google</a>
+          {primo?.google_reviews_url ? (
+            <a
+              class="pf-btn"
+              href={primo.google_reviews_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style="margin-top: 12px;"
+            >Lascia una recensione su Google</a>
+          ) : (
+            <a class="pf-btn" href="/cerca" style="margin-top: 12px;">Trova un professionista e prenota</a>
+          )}
         </div>
       )}
 

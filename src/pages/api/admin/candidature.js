@@ -25,7 +25,7 @@ export async function GET({ request }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
   const candidature = await sql`
     SELECT id, name, email, phone, profession, albo_name, albo_number, albo_date,
-           vat_number, city, province, address, message, created_at
+           vat_number, city, province, address, message, created_at, tipo
     FROM applications WHERE status = 'new' ORDER BY created_at`;
   return json({ candidature });
 }
@@ -96,7 +96,7 @@ export async function POST({ request }) {
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
-    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by)
+    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by, tipo)
     VALUES (
       ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${cand.albo_name || ''}, ${cand.albo_number || ''}, ${cand.albo_date || ''},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
@@ -104,7 +104,8 @@ export async function POST({ request }) {
       ${regione}, ${provincia}, ${cand.city}, ${cand.address},
       ${cand.phone}, ${cand.email},
       ${geo ? geo.lat : null}, ${geo ? geo.lng : null},
-      ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}, now(), now(), ${verificatoDa}
+      ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}, now(), now(), ${verificatoDa},
+      ${cand.tipo || "domicilio"}
     ) RETURNING id`;
 
   await sql`

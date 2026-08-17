@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../lib/db.js";
 import { SITE_URL } from "../data/schema.js";
 import { servicesData } from "../data/services.js";
+import { CONSULENZE } from "../data/consulenze.js";
 
 const slugify = (s) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/['\s]+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -14,6 +15,8 @@ export async function GET() {
     SELECT slug, created_at FROM professionals p WHERE status = 'active'
       AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)`;
 
+  // Pagine geografiche = infermieri a DOMICILIO (le consulenze per colleghi
+  // sono online, non hanno una zona: stanno sotto /consulenza)
   const zone = await sql`
     SELECT DISTINCT z.region, z.province, z.city
     FROM (
@@ -22,7 +25,7 @@ export async function GET() {
       SELECT region, province, city, id FROM professionals WHERE status = 'active'
     ) z
     JOIN professionals p ON p.id = z.professional_id AND p.status = 'active'
-      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
+      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')
     WHERE z.region <> '' AND z.city <> ''`;
 
   const articoli = await sql`
@@ -37,6 +40,11 @@ export async function GET() {
   }
   for (const serviceId of Object.keys(servicesData)) {
     urls.push({ loc: `${SITE_URL}/servizio/${serviceId}`, priority: "0.8" });
+  }
+  // Consulenze per infermieri liberi professionisti (indice + una pagina per consulenza)
+  urls.push({ loc: `${SITE_URL}/consulenza`, priority: "0.8" });
+  for (const c of CONSULENZE) {
+    urls.push({ loc: `${SITE_URL}/consulenza/${c.slug}`, priority: "0.7" });
   }
 
   // Conto i figli di ogni livello: una regione/provincia con UN solo figlio

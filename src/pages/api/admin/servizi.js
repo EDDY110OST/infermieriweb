@@ -18,6 +18,7 @@ export async function GET({ request }) {
     FROM services s
     JOIN professionals p ON p.id = s.professional_id
     LEFT JOIN LATERAL (SELECT COUNT(*) AS n FROM bookings WHERE service_id = s.id) b ON TRUE
+    WHERE s.deleted_at IS NULL
     ORDER BY p.name, s.sort`;
 
   return json({ servizi });

@@ -29,3 +29,4 @@ node_modules.nosync
 
 # Cache locale di Astro (non condividere tra i Mac)
 .astro/
+scripts/tmp/

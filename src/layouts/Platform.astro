@@ -4,6 +4,9 @@ import "../styles/platform.css";
 import logo from "../assets/logo.png";
 import SocialBar from "../islands/SocialBar.jsx";
 import { social } from "../data/social.js";
+import { servicesData } from "../data/services.js";
+import { NOMI_DOMICILIO, NOMI_COLLOQUIALI } from "../data/servizi-extra.js";
+import { CONSULENZE } from "../data/consulenze.js";
 
 const { title, description, path = "/", ogType, ogImage, ogImageAlt, schemas = [], manifest, robots } = Astro.props;
 const current = path.replace(/\/$/, "") || "/";
@@ -17,26 +20,25 @@ try {
   const zone = await sql`
     SELECT c.city, c.province, c.region, COUNT(*) AS n
     FROM coverage_areas c JOIN professionals p ON p.id = c.professional_id AND p.status = 'active'
-      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
+      AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')
     GROUP BY 1, 2, 3 ORDER BY n DESC, c.city LIMIT 6`;
   cittaFooter = zone.map((z) => ({
     city: z.city,
     href: `/professionisti/${slugifyFooter(z.region)}/${slugifyFooter(z.province)}/${slugifyFooter(z.city)}`,
   }));
 } catch { /* footer senza città se il DB non risponde */ }
-// Menu potato secondo la revisione di Eduard (15/7): due percorsi chiari,
-// paziente e professionista. Zone e Chi siamo vivono nel footer.
-// Menu minimale (richiesta soci 16/7): "Come funziona" vive nella home,
-// "Per i professionisti" si raggiunge dal bottone "Voglio la mia scheda" in fondo alla home
-// Nav = solo pagine informative. Le AZIONI sono i due pulsanti (Prenota, Richiedi
-// informazioni). Tolte "Trova un infermiere" (ridondante col pulsante Prenota) e
-// "Area professionisti" (era grigia e sembrava rotta: vive nel footer).
-const nav = [
-  { href: "/come-funziona", label: "Come funziona" },
-  { href: "/domicilio", label: "Prestazioni" },
-  { href: "/articoli", label: "Blog" },
-  { href: "/per-i-professionisti", label: "Sei un infermiere?" },
-];
+// Menu (revisione soci 17/8/26): due tendine.
+//  - "Prestazioni": due gruppi, per i PAZIENTI (a domicilio → /servizio/*) e per i
+//    PROFESSIONISTI (consulenze a ora per colleghi → /consulenza/*).
+//  - "Area professionisti": Accedi / Candidati + le info (perché iscriversi, consulenze).
+// Le AZIONI restano i due pulsanti (Prenota, Richiedi informazioni).
+const prestazioniPazienti = Object.entries(servicesData).map(([id, sv]) => ({
+  href: `/servizio/${id}`, label: NOMI_DOMICILIO[id] || NOMI_COLLOQUIALI[id] || sv.title,
+}));
+const prestazioniProfessionisti = CONSULENZE.map((c) => ({ href: `/consulenza/${c.slug}`, label: c.titolo }));
+const dentro = (prefissi) => prefissi.some((pre) => current === pre || current.startsWith(pre + "/"));
+const attivoPrestazioni = dentro(["/domicilio", "/servizio", "/consulenza"]);
+const attivoArea = dentro(["/area-professionisti", "/lavora-con-noi", "/per-i-professionisti"]);
 ---
 
 <Base {title} {description} {path} {ogType} {ogImage} {ogImageAlt} {schemas} {manifest} {robots}>
@@ -50,9 +52,42 @@ const nav = [
           <span></span><span></span><span></span>
         </button>
         <nav class="pf-nav" id="pf-nav" aria-label="Menu principale">
-          {nav.map((item) => (
-            <a href={item.href} class={item.spento ? "pf-nav-spento" : undefined} aria-current={current === item.href ? "page" : undefined}>{item.label}</a>
-          ))}
+          <a href="/come-funziona" aria-current={current === "/come-funziona" ? "page" : undefined}>Come funziona</a>
+
+          <div class="pf-dd">
+            <button type="button" class={`pf-dd-btn${attivoPrestazioni ? " attivo" : ""}`} aria-expanded="false" aria-haspopup="true" aria-controls="pf-dd-prestazioni">Prestazioni <span class="pf-dd-freccia" aria-hidden="true">▾</span></button>
+            <div class="pf-dd-menu pf-dd-menu-2col" id="pf-dd-prestazioni">
+              <div class="pf-dd-col">
+                <a class="pf-dd-testa" href="/domicilio">Per i pazienti <small>a domicilio</small></a>
+                {prestazioniPazienti.map((it) => (
+                  <a href={it.href} aria-current={current === it.href ? "page" : undefined}>{it.label}</a>
+                ))}
+                <a class="pf-dd-tutte" href="/domicilio">Tutte le prestazioni a domicilio →</a>
+              </div>
+              <div class="pf-dd-col">
+                <a class="pf-dd-testa" href="/consulenza">Per i professionisti <small>consulenze a ora</small></a>
+                {prestazioniProfessionisti.map((it) => (
+                  <a href={it.href} aria-current={current === it.href ? "page" : undefined}>{it.label}</a>
+                ))}
+                <a class="pf-dd-tutte" href="/consulenza">Tutte le consulenze →</a>
+              </div>
+            </div>
+          </div>
+
+          <a href="/articoli" aria-current={current === "/articoli" ? "page" : undefined}>Blog</a>
+
+          <div class="pf-dd">
+            <button type="button" class={`pf-dd-btn${attivoArea ? " attivo" : ""}`} aria-expanded="false" aria-haspopup="true" aria-controls="pf-dd-area">Area professionisti <span class="pf-dd-freccia" aria-hidden="true">▾</span></button>
+            <div class="pf-dd-menu" id="pf-dd-area">
+              <a class="pf-dd-azione" href="/area-professionisti">🔐 Accedi <small>hai già la tua scheda</small></a>
+              <a class="pf-dd-azione" href="/lavora-con-noi">✍️ Candidati <small>gratis in fase di lancio</small></a>
+              <div class="pf-dd-sep" role="separator"></div>
+              <a href="/per-i-professionisti" aria-current={current === "/per-i-professionisti" ? "page" : undefined}>Perché iscriverti</a>
+              <a href="/consulenza" aria-current={current === "/consulenza" ? "page" : undefined}>Consulenze per la libera professione</a>
+              <a href="/articoli">Blog e guide</a>
+            </div>
+          </div>
+
           <a class="pf-cta" href="/cerca">Prenota</a>
           <a class="pf-cta pf-cta-ghost" href="/richiedi-informazioni" aria-current={current === "/richiedi-informazioni" ? "page" : undefined}>Richiedi informazioni</a>
           <SocialBar links={social} variant="header" size={19} />
@@ -131,6 +166,30 @@ const nav = [
           burger.setAttribute("aria-expanded", open ? "true" : "false");
         });
       }
+      // Tendine del menu: click/tocco apre e chiude (sul desktop si aprono anche al
+      // passaggio del mouse, via CSS); click fuori o Esc chiudono tutto.
+      var tendine = Array.prototype.slice.call(document.querySelectorAll(".pf-dd"));
+      function chiudiTutte(tranne) {
+        tendine.forEach(function (dd) {
+          if (dd === tranne) return;
+          dd.classList.remove("open");
+          var b = dd.querySelector(".pf-dd-btn");
+          if (b) b.setAttribute("aria-expanded", "false");
+        });
+      }
+      tendine.forEach(function (dd) {
+        var btn = dd.querySelector(".pf-dd-btn");
+        if (!btn) return;
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var open = dd.classList.toggle("open");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+          chiudiTutte(dd);
+        });
+        dd.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      document.addEventListener("click", function () { chiudiTutte(null); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") chiudiTutte(null); });
     })();
   </script>
 </Base>

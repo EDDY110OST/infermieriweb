@@ -5,6 +5,7 @@ import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { sendEmail } from "../../lib/mailer.js";
 import { hashPassword } from "../../lib/auth.js";
 import { trovaComune } from "../../data/comuni.js";
+import { TIPI_ATTIVITA } from "../../data/listino.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -26,6 +27,9 @@ export async function POST({ request }) {
   const phone = String(body.phone || "").trim();
   const profession = String(body.profession || "infermiere").trim();
   const gender = String(body.gender || "").trim();
+  // Tipo di attività dichiarato: domicilio (pazienti) / consulenza (colleghi) / entrambi
+  const tipo = TIPI_ATTIVITA.some((t) => t.key === body.tipo) ? String(body.tipo) : "domicilio";
+  const nomeTipo = TIPI_ATTIVITA.find((t) => t.key === tipo)?.nome || tipo;
   const alboName = String(body.albo_name || "").trim();
   const alboNumber = String(body.albo_number || "").trim();
   const alboDate = String(body.albo_date || "").trim();
@@ -65,8 +69,8 @@ export async function POST({ request }) {
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
-    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender})`;
+    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender, tipo)
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender}, ${tipo})`;
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
@@ -79,6 +83,7 @@ export async function POST({ request }) {
         <table style="width: 100%; font-size: 15px;">
           <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${gender === "f" ? "Dott.ssa" : "Dott."} ${esc(name)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${esc(profession)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Attività</td><td>${esc(nomeTipo)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${esc(city)}${province ? " (" + province + ")" : ""}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${esc(alboName)} n. ${esc(alboNumber)} (dal ${esc(alboDate)})</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${vatNumber ? esc(vatNumber) : "<strong>assente</strong> — pre-iscrizione (profilo non prenotabile finché non apre la P.IVA)"}</td></tr>

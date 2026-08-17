@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import CampoPassword from "./CampoPassword.jsx";
 import CercaComune from "./CercaComune.jsx";
-import { LISTINO, LISTINO_MAP } from "../data/listino.js";
+import { LISTINO, LISTINO_CONSULENZA, LISTINO_MAP, eConsulenza, TIPI_ATTIVITA } from "../data/listino.js";
 
 const dataIt = (iso) =>
   new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -305,6 +305,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
 
   if (!prof) return <Caricamento />;
   const disponibili = LISTINO.filter((v) => !(servizi || []).some((s) => s.catalog_key === v.key));
+  const disponibiliConsulenze = LISTINO_CONSULENZA.filter((v) => !(servizi || []).some((s) => s.catalog_key === v.key));
 
   return (
     <div>
@@ -369,7 +370,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
           const voce = LISTINO_MAP[s.catalog_key];
           return (
             <div key={s.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "8px 0", borderBottom: "1px solid var(--iw-line, #eee)" }}>
-              <strong style={{ flex: 1, minWidth: 160 }}>{s.name}{!s.active && <span className="pf-note" style={{ margin: 0 }}> · disattivata</span>}</strong>
+              <strong style={{ flex: 1, minWidth: 160 }}>{s.name}{eConsulenza(s.catalog_key) && <span className="pf-note" style={{ margin: 0 }}> · consulenza/ora</span>}{!s.active && <span className="pf-note" style={{ margin: 0 }}> · disattivata</span>}</strong>
               <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
                 €<input style={{ width: 80, marginBottom: 0 }} defaultValue={(s.price_cents / 100).toString().replace(".", ",")} onBlur={(e) => { const c = eaCent(e.target.value); if (c && c !== s.price_cents) salvaServizio(s, { price_cents: c }); }} />
               </label>
@@ -382,7 +383,12 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }} className="pf-book">
           <select style={{ marginBottom: 0, flex: 1, minWidth: 200 }} value={nuovoServizio.key} onChange={(e) => { const v = LISTINO_MAP[e.target.value]; setNuovoServizio({ key: e.target.value, prezzo: v ? String(v.consigliato) : "" }); }}>
             <option value="">+ Aggiungi prestazione…</option>
-            {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {v.min}€)</option>)}
+            <optgroup label="A domicilio (per i pazienti)">
+              {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {v.min}€)</option>)}
+            </optgroup>
+            <optgroup label="Consulenze a ora (per i colleghi)">
+              {disponibiliConsulenze.map((v) => <option key={v.key} value={v.key}>{v.nome} (min {v.min}€/ora)</option>)}
+            </optgroup>
           </select>
           {nuovoServizio.key && <>€<input style={{ width: 80, marginBottom: 0 }} value={nuovoServizio.prezzo} onChange={(e) => setNuovoServizio({ ...nuovoServizio, prezzo: e.target.value })} /></>}
           <button className="pf-btn compatto" disabled={!nuovoServizio.key} onClick={aggiungiServizio}>Aggiungi</button>
@@ -522,6 +528,7 @@ function Candidature({ aggiornaBadge }) {
           </div>
           <p style={{ margin: "6px 0", fontSize: 17, color: "var(--iw-slate)" }}>
             {c.profession} · {c.albo_name} n. {c.albo_number} (dal {c.albo_date}) · P.IVA {c.vat_number}<br />
+            🧭 Attività: <strong>{(TIPI_ATTIVITA.find((t) => t.key === c.tipo) || TIPI_ATTIVITA[0]).nome}</strong><br />
             📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ {c.email}
           </p>
           {c.message && <p style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
@@ -835,9 +842,9 @@ function RecensioniGoogle() {
     <div className="pf-panel">
       <h2 style={{ marginTop: 0 }}>⭐ Recensioni Google</h2>
       <p style={{ color: "var(--iw-slate)" }}>
-        Le recensioni Google restano su Google (importarle è vietato dai loro termini) ma le VALORIZZIAMO:
-        ogni professionista può mostrare il badge del proprio profilo Google nella scheda — per Eduard è già attivo
-        («5,0 su Google · 50 recensioni»).
+        Le recensioni Google restano su Google (importarle è vietato dai loro termini): un professionista PUÒ
+        mostrare il badge del proprio profilo Google nella scheda (campo google_rating), ma oggi nessuno lo usa
+        (Eduard l'ha tolto dalla sua scheda il 17/8/26).
       </p>
       <p style={{ color: "var(--iw-slate)", margin: 0 }}>
         Il nostro vantaggio è l'altra metà del campo: <strong>le recensioni interne sono verificate</strong> (solo da

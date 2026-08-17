@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { LISTINO, LISTINO_MAP, FASCE, fasciaDi } from "../data/listino.js";
+import { LISTINO, LISTINO_CONSULENZA, LISTINO_MAP, FASCE, fasciaDi, eConsulenza, TIPI_ATTIVITA, offreDomicilio, offreConsulenza } from "../data/listino.js";
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
 
@@ -514,7 +514,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
 
 // ---------------------------------------------------------------- Servizi
 
-function TabServizi() {
+function TabServizi({ tipo, onCambiaTipo }) {
   const [servizi, setServizi] = useState(null);
   const [nuovo, setNuovo] = useState({ key: "", durata: "", prezzo: "", prezzoNotte: "" });
   const [messaggio, setMessaggio] = useState(null);
@@ -531,15 +531,22 @@ function TabServizi() {
 
   const aggiungi = async (e) => {
     e.preventDefault();
+    const voce = LISTINO_MAP[nuovo.key];
+    const consulenza = eConsulenza(nuovo.key);
     const r = await panelFetch("/api/panel/servizi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ catalog_key: nuovo.key, duration_min: Number(nuovo.durata), price_cents: centesimi(nuovo.prezzo), price_notte_cents: nuovo.prezzoNotte ? centesimi(nuovo.prezzoNotte) : null }),
+      body: JSON.stringify({
+        catalog_key: nuovo.key,
+        duration_min: consulenza ? (voce?.durata || 60) : Number(nuovo.durata),
+        price_cents: centesimi(nuovo.prezzo),
+        price_notte_cents: !consulenza && nuovo.prezzoNotte ? centesimi(nuovo.prezzoNotte) : null,
+      }),
     });
     const d = await r.json();
     if (!r.ok) return avvisa("err", d.error);
     setNuovo({ key: "", durata: "", prezzo: "", prezzoNotte: "" });
-    avvisa("ok", "Prestazione aggiunta ✅");
+    avvisa("ok", consulenza ? "Consulenza aggiunta ✅" : "Prestazione aggiunta ✅");
     carica();
   };
 
@@ -569,6 +576,104 @@ function TabServizi() {
 
   if (!servizi) return <p className="pf-note">Caricamento…</p>;
 
+  // Cosa mostrare: dipende dal tipo di attività scelto (Profilo). Le prestazioni
+  // già inserite si vedono SEMPRE, anche se il tipo è cambiato dopo.
+  const mostraDomicilio = offreDomicilio(tipo) || servizi.some((s) => !eConsulenza(s.catalog_key));
+  const mostraConsulenze = offreConsulenza(tipo) || servizi.some((s) => eConsulenza(s.catalog_key));
+  const serviziDomicilio = servizi.filter((s) => !eConsulenza(s.catalog_key));
+  const serviziConsulenza = servizi.filter((s) => eConsulenza(s.catalog_key));
+
+  const rigaServizio = (s) => {
+    const voce = LISTINO_MAP[s.catalog_key];
+    const consulenza = eConsulenza(s.catalog_key);
+    return (
+      <div className="pf-servizio-edit" key={s.id} style={{ opacity: s.active ? 1 : 0.55 }}>
+        <div className="nome" style={{ fontWeight: 700, color: "var(--iw-navy)", padding: "8px 0" }}>{s.name}{consulenza && <span className="pf-note" style={{ margin: 0, fontWeight: 400 }}> · 1 ora, online o telefono</span>}</div>
+        <div className="riga2">
+          {!consulenza && (
+            <label>
+              min
+              <input type="number" min={5} max={480} step={5} value={s.duration_min} onChange={(e) => cambia(s.id, "duration_min", e.target.value)} aria-label="Durata in minuti" />
+            </label>
+          )}
+          <label>
+            {consulenza ? "€ / ora" : "€ giorno"}
+            <input inputMode="decimal" value={s._prezzo !== undefined ? s._prezzo : euro(s.price_cents)} onChange={(e) => cambia(s.id, "_prezzo", e.target.value)} aria-label={consulenza ? "Prezzo all'ora" : "Prezzo di giorno"} />
+          </label>
+          {!consulenza && (
+            <label title="Prezzo maggiorato per le prenotazioni notturne (22:00-07:00). Lascia vuoto se di notte non fai questa prestazione.">
+              🌙 notte
+              <input inputMode="decimal" placeholder="—" value={s._prezzoNotte !== undefined ? s._prezzoNotte : (s.price_notte_cents ? euro(s.price_notte_cents) : "")} onChange={(e) => cambia(s.id, "_prezzoNotte", e.target.value)} aria-label="Prezzo di notte" />
+            </label>
+          )}
+          <label className="attivo">
+            <input type="checkbox" checked={s.active} onChange={(e) => cambia(s.id, "active", e.target.checked)} /> attiva
+          </label>
+          {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
+          <button className="pf-elimina" onClick={() => elimina(s)} type="button" title={`Elimina ${s.name}`} aria-label={`Elimina ${s.name}`}>🗑</button>
+        </div>
+        {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {voce.min} € · consigliato {voce.consigliato} €{consulenza ? " all'ora" : ""}</p>}
+      </div>
+    );
+  };
+
+  const formAggiungi = (listino, consulenza) => {
+    const gia = new Set(servizi.map((s) => s.catalog_key));
+    const disponibili = listino.filter((v) => !gia.has(v.key));
+    const voceSel = LISTINO_MAP[nuovo.key];
+    const nuovoEQui = nuovo.key && eConsulenza(nuovo.key) === consulenza;
+    if (!disponibili.length) return <p className="pf-note" style={{ marginTop: 18 }}>{consulenza ? "Hai già aggiunto tutte le consulenze del listino ✅" : "Hai già aggiunto tutte le prestazioni del listino ✅"}</p>;
+    return (
+      <form key={consulenza ? "form-consulenza" : "form-domicilio"} className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
+        <h2>{consulenza ? "+ Aggiungi una consulenza" : "+ Aggiungi una prestazione"}</h2>
+        <label>{consulenza ? "Consulenza *" : "Prestazione *"}</label>
+        <select required value={nuovoEQui ? nuovo.key : ""} onChange={(e) => {
+          const v = LISTINO_MAP[e.target.value];
+          setNuovo({ key: e.target.value, durata: v ? String(v.durata) : "", prezzo: v ? String(v.consigliato).replace(".", ",") : "", prezzoNotte: "" });
+        }}>
+          <option value="">Scegli dal listino…</option>
+          {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome}</option>)}
+        </select>
+        {nuovoEQui && voceSel && (
+          <p className="pf-note" style={{ marginTop: -4 }}>
+            Prezzo minimo <strong>{voceSel.min} €</strong> · consigliato <strong>{voceSel.consigliato} €</strong>{consulenza ? " all'ora" : ""} — sopra il consigliato sei libero.
+          </p>
+        )}
+        {consulenza ? (
+          <>
+            <label>Il tuo prezzo all'ora (€) *</label>
+            <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovoEQui ? nuovo.prezzo : ""} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
+            <p className="pf-note" style={{ marginTop: -4 }}>
+              Ogni consulenza dura <strong>un'ora</strong> e si svolge <strong>online o per telefono</strong>: il collega
+              la prenota dalla tua agenda come una normale prestazione, tu lo contatti col recapito che ricevi.
+            </p>
+          </>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label>Durata (minuti) *</label>
+                <input type="number" required min={5} max={480} step={5} value={nuovoEQui ? nuovo.durata : ""} onChange={(e) => setNuovo({ ...nuovo, durata: e.target.value })} />
+              </div>
+              <div>
+                <label>Il tuo prezzo di giorno (€) *</label>
+                <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovoEQui ? nuovo.prezzo : ""} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
+              </div>
+            </div>
+            <label>🌙 Prezzo di notte (€) <span style={{ fontWeight: 400 }}>— facoltativo</span></label>
+            <input inputMode="decimal" placeholder="lascia vuoto se di notte non la fai" value={nuovoEQui ? nuovo.prezzoNotte : ""} onChange={(e) => setNuovo({ ...nuovo, prezzoNotte: e.target.value })} />
+            <p className="pf-note" style={{ marginTop: -4 }}>
+              Vale per le prenotazioni tra le <strong>22:00 e le 07:00</strong>. È una maggiorazione:
+              non può essere inferiore al prezzo di giorno. Se lo lasci vuoto, di notte questa
+              prestazione non è prenotabile.
+            </p>
+          </>
+        )}
+        <button className="pf-btn" disabled={!nuovoEQui}>Aggiungi</button>
+      </form>
+    );
+  };
+
   return (
     <div>
       <p className="pf-note" style={{ marginTop: 0 }}>
@@ -576,80 +681,36 @@ function TabServizi() {
         prezzo: non puoi scendere sotto il minimo indicato (per evitare concorrenza sleale),
         sopra il consigliato sei libero. Il compenso resta interamente tuo: zero commissioni.
         <br />Togli la spunta <strong>"attiva"</strong> per sospendere una prestazione (sparisce
-        dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla del tutto. Il campo <strong>🌙 notte</strong> è la tua maggiorazione per le prenotazioni tra le 22:00 e le 07:00 (vuoto = di notte non la fai).
+        dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla dalla tua scheda. Il campo <strong>🌙 notte</strong> è la tua maggiorazione per le prenotazioni tra le 22:00 e le 07:00 (vuoto = di notte non la fai).
       </p>
       {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
 
-      {servizi.map((s) => {
-        const voce = LISTINO_MAP[s.catalog_key];
-        return (
-        <div className="pf-servizio-edit" key={s.id} style={{ opacity: s.active ? 1 : 0.55 }}>
-          <div className="nome" style={{ fontWeight: 700, color: "var(--iw-navy)", padding: "8px 0" }}>{s.name}</div>
-          <div className="riga2">
-            <label>
-              min
-              <input type="number" min={5} max={480} step={5} value={s.duration_min} onChange={(e) => cambia(s.id, "duration_min", e.target.value)} aria-label="Durata in minuti" />
-            </label>
-            <label>
-              € giorno
-              <input inputMode="decimal" value={s._prezzo !== undefined ? s._prezzo : euro(s.price_cents)} onChange={(e) => cambia(s.id, "_prezzo", e.target.value)} aria-label="Prezzo di giorno" />
-            </label>
-            <label title="Prezzo maggiorato per le prenotazioni notturne (22:00-07:00). Lascia vuoto se di notte non fai questa prestazione.">
-              🌙 notte
-              <input inputMode="decimal" placeholder="—" value={s._prezzoNotte !== undefined ? s._prezzoNotte : (s.price_notte_cents ? euro(s.price_notte_cents) : "")} onChange={(e) => cambia(s.id, "_prezzoNotte", e.target.value)} aria-label="Prezzo di notte" />
-            </label>
-            <label className="attivo">
-              <input type="checkbox" checked={s.active} onChange={(e) => cambia(s.id, "active", e.target.checked)} /> attiva
-            </label>
-            {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
-            <button className="pf-elimina" onClick={() => elimina(s)} type="button" title={`Elimina ${s.name}`} aria-label={`Elimina ${s.name}`}>🗑</button>
-          </div>
-          {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {voce.min} € · consigliato {voce.consigliato} €</p>}
-        </div>
-      ); })}
+      {mostraDomicilio && (
+        <section style={{ marginBottom: 26 }}>
+          {mostraConsulenze && <h2 style={{ margin: "0 0 8px", fontSize: 24 }}>🏠 Prestazioni a domicilio (per i pazienti)</h2>}
+          {serviziDomicilio.map((s) => rigaServizio(s))}
+          {formAggiungi(LISTINO, false)}
+        </section>
+      )}
 
-      {(() => {
-        const gia = new Set(servizi.map((s) => s.catalog_key));
-        const disponibili = LISTINO.filter((v) => !gia.has(v.key));
-        const voceSel = LISTINO_MAP[nuovo.key];
-        if (!disponibili.length) return <p className="pf-note" style={{ marginTop: 18 }}>Hai già aggiunto tutte le prestazioni del listino ✅</p>;
-        return (
-          <form className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
-            <h2>+ Aggiungi una prestazione</h2>
-            <label>Prestazione *</label>
-            <select required value={nuovo.key} onChange={(e) => {
-              const v = LISTINO_MAP[e.target.value];
-              setNuovo({ key: e.target.value, durata: v ? String(v.durata) : "", prezzo: v ? String(v.consigliato).replace(".", ",") : "", prezzoNotte: "" });
-            }}>
-              <option value="">Scegli dal listino…</option>
-              {disponibili.map((v) => <option key={v.key} value={v.key}>{v.nome}</option>)}
-            </select>
-            {voceSel && (
-              <p className="pf-note" style={{ marginTop: -4 }}>
-                Prezzo minimo <strong>{voceSel.min} €</strong> · consigliato <strong>{voceSel.consigliato} €</strong> — sopra il consigliato sei libero.
-              </p>
-            )}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div>
-                <label>Durata (minuti) *</label>
-                <input type="number" required min={5} max={480} step={5} value={nuovo.durata} onChange={(e) => setNuovo({ ...nuovo, durata: e.target.value })} />
-              </div>
-              <div>
-                <label>Il tuo prezzo di giorno (€) *</label>
-                <input required inputMode="decimal" placeholder={voceSel ? String(voceSel.consigliato) : "€"} value={nuovo.prezzo} onChange={(e) => setNuovo({ ...nuovo, prezzo: e.target.value })} />
-              </div>
-            </div>
-            <label>🌙 Prezzo di notte (€) <span style={{ fontWeight: 400 }}>— facoltativo</span></label>
-            <input inputMode="decimal" placeholder="lascia vuoto se di notte non la fai" value={nuovo.prezzoNotte} onChange={(e) => setNuovo({ ...nuovo, prezzoNotte: e.target.value })} />
-            <p className="pf-note" style={{ marginTop: -4 }}>
-              Vale per le prenotazioni tra le <strong>22:00 e le 07:00</strong>. È una maggiorazione:
-              non può essere inferiore al prezzo di giorno. Se lo lasci vuoto, di notte questa
-              prestazione non è prenotabile.
-            </p>
-            <button className="pf-btn" disabled={!nuovo.key}>Aggiungi</button>
-          </form>
-        );
-      })()}
+      {mostraConsulenze && (
+        <section style={{ marginBottom: 10 }}>
+          <h2 style={{ margin: "0 0 8px", fontSize: 24 }}>🎓 Consulenze per infermieri liberi professionisti (a ora)</h2>
+          <p className="pf-note" style={{ marginTop: 0 }}>
+            Rivolte ai <strong>colleghi</strong>, non ai pazienti: chi vuole avviare o far crescere la libera professione
+            prenota un'ora con te. Scegli quali offrire e il tuo prezzo all'ora; compaiono nella tua scheda e su <a href="/consulenza" target="_blank" rel="noreferrer">/consulenza</a>.
+          </p>
+          {serviziConsulenza.map((s) => rigaServizio(s))}
+          {formAggiungi(LISTINO_CONSULENZA, true)}
+        </section>
+      )}
+
+      {!mostraConsulenze && (
+        <p className="pf-note" style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--iw-line)" }}>
+          🎓 Hai esperienza di libera professione e vuoi offrire <strong>consulenze a ora ai colleghi</strong>?{" "}
+          <a href="#" onClick={(e) => { e.preventDefault(); onCambiaTipo && onCambiaTipo(); }}>Cambia il tipo di attività</a> (scheda Profilo) e scegli «Entrambe le cose» o «Infermiere consulente».
+        </p>
+      )}
     </div>
   );
 }
@@ -869,7 +930,7 @@ function TabZone() {
   );
 }
 
-function TabProfilo() {
+function TabProfilo({ tipo, setTipo }) {
   const [profilo, setProfilo] = useState(null);
   const [qr, setQr] = useState(null);
 
@@ -885,7 +946,11 @@ function TabProfilo() {
   const [caricoFoto, setCaricoFoto] = useState(false);
 
   useEffect(() => {
-    panelFetch("/api/panel/profilo").then((r) => r.json()).then((d) => setProfilo(d.profilo));
+    panelFetch("/api/panel/profilo").then((r) => r.json()).then((d) => {
+      setProfilo(d.profilo);
+      if (d.profilo && setTipo) setTipo(d.profilo.tipo || "");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const salva = async (e) => {
@@ -901,10 +966,12 @@ function TabProfilo() {
           city: profilo.city, province: profilo.province, sigla: profilo.sigla,
           albo_name: profilo.albo_name, albo_number: profilo.albo_number,
           albo_date: profilo.albo_date, vat_number: profilo.vat_number,
+          tipo: profilo.tipo || tipo || "domicilio",
         }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
+      if (setTipo && d.tipo !== undefined) setTipo(d.tipo);
       if (d.pivaSegnalata) {
         setEsito({ tipo: "ok", testo: "✅ Partita IVA ricevuta! La verifichiamo e attiviamo la tua scheda pubblica al più presto: ti avviseremo. Da quel momento i pazienti potranno prenotarti online." });
       } else if (d.geocoded) {
@@ -992,7 +1059,21 @@ function TabProfilo() {
       </div>
 
       <form className="pf-panel pf-book" onSubmit={salva} style={{ marginBottom: 18 }}>
-        <h2>📍 Dati e segnaposto sulla mappa</h2>
+        <h2>🧭 Tipo di attività</h2>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Decide quale listino vedi nella scheda Servizi e come si presenta la tua scheda pubblica.
+          Le consulenze sono a ora, online o per telefono, rivolte ai colleghi infermieri.
+        </p>
+        <div className="pf-tipi">
+          {TIPI_ATTIVITA.map((t) => (
+            <label key={t.key} className={`pf-tipo${(profilo.tipo || tipo || "domicilio") === t.key ? " sel" : ""}`}>
+              <input type="radio" name="pr-tipo" value={t.key} checked={(profilo.tipo || tipo || "domicilio") === t.key} onChange={() => setProfilo({ ...profilo, tipo: t.key })} />
+              <span><strong>{t.nome}</strong><br /><span className="pf-note" style={{ margin: 0 }}>{t.breve}</span></span>
+            </label>
+          ))}
+        </div>
+
+        <h2 style={{ marginTop: 22 }}>📍 Dati e segnaposto sulla mappa</h2>
         <label htmlFor="pr-indirizzo">Indirizzo studio/sede <span style={{ fontWeight: 400 }}>(posiziona il tuo segnaposto)</span></label>
         <input id="pr-indirizzo" placeholder="es. Via Roma 12" value={profilo.address || ""} onChange={(e) => setProfilo({ ...profilo, address: e.target.value })} autoComplete="street-address" />
         <label htmlFor="pr-citta">Comune *</label>
@@ -1292,6 +1373,9 @@ export default function PanelApp() {
   const [errore, setErrore] = useState("");
   const [tab, setTab] = useState("agenda");
   const [statoPush, setStatoPush] = useState("idle");
+  // Tipo di attività (domicilio / consulenza / entrambi): null = non ancora caricato,
+  // "" = il professionista non ha ancora scelto → glielo chiediamo al primo accesso.
+  const [tipo, setTipo] = useState(null);
 
   // Notifiche push (modello Prenotazioni Sbarba): stato del dispositivo
   useEffect(() => {
@@ -1342,9 +1426,20 @@ export default function PanelApp() {
     });
   }, []);
 
+  // Appena c'è un utente: carico il tipo di attività (serve alla scheda Servizi e
+  // alla domanda "che tipo di attività offri?" del primo accesso)
+  useEffect(() => {
+    if (!utente) return;
+    let attivo = true;
+    panelFetch("/api/panel/profilo").then((r) => r.ok ? r.json() : null).then((d) => {
+      if (attivo && d && d.profilo) setTipo(d.profilo.tipo || "");
+    }).catch(() => {});
+    return () => { attivo = false; };
+  }, [utente]);
+
   // Sessione scaduta durante l'uso: torna al login con un avviso (niente schede vuote)
   useEffect(() => {
-    const scaduta = () => { setUtente(null); setErrore("La sessione è scaduta: accedi di nuovo."); };
+    const scaduta = () => { setUtente(null); setTipo(null); setErrore("La sessione è scaduta: accedi di nuovo."); };
     window.addEventListener("iw-sessione-scaduta", scaduta);
     return () => window.removeEventListener("iw-sessione-scaduta", scaduta);
   }, []);
@@ -1370,6 +1465,7 @@ export default function PanelApp() {
   const esci = async () => {
     await fetch("/api/panel/logout", { method: "POST" });
     setUtente(null);
+    setTipo(null);
     setTab("agenda");
   };
 
@@ -1462,12 +1558,61 @@ export default function PanelApp() {
         <button className="pf-tab esci" onClick={esci}>Esci</button>
       </div>
 
+      {tipo === "" && <SceltaTipo onScelto={(t) => { setTipo(t); if (t !== "domicilio") setTab("servizi"); }} />}
+
       {tab === "agenda" && <TabAgenda statoPush={statoPush} attivaNotifiche={attivaNotifiche} />}
-      {tab === "servizi" && <TabServizi />}
+      {tab === "servizi" && <TabServizi tipo={tipo || ""} onCambiaTipo={() => setTab("profilo")} />}
       {tab === "orari" && <TabOrari />}
       {tab === "zone" && <TabZone />}
       {tab === "stats" && <TabStatistiche />}
-      {tab === "profilo" && <TabProfilo />}
+      {tab === "profilo" && <TabProfilo tipo={tipo || ""} setTipo={setTipo} />}
+    </div>
+  );
+}
+
+// Primo accesso dopo l'introduzione delle consulenze (17/8/26): il professionista
+// dice che tipo di attività offre. Si può cambiare quando si vuole dal Profilo.
+function SceltaTipo({ onScelto }) {
+  const [sel, setSel] = useState("domicilio");
+  const [salvo, setSalvo] = useState(false);
+  const [errore, setErrore] = useState("");
+
+  const conferma = async () => {
+    setSalvo(true); setErrore("");
+    try {
+      const r = await panelFetch("/api/panel/profilo", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: sel }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
+      onScelto(sel);
+    } catch (e) {
+      setErrore(e.message);
+    } finally {
+      setSalvo(false);
+    }
+  };
+
+  return (
+    <div className="pf-panel" style={{ marginBottom: 18, borderLeft: "5px solid var(--iw-primary)" }}>
+      <h2 style={{ marginTop: 0 }}>Che tipo di attività offri su InfermieriWeb?</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>
+        Novità: oltre alle prestazioni a domicilio per i pazienti, la rete ospita le <strong>consulenze a ora
+        per i colleghi</strong> che avviano o sviluppano la libera professione (avvio, competenze e posizionamento,
+        servizi e tariffario, organizzazione, consulenza personalizzata). Dicci cosa offri tu: puoi cambiare
+        quando vuoi dalla scheda Profilo.
+      </p>
+      <div className="pf-tipi">
+        {TIPI_ATTIVITA.map((t) => (
+          <label key={t.key} className={`pf-tipo${sel === t.key ? " sel" : ""}`}>
+            <input type="radio" name="scelta-tipo" value={t.key} checked={sel === t.key} onChange={() => setSel(t.key)} />
+            <span><strong>{t.nome}</strong><br /><span className="pf-note" style={{ margin: 0 }}>{t.breve}</span></span>
+          </label>
+        ))}
+      </div>
+      {errore && <div className="pf-errore">{errore}</div>}
+      <button type="button" className="pf-btn" onClick={conferma} disabled={salvo}>{salvo ? "Salvo…" : "Conferma"}</button>
     </div>
   );
 }

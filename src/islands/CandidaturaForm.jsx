@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CercaComune from "./CercaComune.jsx";
+import { TIPI_ATTIVITA } from "../data/listino.js";
 
 const PROFESSIONI = ["Infermiere", "Infermiera"];
 
@@ -8,7 +9,7 @@ const PROFESSIONI = ["Infermiere", "Infermiera"];
 export default function CandidaturaForm() {
   const [passo, setPasso] = useState(1);
   const [dati, setDati] = useState({
-    name: "", email: "", phone: "", profession: "", gender: "",
+    name: "", email: "", phone: "", profession: "", gender: "", tipo: "domicilio",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
     city: "", province: "", region: "", sigla: "", address: "", message: "", privacy: false,
     password: "", password2: "",
@@ -84,6 +85,16 @@ export default function CandidaturaForm() {
           <option value="" disabled>Scegli…</option>
           {PROFESSIONI.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
+
+        <label>Cosa vuoi offrire su InfermieriWeb? *</label>
+        <div className="pf-tipi">
+          {TIPI_ATTIVITA.map((t) => (
+            <label key={t.key} className={`pf-tipo${dati.tipo === t.key ? " sel" : ""}`}>
+              <input type="radio" name="cf-tipo" value={t.key} checked={dati.tipo === t.key} onChange={() => setDati({ ...dati, tipo: t.key })} />
+              <span><strong>{t.nome}</strong><br /><span className="pf-note" style={{ margin: 0 }}>{t.breve}</span></span>
+            </label>
+          ))}
+        </div>
 
         <label htmlFor="cf-citta">Comune in cui operi *</label>
         <CercaComune

@@ -82,6 +82,7 @@ export function emailConfermaPaziente({ booking, professional, service, cancelTo
         <tr><td style="padding: 5px 0; color: #7b909b;">Professionista</td><td style="font-weight: bold;">${professional.name}</td></tr>
         <tr><td style="padding: 5px 0; color: #7b909b;">Quando</td><td style="font-weight: bold; text-transform: capitalize;">${dataEstesa(booking.start)}</td></tr>
         ${booking.address ? `<tr><td style="padding: 5px 0; color: #7b909b;">Dove</td><td style="font-weight: bold;">${booking.address}${booking.city ? ", " + booking.city : ""}</td></tr>` : ""}
+        ${service.consulenza ? `<tr><td style="padding: 5px 0; color: #7b909b;">Modalità</td><td style="font-weight: bold;">Online o per telefono (consulenza a ora): vi accordate sul canale col recapito qui sotto</td></tr>` : ""}
       </table>
       <p>Se non puoi più essere presente, ti chiediamo di disdire (è gratuito):</p>
       <p style="text-align: center; margin: 22px 0;">
@@ -134,6 +135,7 @@ export function emailNotificaProfessionista({ booking, service }) {
         <tr><td style="padding: 5px 0; color: #7b909b;">Telefono</td><td style="font-weight: bold;">${booking.phone}</td></tr>
         ${booking.email ? `<tr><td style="padding: 5px 0; color: #7b909b;">Email</td><td style="font-weight: bold;">${booking.email}</td></tr>` : ""}
         ${booking.address ? `<tr><td style="padding: 5px 0; color: #7b909b;">Indirizzo</td><td style="font-weight: bold;">${booking.address}${booking.city ? ", " + booking.city : ""}</td></tr>` : ""}
+        ${service.consulenza ? `<tr><td style="padding: 5px 0; color: #7b909b;">Modalità</td><td style="font-weight: bold;">Online o per telefono (consulenza a ora): contatta tu il collega per accordarvi sul canale</td></tr>` : ""}
       </table>
       <p style="text-align: center; margin: 22px 0;">
         <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Apri la tua agenda</a>

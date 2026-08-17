@@ -5,7 +5,10 @@ import { sql } from "../../lib/db.js";
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 
-// GET /api/professionisti?q=lucca — elenco professionisti attivi per ricerca/mappa
+// GET /api/professionisti?q=lucca — elenco professionisti attivi per ricerca/mappa.
+// Conta SOLO chi offre prestazioni a domicilio: chi fa solo consulenze per
+// colleghi (chiavi "consulenza-*") non è un infermiere da prenotare a casa,
+// e si trova da /consulenza.
 export async function GET({ url }) {
   const q = (url.searchParams.get("q") || "").trim().toLowerCase();
 
@@ -24,7 +27,7 @@ export async function GET({ url }) {
     ) r ON TRUE
     LEFT JOIN LATERAL (
       SELECT MIN(price_cents) AS min_price FROM services
-      WHERE professional_id = p.id AND active
+      WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
     ) s ON TRUE
     LEFT JOIN LATERAL (
       SELECT array_agg(city ORDER BY city) AS cities FROM coverage_areas
@@ -32,9 +35,9 @@ export async function GET({ url }) {
     ) c ON TRUE
     LEFT JOIN LATERAL (
       SELECT array_agg(name ORDER BY sort) AS nomi FROM services
-      WHERE professional_id = p.id AND active
+      WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
     ) sv ON TRUE
-    WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active)
+    WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')
     ORDER BY p.name`;
 
   const results = q

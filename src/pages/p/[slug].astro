@@ -7,6 +7,8 @@ import BookingWidget from "../../islands/BookingWidget.jsx";
 import { sql } from "../../lib/db.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
+import { eConsulenza } from "../../data/listino.js";
+import { CONSULENZE_PER_KEY } from "../../data/consulenze.js";
 
 const { slug } = Astro.params;
 const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
@@ -21,8 +23,18 @@ if (!pro) {
 }
 
 const services = await sql`
-  SELECT id, name, duration_min, price_cents FROM services
+  SELECT id, name, duration_min, price_cents, catalog_key FROM services
   WHERE professional_id = ${pro.id} AND active ORDER BY sort`;
+// Due famiglie di prestazioni: a domicilio (per i pazienti) e consulenze a ora
+// (per i colleghi infermieri liberi professionisti). Un profilo può avere una
+// sola delle due o entrambe.
+const serviziDomicilio = services.filter((s) => !eConsulenza(s.catalog_key));
+const consulenze = services.filter((s) => eConsulenza(s.catalog_key));
+const soloConsulente = consulenze.length > 0 && serviziDomicilio.length === 0;
+// Profilo attivo ma senza prestazioni = non prenotabile: si tiene fuori da Google
+// (noindex) finché non completa la scheda; la sitemap già lo esclude.
+const prenotabile = services.length > 0;
+if (!prenotabile) Astro.response.headers.set("X-Robots-Tag", "noindex");
 
 const coverage = await sql`
   SELECT city FROM coverage_areas WHERE professional_id = ${pro.id} ORDER BY city`;
@@ -40,12 +52,16 @@ const professione = pro.profession.charAt(0).toUpperCase() + pro.profession.slic
 const zone = coverage.map((c) => c.city);
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 const path = `/p/${pro.slug}`;
-const titolo = `${pro.name} — ${professione} a domicilio a ${pro.city} | InfermieriWeb`;
-const descrizione = `Prenota online ${pro.name}, ${pro.profession} a domicilio a ${zone.join(", ")}. Prezzi chiari, recensioni verificate, disdetta gratuita.`;
+const titolo = soloConsulente
+  ? `${pro.name} — ${professione} consulente per la libera professione | InfermieriWeb`
+  : `${pro.name} — ${professione} a domicilio a ${pro.city} | InfermieriWeb`;
+const descrizione = soloConsulente
+  ? `Prenota online una consulenza a ora con ${pro.name}, ${pro.profession} consulente per infermieri liberi professionisti: ${consulenze.map((c) => c.name.toLowerCase()).join(", ")}. Online o per telefono, disdetta gratuita.`
+  : `Prenota online ${pro.name}, ${pro.profession} a domicilio a ${zone.join(", ")}. Prezzi chiari, recensioni verificate, disdetta gratuita.`;
 
 const schema = {
   "@context": "https://schema.org",
-  "@type": "MedicalBusiness",
+  "@type": soloConsulente ? "ProfessionalService" : "MedicalBusiness",
   "@id": `${SITE_URL}${path}#professionista`,
   name: pro.name,
   url: `${SITE_URL}${path}`,
@@ -88,13 +104,13 @@ try {
 } catch { /* statistiche best-effort */ }
 ---
 
-<Platform title={titolo} description={descrizione} path={path} ogImage={new URL(pro.photo_url, SITE_URL).href} ogImageAlt={`Foto di ${pro.name}`} schemas={schemas}>
+<Platform title={titolo} description={descrizione} path={path} ogImage={new URL(pro.photo_url, SITE_URL).href} ogImageAlt={`Foto di ${pro.name}`} schemas={schemas} robots={prenotabile ? undefined : "noindex, follow"}>
   <section class="pf-profile-hero">
     <div class="pf-profile-card">
       <img class="foto" src={pro.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${pro.name}`} width="132" height="132" />
       <div>
         <h1>{pro.name}</h1>
-        <p class="prof">{professione} · {pro.city} ({pro.province})</p>
+        <p class="prof">{professione}{soloConsulente ? " consulente per la libera professione" : ""} · {pro.city} ({pro.province})</p>
         <span class="badge-albo">✓ {[pro.albo_name, pro.albo_number ? `n. ${pro.albo_number}` : ""].filter(Boolean).join(" ") || "Iscritto all'albo professionale"}</span>
         {Number(ratingAgg?.totale) > 0 ? (
           <span class="badge-albo">★ {String(ratingAgg.media).replace(".", ",")} · {ratingAgg.totale} recensioni verificate</span>
@@ -104,7 +120,7 @@ try {
         <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
           {services.length > 0 && (
             <a class="pf-btn" style="background: #fff; color: var(--iw-primary-deep) !important;" href="#prenota">
-              Prenota online{prezzoMinimo ? ` — da ${euro(prezzoMinimo)}` : ""}
+              {soloConsulente ? "Prenota una consulenza" : "Prenota online"}{prezzoMinimo ? ` — da ${euro(prezzoMinimo)}${soloConsulente ? "/ora" : ""}` : ""}
             </a>
           )}
         </div>
@@ -135,34 +151,63 @@ try {
           <p style="color: var(--iw-slate); margin: 0;">{pro.bio}</p>
         </div>
 
-        <div class="pf-panel">
-          <h2>Zone coperte a domicilio</h2>
-          <p style="color: var(--iw-slate); margin: 0;">
-            {zone.map((city, i) => (
-              <span class="pf-zona-chip"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {city}</span>
-            ))}
-          </p>
-        </div>
+        {!soloConsulente && (
+          <div class="pf-panel">
+            <h2>Zone coperte a domicilio</h2>
+            <p style="color: var(--iw-slate); margin: 0;">
+              {zone.map((city, i) => (
+                <span class="pf-zona-chip"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {city}</span>
+              ))}
+            </p>
+          </div>
+        )}
 
-        <div class="pf-panel">
-          <h2>Prestazioni e prezzi</h2>
-          {services.map((s) => (
-            <div class="pf-servizio-row">
-              <div>
-                <div class="nome">{s.name}</div>
-                <div class="durata">{s.duration_min} minuti</div>
+        {serviziDomicilio.length > 0 && (
+          <div class="pf-panel">
+            <h2>{consulenze.length > 0 ? "Prestazioni a domicilio e prezzi" : "Prestazioni e prezzi"}</h2>
+            {serviziDomicilio.map((s) => (
+              <div class="pf-servizio-row">
+                <div>
+                  <div class="nome">{s.name}</div>
+                  <div class="durata">{s.duration_min} minuti</div>
+                </div>
+                <div class="prezzo">da {euro(s.price_cents)}</div>
               </div>
-              <div class="prezzo">da {euro(s.price_cents)}</div>
-            </div>
-          ))}
-          <p class="pf-note" style="margin-top: 12px;">
-            Prezzi indicativi "a partire da": possono variare in base alla complessità e alla distanza.
-            Il compenso si regola direttamente con il professionista.
-          </p>
-        </div>
+            ))}
+            <p class="pf-note" style="margin-top: 12px;">
+              Prezzi indicativi "a partire da": possono variare in base alla complessità e alla distanza.
+              Il compenso si regola direttamente con il professionista.
+            </p>
+          </div>
+        )}
+
+        {consulenze.length > 0 && (
+          <div class="pf-panel" id="consulenze">
+            <h2>Consulenze per infermieri liberi professionisti</h2>
+            <p style="color: var(--iw-slate); margin: 0 0 12px;">
+              Consulenze <strong>a ora</strong>, online o per telefono, per colleghi che vogliono avviare o far
+              crescere la libera professione. Si prenotano qui sotto come una normale prestazione.
+            </p>
+            {consulenze.map((s) => (
+              <div class="pf-servizio-row">
+                <div>
+                  <div class="nome">{s.name}</div>
+                  <div class="durata">
+                    1 ora · online o telefono
+                    {CONSULENZE_PER_KEY[s.catalog_key] && <span> · <a href={`/consulenza/${CONSULENZE_PER_KEY[s.catalog_key].slug}`} style="color: var(--iw-primary-deep);">cosa comprende</a></span>}
+                  </div>
+                </div>
+                <div class="prezzo">{euro(s.price_cents)}/ora</div>
+              </div>
+            ))}
+            <p class="pf-note" style="margin-top: 12px;">
+              Il compenso si regola direttamente con il consulente. Tutte le consulenze: <a href="/consulenza" style="color: var(--iw-primary-deep); font-weight: 700;">/consulenza</a>.
+            </p>
+          </div>
+        )}
 
         <div class="pf-panel" id="recensioni">
-          <h2>Recensioni dei pazienti</h2>
+          <h2>{soloConsulente ? "Recensioni" : "Recensioni dei pazienti"}</h2>
           {reviews.length === 0 ? (
             <div>
               <p style="color: var(--iw-slate);">
@@ -191,7 +236,7 @@ try {
       </div>
 
       <div class="pf-panel" id="prenota" style="position: sticky; top: 90px;">
-        <h2>Prenota online</h2>
+        <h2>{soloConsulente ? "Prenota una consulenza" : "Prenota online"}</h2>
         {services.length > 0 ? (
           <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} zone={zone} />
         ) : (
@@ -206,7 +251,7 @@ try {
 
   <!-- Barra azioni fissa su mobile: sparisce quando il widget è già in vista -->
   <div class="pf-cta-mobile" id="pf-cta-mobile">
-    <a class="pf-btn" href="#prenota" style="flex: 1;">Prenota online{prezzoMinimo ? ` · da ${euro(prezzoMinimo)}` : ""}</a>
+    <a class="pf-btn" href="#prenota" style="flex: 1;">{soloConsulente ? "Prenota una consulenza" : "Prenota online"}{prezzoMinimo ? ` · da ${euro(prezzoMinimo)}${soloConsulente ? "/ora" : ""}` : ""}</a>
   </div>
   <script is:inline>
     (function () {

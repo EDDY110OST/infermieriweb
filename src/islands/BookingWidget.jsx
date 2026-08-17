@@ -19,6 +19,9 @@ function prossimiGiorni(n = 14) {
 }
 
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+// Le consulenze per colleghi (chiavi "consulenza-*") si svolgono online o per
+// telefono: niente indirizzo, niente "per un familiare", testi da collega a collega.
+const eConsulenza = (s) => String(s?.catalog_key || "").startsWith("consulenza-");
 
 export default function BookingWidget({ professionalId, services, servizioIniziale, zone = [] }) {
   // il prezzo dipende dallo slot: di notte (22-07) vale la maggiorazione del professionista
@@ -84,6 +87,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
   }, [professionalId, servizio]);
 
   const servizioSel = services.find((s) => s.id === Number(servizio));
+  const consulenza = eConsulenza(servizioSel);
 
   const prenota = async (e) => {
     e.preventDefault();
@@ -97,7 +101,9 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professional_id: professionalId, service_id: servizio, start: slot.start, ...dati,
-          name: perAltri && paziente.trim() ? `${paziente.trim()} (prenotato da ${dati.name})` : dati.name,
+          name: !consulenza && perAltri && paziente.trim() ? `${paziente.trim()} (prenotato da ${dati.name})` : dati.name,
+          address: consulenza ? "" : dati.address,
+          city: consulenza ? "" : dati.city,
         }),
       });
       const d = await r.json();
@@ -141,8 +147,9 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         </p>
         
         <p style={{ margin: "8px 0", fontSize: 16 }}>
-          Dopo la convalida riceverai l'email di conferma con il recapito del professionista,
-          per qualsiasi cosa dell'ultimo minuto.
+          {consulenza
+            ? "Dopo la convalida riceverai l'email di conferma con il recapito del consulente: vi accorderete lì sul canale (videochiamata o telefono)."
+            : "Dopo la convalida riceverai l'email di conferma con il recapito del professionista, per qualsiasi cosa dell'ultimo minuto."}
         </p>
       </div>
     );
@@ -155,7 +162,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         <option value={0} disabled>Scegli la prestazione…</option>
         {services.map((s) => (
           <option key={s.id} value={s.id}>
-            {s.name} · {s.duration_min} min · {euro(s.price_cents)}
+            {s.name} · {eConsulenza(s) ? `1 ora · ${euro(s.price_cents)}/ora` : `${s.duration_min} min · ${euro(s.price_cents)}`}
           </option>
         ))}
       </select>
@@ -205,57 +212,75 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
       {slot && (
         <>
-          <label>Per chi è la prestazione?</label>
-          <div className="pf-scelta">
-            <button type="button" className={`pf-scelta-btn${!perAltri ? " sel" : ""}`} onClick={() => setPerAltri(false)}>Per me</button>
-            <button type="button" className={`pf-scelta-btn${perAltri ? " sel" : ""}`} onClick={() => setPerAltri(true)}>Per un familiare</button>
-          </div>
-
-          {perAltri && (
+          {!consulenza && (
             <>
-              <label htmlFor="bw-paziente">Nome del paziente *</label>
-              <input id="bw-paziente" required={perAltri} minLength={2} value={paziente} onChange={(e) => setPaziente(e.target.value)} placeholder="es. Maria Rossi" />
+              <label>Per chi è la prestazione?</label>
+              <div className="pf-scelta">
+                <button type="button" className={`pf-scelta-btn${!perAltri ? " sel" : ""}`} onClick={() => setPerAltri(false)}>Per me</button>
+                <button type="button" className={`pf-scelta-btn${perAltri ? " sel" : ""}`} onClick={() => setPerAltri(true)}>Per un familiare</button>
+              </div>
+
+              {perAltri && (
+                <>
+                  <label htmlFor="bw-paziente">Nome del paziente *</label>
+                  <input id="bw-paziente" required={perAltri} minLength={2} value={paziente} onChange={(e) => setPaziente(e.target.value)} placeholder="es. Maria Rossi" />
+                </>
+              )}
             </>
           )}
 
-          <label htmlFor="bw-nome">{perAltri ? "Il tuo nome e cognome *" : "Nome e cognome *"}</label>
+          <label htmlFor="bw-nome">{!consulenza && perAltri ? "Il tuo nome e cognome *" : "Nome e cognome *"}</label>
           <input id="bw-nome" required minLength={2} value={dati.name} onChange={(e) => setDati({ ...dati, name: e.target.value })} autoComplete="name" />
 
-          <label htmlFor="bw-tel">{perAltri ? "Il tuo telefono *" : "Telefono *"}</label>
+          <label htmlFor="bw-tel">{!consulenza && perAltri ? "Il tuo telefono *" : "Telefono *"}</label>
           <input id="bw-tel" required type="tel" minLength={6} value={dati.phone} onChange={(e) => setDati({ ...dati, phone: e.target.value })} autoComplete="tel" />
 
           <label htmlFor="bw-email">Email * <span style={{ fontWeight: 400 }}>(riceverai conferma e link per disdire)</span></label>
           <input id="bw-email" type="email" required value={dati.email} onChange={(e) => setDati({ ...dati, email: e.target.value })} autoComplete="email" />
 
-          <label htmlFor="bw-indirizzo">Dove deve venire l'infermiere? *</label>
-          <input id="bw-indirizzo" required minLength={5} value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via e numero civico" />
-
-          <label htmlFor="bw-citta">Città * {zone.length > 0 && <span style={{ fontWeight: 400 }}>(zone coperte: {zone.join(", ")})</span>}</label>
-          <input id="bw-citta" required minLength={2} value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} autoComplete="address-level2" list="bw-zone" />
-          {zone.length > 0 && (
-            <datalist id="bw-zone">
-              {zone.map((z) => <option key={z} value={z} />)}
-            </datalist>
-          )}
-          {dati.city.trim().length >= 3 && zone.length > 0 && !zone.some((z) => z.toLowerCase() === dati.city.trim().toLowerCase()) && (
-            <p className="pf-note" style={{ marginTop: -6, color: "#b45309" }}>
-              ⚠︎ {dati.city.trim()} non risulta tra le zone coperte da questo professionista:
-              se sei in una frazione vicina va bene, altrimenti <a href="/cerca">cerca chi copre la tua città</a>.
+          {consulenza ? (
+            <p className="pf-note" style={{ marginTop: 2 }}>
+              💻 La consulenza si svolge <strong>online (videochiamata) o per telefono</strong>: non serve
+              indicare un indirizzo. Dopo la conferma riceverai il recapito del consulente per accordarvi sul canale.
             </p>
-          )}
+          ) : (
+            <>
+              <label htmlFor="bw-indirizzo">Dove deve venire l'infermiere? *</label>
+              <input id="bw-indirizzo" required minLength={5} value={dati.address} onChange={(e) => setDati({ ...dati, address: e.target.value })} autoComplete="street-address" placeholder="Via e numero civico" />
 
-          <p className="pf-note" style={{ marginTop: 2 }}>
-            Per la tua privacy, <strong>non scrivere informazioni sulla tua salute</strong> (diagnosi,
-            patologie) nei campi qui sopra: i dettagli clinici li darai direttamente al professionista.
-          </p>
+              <label htmlFor="bw-citta">Città * {zone.length > 0 && <span style={{ fontWeight: 400 }}>(zone coperte: {zone.join(", ")})</span>}</label>
+              <input id="bw-citta" required minLength={2} value={dati.city} onChange={(e) => setDati({ ...dati, city: e.target.value })} autoComplete="address-level2" list="bw-zone" />
+              {zone.length > 0 && (
+                <datalist id="bw-zone">
+                  {zone.map((z) => <option key={z} value={z} />)}
+                </datalist>
+              )}
+              {dati.city.trim().length >= 3 && zone.length > 0 && !zone.some((z) => z.toLowerCase() === dati.city.trim().toLowerCase()) && (
+                <p className="pf-note" style={{ marginTop: -6, color: "#b45309" }}>
+                  ⚠︎ {dati.city.trim()} non risulta tra le zone coperte da questo professionista:
+                  se sei in una frazione vicina va bene, altrimenti <a href="/cerca">cerca chi copre la tua città</a>.
+                </p>
+              )}
+
+              <p className="pf-note" style={{ marginTop: 2 }}>
+                Per la tua privacy, <strong>non scrivere informazioni sulla tua salute</strong> (diagnosi,
+                patologie) nei campi qui sopra: i dettagli clinici li darai direttamente al professionista.
+              </p>
+            </>
+          )}
 
           <div className="pf-check">
             <input id="bw-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
             <label htmlFor="bw-privacy" style={{ margin: 0, fontWeight: 400 }}>
-              Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al
-              professionista scelto. Poiché la prestazione scelta può indicare un'esigenza di salute, presto
-              anche il <strong>consenso esplicito</strong> a questo trattamento. Ho letto l'
-              <a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>. *
+              {consulenza ? (
+                <>Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al
+                consulente scelto. Ho letto l'<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>. *</>
+              ) : (
+                <>Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al
+                professionista scelto. Poiché la prestazione scelta può indicare un'esigenza di salute, presto
+                anche il <strong>consenso esplicito</strong> a questo trattamento. Ho letto l'
+                <a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>. *</>
+              )}
             </label>
           </div>
 
@@ -263,18 +288,20 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {servizioSel && slot && (
             <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
-              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · da {euro(prezzoSlot(servizioSel, slot))}{slot.notte && " 🌙 (tariffa notturna)"}
+              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · {consulenza ? `${euro(servizioSel.price_cents)}/ora` : `da ${euro(prezzoSlot(servizioSel, slot))}`}{!consulenza && slot.notte && " 🌙 (tariffa notturna)"}
             </div>
           )}
 
           <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
-            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? ` · da ${euro(prezzoSlot(servizioSel, slot))}` : ""}`}
+            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? (consulenza ? ` · ${euro(servizioSel.price_cents)}/ora` : ` · da ${euro(prezzoSlot(servizioSel, slot))}`) : ""}`}
           </button>
           <p className="pf-note" style={{ marginTop: 10, textAlign: "center" }}>
             Se cambi idea, la disdetta online è <strong>gratuita e senza penali</strong>.
           </p>
           <p className="pf-note" style={{ marginTop: 8 }}>
-            Non paghi nulla online, nessuna carta richiesta: paghi direttamente all'infermiere dopo la prestazione.
+            {consulenza
+              ? "Non paghi nulla online, nessuna carta richiesta: il compenso lo regoli direttamente con il consulente."
+              : "Non paghi nulla online, nessuna carta richiesta: paghi direttamente all'infermiere dopo la prestazione."}
           </p>
         </>
       )}

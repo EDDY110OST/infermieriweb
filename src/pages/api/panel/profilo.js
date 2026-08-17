@@ -4,6 +4,7 @@ import { sql } from "../../../lib/db.js";
 import { sessionFromRequest, pidBersaglio, adminSuAltro } from "../../../lib/auth.js";
 import { geocodeWithFallback } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
+import { TIPI_ATTIVITA } from "../../../data/listino.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -18,7 +19,7 @@ export async function GET({ request }) {
   const [profilo] = await sql`
     SELECT slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, vat_number,
            bio, phone, email, address, city, province, region, photo_url, lat, lng, status,
-           edited_by, edited_at
+           edited_by, edited_at, tipo
     FROM professionals WHERE id = ${pid}`;
   if (!profilo) return json({ error: "Profilo non trovato" }, 404);
   return json({ profilo });
@@ -42,7 +43,7 @@ export async function PATCH({ request }) {
 
   const [attuale] = await sql`
     SELECT name, full_name, gender, profession, email, bio, phone, address, city, province, region,
-           albo_name, albo_number, albo_date, vat_number, status, slug
+           albo_name, albo_number, albo_date, vat_number, status, slug, tipo
     FROM professionals WHERE id = ${pid}`;
   if (!attuale) return json({ error: "Profilo non trovato" }, 404);
 
@@ -56,6 +57,14 @@ export async function PATCH({ request }) {
   // albo_date è NOT NULL (default ''): mai null, sennò il salvataggio va in errore.
   const albo_date = body.albo_date !== undefined ? String(body.albo_date).trim() : attuale.albo_date;
   const vat_number = body.vat_number !== undefined ? String(body.vat_number).replace(/\D/g, "").slice(0, 11) : attuale.vat_number;
+  // Tipo di attività (domicilio / consulenza / entrambi): lo sceglie il professionista
+  // stesso (al primo accesso o dal Profilo); decide quale listino vede nel pannello.
+  let tipo = attuale.tipo || "";
+  if (body.tipo !== undefined) {
+    const t = String(body.tipo).trim().toLowerCase();
+    if (!TIPI_ATTIVITA.some((x) => x.key === t)) return json({ error: "Tipo di attività non valido" }, 400);
+    tipo = t;
+  }
 
   // Campi identità: modificabili SOLO dall'admin (il professionista non cambia
   // da solo il proprio nome pubblico, l'appellativo, la professione o l'email di contatto).
@@ -112,7 +121,7 @@ export async function PATCH({ request }) {
       SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
           bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
           region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
-          albo_date = ${albo_date}, vat_number = ${vat_number},
+          albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo},
           lat = ${geocoded.lat}, lng = ${geocoded.lng}
       WHERE id = ${pid}`;
   } else {
@@ -121,7 +130,7 @@ export async function PATCH({ request }) {
       SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
           bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
           region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
-          albo_date = ${albo_date}, vat_number = ${vat_number}
+          albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo}
       WHERE id = ${pid}`;
   }
 
@@ -154,5 +163,6 @@ export async function PATCH({ request }) {
       : null,
     posizioneCambiata,
     pivaSegnalata,
+    tipo,
   });
 }

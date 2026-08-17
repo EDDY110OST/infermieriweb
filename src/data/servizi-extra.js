@@ -20,6 +20,29 @@ export const NOMI_COLLOQUIALI = {
   "educazione-terapeutica": "Educazione terapeutica a domicilio",
 };
 
+// Diciture brevi allineate ai nomi del listino delle schede (soci, 18/7/26): il
+// paziente ritrova la STESSA parola su /domicilio, nel menu e nella scheda
+// dell'infermiere. Le categorie ampie (Medicazioni, Iniezioni, Cateteri) restano
+// tali perché nelle schede si sdoppiano (es. Iniezione IM/SC).
+export const NOMI_DOMICILIO = {
+  ecg: "ECG",
+  medicazioni: "Medicazioni",
+  prelievi: "Prelievo",
+  iniezioni: "Iniezioni",
+  flebo: "Flebo",
+  desutura: "Rimozione punti",
+  "cateteri-vescicali": "Cateteri vescicali",
+  "holter-pressori": "Holter pressorio",
+  "holter-cardiaci": "Holter cardiaco",
+  "sondini-naso-gastrici": "Sondino naso-gastrico",
+  "gestione-peg": "Gestione PEG",
+  "terapia-orale": "Somministrazione terapia orale",
+  "parametri-vitali": "Parametri vitali",
+  "clisteri-evacuativi": "Clistere",
+  "gestione-stomie": "Gestione stomia",
+  "educazione-terapeutica": "Educazione terapeutica",
+};
+
 // guida servizio → articolo del blog che approfondisce (e viceversa)
 export const ARTICOLO_PER_SERVIZIO = {
   ecg: "ecg-a-domicilio-come-funziona",

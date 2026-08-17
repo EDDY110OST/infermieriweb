@@ -22,7 +22,7 @@ export async function POST({ request }) {
   const [b] = await sql`
     SELECT b.id, b.status, b.created_at, b.start_dt, b.customer_name, b.customer_phone,
            b.customer_email, b.address, b.city, b.cancel_token, b.professional_id,
-           s.name AS service_name, p.name AS professional_name, p.full_name AS professional_full_name, p.gender AS professional_gender, p.email AS professional_email,
+           s.name AS service_name, s.catalog_key AS service_key, p.name AS professional_name, p.full_name AS professional_full_name, p.gender AS professional_gender, p.email AS professional_email,
            p.slug AS professional_slug, p.cancel_hours
     FROM bookings b
     JOIN services s ON s.id = b.service_id
@@ -56,7 +56,7 @@ export async function POST({ request }) {
     email: b.professional_email,
     slug: b.professional_slug, cancel_hours: b.cancel_hours,
   };
-  const svc = { name: b.service_name };
+  const svc = { name: b.service_name, consulenza: String(b.service_key || "").startsWith("consulenza-") };
 
   // al paziente: la conferma definitiva con link di gestione e area personale
   const areaToken = createSession({ scope: "paziente", email: String(b.customer_email).trim().toLowerCase() }, 60 * 60 * 24 * 30);

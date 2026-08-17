@@ -101,17 +101,78 @@
 }
 .pf-burger span { display: block; height: 3px; border-radius: 99px; background: var(--iw-navy); }
 
+/* ---------- Tendine del menu (Prestazioni, Area professionisti) ---------- */
+
+.pf-dd { position: relative; }
+.pf-dd-btn {
+  background: none; border: 0; cursor: pointer; padding: 0; font: inherit;
+  font-weight: 600; font-size: 17px; color: var(--iw-slate); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s ease;
+}
+.pf-dd-btn:hover, .pf-dd-btn.attivo, .pf-dd.open > .pf-dd-btn { color: var(--iw-primary-deep); }
+.pf-dd-freccia { font-size: 12px; transition: transform 0.2s ease; }
+.pf-dd.open > .pf-dd-btn .pf-dd-freccia { transform: rotate(180deg); }
+
+.pf-dd-menu {
+  display: none; position: absolute; top: calc(100% + 12px); left: 0; z-index: 1300;
+  background: #fff; border: 1px solid var(--iw-line); border-radius: 14px;
+  box-shadow: var(--iw-shadow-lg); padding: 10px; min-width: 260px;
+  max-height: calc(100vh - 110px); overflow-y: auto;
+}
+/* ponte invisibile: passando dal bottone al menu non si chiude */
+.pf-dd-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -14px; height: 14px; }
+.pf-dd.open > .pf-dd-menu { display: block; }
+.pf-dd.open > .pf-dd-menu-2col { display: grid; }
+@media (hover: hover) and (min-width: 1041px) {
+  .pf-dd:hover > .pf-dd-menu, .pf-dd:focus-within > .pf-dd-menu { display: block; }
+  .pf-dd:hover > .pf-dd-menu-2col, .pf-dd:focus-within > .pf-dd-menu-2col { display: grid; }
+}
+.pf-dd-menu-2col {
+  grid-template-columns: 1fr 1fr; gap: 6px 22px; min-width: 620px; padding: 14px 16px;
+  left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px);
+}
+.pf-nav .pf-dd-menu a {
+  display: block; padding: 7px 10px; border-radius: 8px; font-size: 15.5px; font-weight: 500;
+  color: var(--iw-navy); white-space: normal; line-height: 1.3;
+}
+.pf-nav .pf-dd-menu a:hover, .pf-nav .pf-dd-menu a[aria-current="page"] { background: var(--iw-primary-soft); color: var(--iw-primary-deep); }
+.pf-nav .pf-dd-menu a.pf-dd-testa {
+  font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--iw-primary-deep); padding: 4px 10px 6px; margin-bottom: 2px;
+  border-bottom: 1px solid var(--iw-line); border-radius: 0;
+}
+.pf-nav .pf-dd-menu a.pf-dd-testa small { display: block; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 13px; color: var(--iw-muted); }
+.pf-nav .pf-dd-menu a.pf-dd-tutte { font-weight: 700; color: var(--iw-primary-deep); margin-top: 4px; }
+.pf-nav .pf-dd-menu a.pf-dd-azione { font-weight: 700; font-size: 16.5px; padding: 9px 10px; }
+.pf-nav .pf-dd-menu a.pf-dd-azione small { display: block; font-weight: 400; font-size: 13.5px; color: var(--iw-muted); }
+.pf-dd-sep { height: 1px; background: var(--iw-line); margin: 6px 4px; }
+.pf-dd-col { display: flex; flex-direction: column; gap: 1px; }
+
 @media (max-width: 1040px) {
   .pf-nav {
     display: none; position: absolute; top: 100%; left: 0; right: 0;
     background: #fff; border-bottom: 1px solid var(--iw-line);
     flex-direction: column; align-items: stretch; padding: 16px 20px; gap: 14px;
-    box-shadow: var(--iw-shadow-lg);
+    box-shadow: var(--iw-shadow-lg); max-height: calc(100vh - 80px); overflow-y: auto;
   }
   .pf-nav.open { display: flex; }
   .pf-nav a { padding: 12px 4px; font-size: 20px; }
   .pf-cta { text-align: center; }
   .pf-burger { display: flex; }
+
+  /* Tendine → fisarmonica dentro il menu a scomparsa */
+  .pf-dd { position: static; }
+  .pf-dd-btn { width: 100%; justify-content: space-between; padding: 12px 4px; font-size: 20px; }
+  .pf-dd-menu, .pf-dd-menu-2col {
+    position: static; transform: none; min-width: 0; max-width: none; max-height: none; overflow: visible; box-shadow: none;
+    border: 0; border-left: 3px solid var(--iw-primary-soft); border-radius: 0;
+    padding: 4px 0 6px 12px; margin: -6px 0 4px 6px;
+  }
+  .pf-dd-menu::before { display: none; }
+  .pf-dd.open > .pf-dd-menu-2col { display: block; }
+  .pf-dd-col + .pf-dd-col { margin-top: 10px; }
+  .pf-nav .pf-dd-menu a { font-size: 17px; padding: 9px 8px; }
+  .pf-nav .pf-dd-menu a.pf-dd-azione { font-size: 18px; }
 }
 
 /* ---------- Hero con ricerca ---------- */
@@ -171,6 +232,10 @@
 
 .pf-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: var(--iw-max); margin: 0 auto; }
 @media (max-width: 860px) { .pf-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* 5 consulenze: 3 + 2 (non 4 + 1 orfana) */
+.pf-cats.pf-cats-5 { grid-template-columns: repeat(3, 1fr); max-width: 960px; }
+@media (max-width: 860px) { .pf-cats.pf-cats-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .pf-cats.pf-cats-5 { grid-template-columns: 1fr; } }
 .pf-cat, .pf-cat > span { min-width: 0; }
 .pf-cat { justify-content: center; text-align: center; }
 .pf-cat .nome, .pf-cat .da { overflow-wrap: anywhere; hyphens: auto; }
@@ -885,6 +950,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* CTA header sempre su una riga */
 .pf-cta { white-space: nowrap; }
+
+/* Scelta del tipo di attività (pannello: primo accesso + Profilo; candidatura) */
+.pf-tipi { display: grid; gap: 10px; margin: 6px 0 14px; }
+label.pf-tipo, .pf-book label.pf-tipo {
+  display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+  border: 1.5px solid var(--iw-line); border-radius: 12px; padding: 12px 14px;
+  background: #fff; transition: border-color 0.15s ease, background 0.15s ease;
+  font-weight: 400; font-size: 16px; color: var(--iw-ink); margin: 0;
+}
+.pf-tipo:hover { border-color: var(--iw-primary); }
+.pf-tipo.sel { border-color: var(--iw-primary-deep); background: var(--iw-primary-soft); }
+.pf-tipo input[type="radio"], .pf-book .pf-tipo input[type="radio"] { margin: 5px 0 0; width: 18px; height: 18px; flex: none; accent-color: var(--iw-primary-deep); padding: 0; }
+.pf-tipo strong { color: var(--iw-navy); font-size: 17px; }
 
 /* Bottone elimina prestazione (pannello professionista) */
 .pf-elimina {
