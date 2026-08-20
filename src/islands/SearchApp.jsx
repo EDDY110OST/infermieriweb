@@ -3,6 +3,44 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 const capitalizza = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const prezzo = (cents) => (cents > 0 ? `da ${(cents / 100).toFixed(2).replace(".", ",")} €` : "");
 
+// Ricerca a parole: "infermiere a Lucca" e "medicazioni Lucca" devono funzionare,
+// non solo la frase esatta. Le parole di servizio non contano.
+const STOPWORD = new Set(["a", "ad", "di", "da", "in", "per", "il", "lo", "la", "un", "uno", "una", "vicino", "zona", "casa", "domicilio", "e"]);
+// La ricerca deve capire il paziente, non pretendere la parola esatta del listino:
+// "prelievo"≈"prelievi" (radice), "puntura"→iniezioni (sinonimo), "analisi"→prelievi.
+const SINONIMI = {
+  puntura: "iniezioni", punture: "iniezioni", iniezione: "iniezioni",
+  sangue: "prelievi", analisi: "prelievi", prelievo: "prelievi",
+  medicazione: "medicazioni", ferita: "medicazioni", ferite: "medicazioni", piaga: "medicazioni", piaghe: "medicazioni",
+  elettrocardiogramma: "ecg", catetere: "cateteri", stomia: "stomie",
+  infermiera: "infermiere", infermieri: "infermiere", flebo: "flebo",
+};
+
+// Popup del segnaposto, costruito con textContent come in home: nome e foto
+// arrivano dal profilo e non devono poter iniettare HTML nella pagina.
+// Un nodo per segnaposto — lo stesso non si può appendere a due marcatori.
+function popupScheda(p, comune) {
+  const box = document.createElement("div");
+  box.className = "pf-pin-popup";
+  const foto = document.createElement("img");
+  foto.src = p.photo_url || "/avatar-infermiere.svg";
+  foto.alt = "";
+  const testi = document.createElement("div");
+  const nome = document.createElement("div");
+  nome.className = "nome";
+  nome.textContent = p.name;
+  const prof = document.createElement("div");
+  prof.className = "prof";
+  // il comune del segnaposto: è lì che va a domicilio, non dove ha la sede
+  prof.textContent = `${capitalizza(p.profession)} · ${comune}`;
+  const link = document.createElement("a");
+  link.href = `/p/${encodeURIComponent(p.slug)}`;
+  link.textContent = "Vedi scheda e prenota →";
+  testi.append(nome, prof, link);
+  box.append(foto, testi);
+  return box;
+}
+
 function Stelle({ pro }) {
   if (pro.review_count > 0) {
     const piene = Math.round(Number(pro.avg_rating));
@@ -72,18 +110,6 @@ export default function SearchApp() {
       .finally(() => setCaricamento(false));
   }, []);
 
-  // Ricerca a parole: "infermiere a Lucca" e "medicazioni Lucca" devono funzionare,
-  // non solo la frase esatta. Le parole di servizio non contano.
-  const STOPWORD = new Set(["a", "ad", "di", "da", "in", "per", "il", "lo", "la", "un", "uno", "una", "vicino", "zona", "casa", "domicilio", "e"]);
-  // La ricerca deve capire il paziente, non pretendere la parola esatta del listino:
-  // "prelievo"≈"prelievi" (radice), "puntura"→iniezioni (sinonimo), "analisi"→prelievi.
-  const SINONIMI = {
-    puntura: "iniezioni", punture: "iniezioni", iniezione: "iniezioni",
-    sangue: "prelievi", analisi: "prelievi", prelievo: "prelievi",
-    medicazione: "medicazioni", ferita: "medicazioni", ferite: "medicazioni", piaga: "medicazioni", piaghe: "medicazioni",
-    elettrocardiogramma: "ecg", catetere: "cateteri", stomia: "stomie",
-    infermiera: "infermiere", infermieri: "infermiere", flebo: "flebo",
-  };
   const radice = (w) =>
     w.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[aeiou]+$/, "");
 
@@ -100,6 +126,15 @@ export default function SearchApp() {
       });
     });
   }, [q, tutti]);
+
+  // Le parole della ricerca ridotte a radice, per capire se il paziente ha
+  // cercato un comune (allora la mappa mostra solo quello) o una prestazione.
+  const paroleCercate = useMemo(
+    () => q.trim().toLowerCase().split(/\s+/)
+      .filter((t) => t && !STOPWORD.has(t))
+      .map((t) => radice(SINONIMI[t] || t)),
+    [q],
+  );
 
   const risultatiOrdinati = useMemo(() => {
     const arr = [...risultati];
@@ -134,15 +169,31 @@ export default function SearchApp() {
       html: '<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#00897b;border:3px solid #fff;box-shadow:0 4px 12px rgba(11,57,84,.4);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:15px;">🩺</span></div>',
       className: "", iconSize: [34, 34], iconAnchor: [17, 34],
     });
-    const conPin = risultati.filter((p) => p.lat && p.lng);
-    for (const p of conPin) {
-      const marker = L.marker([p.lat, p.lng], { icon: icona }).addTo(map)
-        .bindPopup(`<div class="pf-pin-popup"><img src="${p.photo_url}" alt=""/><div><div class="nome">${p.name}</div><div class="prof">${capitalizza(p.profession)} · ${p.city}</div><a href="/p/${p.slug}">Vedi scheda e prenota →</a></div></div>`);
+    // un segnaposto per ogni zona coperta da ogni risultato
+    const tutti = [];
+    for (const p of risultati) {
+      for (const pin of p.pins || []) {
+        if (Number.isFinite(pin.lat) && Number.isFinite(pin.lng)) tutti.push({ p, pin });
+      }
+    }
+    // se il paziente ha cercato un comune, la mappa mostra solo i segnaposti di
+    // quel comune: cercando "Pisa" non ha senso allargare a tutta la Toscana per
+    // far vedere le altre zone di chi ci lavora. Cercando una prestazione, tutti.
+    const comuneCercato = (citta) => {
+      if (!paroleCercate.length) return false;
+      const radiciNome = String(citta).toLowerCase().split(/[^a-zà-ù0-9]+/).map(radice).filter(Boolean);
+      return paroleCercate.some((rt) => radiciNome.some((w) => w.startsWith(rt) || rt.startsWith(w)));
+    };
+    const suComune = tutti.filter(({ pin }) => comuneCercato(pin.city));
+    const conPin = suComune.length ? suComune : tutti;
+
+    for (const { p, pin } of conPin) {
+      const marker = L.marker([pin.lat, pin.lng], { icon: icona }).addTo(map).bindPopup(popupScheda(p, pin.city));
       markersRef.current.push(marker);
     }
-    if (conPin.length === 1) map.setView([conPin[0].lat, conPin[0].lng], 10);
-    else if (conPin.length > 1) map.fitBounds(conPin.map((p) => [p.lat, p.lng]), { padding: [40, 40] });
-  }, [risultati, caricamento]);
+    if (conPin.length === 1) map.setView([conPin[0].pin.lat, conPin[0].pin.lng], 10);
+    else if (conPin.length > 1) map.fitBounds(conPin.map(({ pin }) => [pin.lat, pin.lng]), { padding: [40, 40] });
+  }, [risultati, caricamento, paroleCercate]);
 
   return (
     <div className="pf-search-layout">
