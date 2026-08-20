@@ -1,20 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { filtraProfessionisti, localitaCercate, comuneFraCercati } from "../lib/ricerca.js";
 
 const capitalizza = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const prezzo = (cents) => (cents > 0 ? `da ${(cents / 100).toFixed(2).replace(".", ",")} €` : "");
-
-// Ricerca a parole: "infermiere a Lucca" e "medicazioni Lucca" devono funzionare,
-// non solo la frase esatta. Le parole di servizio non contano.
-const STOPWORD = new Set(["a", "ad", "di", "da", "in", "per", "il", "lo", "la", "un", "uno", "una", "vicino", "zona", "casa", "domicilio", "e"]);
-// La ricerca deve capire il paziente, non pretendere la parola esatta del listino:
-// "prelievo"≈"prelievi" (radice), "puntura"→iniezioni (sinonimo), "analisi"→prelievi.
-const SINONIMI = {
-  puntura: "iniezioni", punture: "iniezioni", iniezione: "iniezioni",
-  sangue: "prelievi", analisi: "prelievi", prelievo: "prelievi",
-  medicazione: "medicazioni", ferita: "medicazioni", ferite: "medicazioni", piaga: "medicazioni", piaghe: "medicazioni",
-  elettrocardiogramma: "ecg", catetere: "cateteri", stomia: "stomie",
-  infermiera: "infermiere", infermieri: "infermiere", flebo: "flebo",
-};
 
 // Popup del segnaposto, costruito con textContent come in home: nome e foto
 // arrivano dal profilo e non devono poter iniettare HTML nella pagina.
@@ -110,31 +98,12 @@ export default function SearchApp() {
       .finally(() => setCaricamento(false));
   }, []);
 
-  const radice = (w) =>
-    w.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[aeiou]+$/, "");
+  // La regola sta tutta in lib/ricerca.js: chi scrive una località vede solo
+  // chi quella località la copre davvero.
+  const risultati = useMemo(() => filtraProfessionisti(tutti, q), [q, tutti]);
 
-  const risultati = useMemo(() => {
-    const parole = q.trim().toLowerCase().split(/\s+/).filter((t) => t && !STOPWORD.has(t));
-    if (!parole.length) return tutti;
-    return tutti.filter((p) => {
-      const radiciCampi = [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
-        .join(" ").toLowerCase().split(/[^a-zà-ù0-9]+/).map(radice).filter(Boolean);
-      return parole.every((t) => {
-        const rt = radice(SINONIMI[t] || t);
-        // confronto per radice: "prelievo"≈"prelievi", "medicazione"≈"medicazioni", "capannoni"≈"capannori" no ma "capannor"≈ sì
-        return radiciCampi.some((w) => w.startsWith(rt) || rt.startsWith(w));
-      });
-    });
-  }, [q, tutti]);
-
-  // Le parole della ricerca ridotte a radice, per capire se il paziente ha
-  // cercato un comune (allora la mappa mostra solo quello) o una prestazione.
-  const paroleCercate = useMemo(
-    () => q.trim().toLowerCase().split(/\s+/)
-      .filter((t) => t && !STOPWORD.has(t))
-      .map((t) => radice(SINONIMI[t] || t)),
-    [q],
-  );
+  // Le località scritte dal paziente: la mappa mostra i segnaposti solo di quelle.
+  const localita = useMemo(() => localitaCercate(tutti, q), [q, tutti]);
 
   const risultatiOrdinati = useMemo(() => {
     const arr = [...risultati];
@@ -179,12 +148,7 @@ export default function SearchApp() {
     // se il paziente ha cercato un comune, la mappa mostra solo i segnaposti di
     // quel comune: cercando "Pisa" non ha senso allargare a tutta la Toscana per
     // far vedere le altre zone di chi ci lavora. Cercando una prestazione, tutti.
-    const comuneCercato = (citta) => {
-      if (!paroleCercate.length) return false;
-      const radiciNome = String(citta).toLowerCase().split(/[^a-zà-ù0-9]+/).map(radice).filter(Boolean);
-      return paroleCercate.some((rt) => radiciNome.some((w) => w.startsWith(rt) || rt.startsWith(w)));
-    };
-    const suComune = tutti.filter(({ pin }) => comuneCercato(pin.city));
+    const suComune = tutti.filter(({ pin }) => comuneFraCercati(pin.city, localita));
     const conPin = suComune.length ? suComune : tutti;
 
     for (const { p, pin } of conPin) {
@@ -193,7 +157,7 @@ export default function SearchApp() {
     }
     if (conPin.length === 1) map.setView([conPin[0].pin.lat, conPin[0].pin.lng], 10);
     else if (conPin.length > 1) map.fitBounds(conPin.map(({ pin }) => [pin.lat, pin.lng]), { padding: [40, 40] });
-  }, [risultati, caricamento, paroleCercate]);
+  }, [risultati, caricamento, localita]);
 
   return (
     <div className="pf-search-layout">
