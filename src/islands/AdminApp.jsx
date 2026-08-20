@@ -519,7 +519,8 @@ function Professionisti({ filtroStato }) {
           </div>
           <div className="pf-note" style={{ margin: "8px 0" }}>
             🪪 {p.albo_name} n. {p.albo_number} (dal {p.albo_date || "—"}) · P.IVA {p.vat_number || "—"} · 📞 {p.phone}
-            {!p.lat && <> · ⚠️ senza segnaposto mappa</>}
+            {/* la mappa prende i segnaposti dalle zone coperte: manca davvero solo se non c'è né l'una né l'altra cosa */}
+            {!p.lat && !p.zone?.length && <> · ⚠️ senza segnaposto mappa</>}
           </div>
           <div className="pf-note" style={{ margin: "0 0 10px" }}>
             💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} prenotazioni ({p.prenotazioni_30gg} negli ultimi 30gg)
