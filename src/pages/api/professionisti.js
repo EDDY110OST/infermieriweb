@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../../lib/db.js";
 import { coordinateComune, normalizza } from "../../data/comuni.js";
 import { jitterPerId } from "../../lib/geocode.js";
+import { filtraProfessionisti } from "../../lib/ricerca.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -78,15 +79,11 @@ export async function GET({ url }) {
       WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
     ) sv ON TRUE
     WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')
-    ORDER BY p.name`;
+    -- in ordine di NOME, non di titolo: ordinando per "Dott. …" tutti i "Dott."
+    -- finivano sopra tutte le "Dott.ssa", cioè gli uomini sempre prima delle donne
+    ORDER BY regexp_replace(p.name, '^Dott\\.(ssa)?\\s+', '', 'i'), p.id`;
 
   segnapostiPerZona(rows);
 
-  const results = q
-    ? rows.filter((p) =>
-        [p.name, p.city, p.province, p.region, p.profession, ...(p.coverage || []), ...(p.servizi || [])]
-          .join(" ").toLowerCase().includes(q))
-    : rows;
-
-  return json({ professionisti: results });
+  return json({ professionisti: filtraProfessionisti(rows, q) });
 }
