@@ -54,7 +54,7 @@ npx astro build        # build di verifica
 - ⚠️ Senza `BACKUP_KEY` il dump **non viene spedito** (mai in chiaro: contiene dati
   personali di pazienti e professionisti) e la pulizia resta in pausa: arriva solo
   l'email di avviso.
-- **Ripristino**: `BACKUP_KEY='…' node scripts/ripristina-backup.mjs infermieriweb-backup-AAAA-MM-GG.json.gz.enc`
+- **Ripristino**: `BACKUP_KEY='…' node scripts/ripristina-backup.mjs infermieriweb-backup-AAAA-MM-GG-cifrato.txt`
   → scrive il `.json` in chiaro, che contiene
   `{ tabelle: { nome: [righe…] } }`. Reinserire con uno script Node usando
   `sql.query('INSERT INTO … VALUES …')` tabella per tabella (rispettare l'ordine:

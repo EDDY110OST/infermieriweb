@@ -19,6 +19,7 @@ const EMAIL_BACKUP = process.env.BACKUP_EMAIL || "info@infermieriweb.it";
  * Cifra il dump con AES-256-GCM. La chiave si ricava da BACKUP_KEY (passphrase)
  * con scrypt e un sale casuale, scritto in testa al file:
  *   "IWBK1" | sale(16) | iv(12) | tag(16) | testo cifrato
+ * L'allegato si chiama .txt solo perché Brevo accetta poche estensioni.
  * Per rileggerlo: `node scripts/ripristina-backup.mjs <file>`.
  */
 function cifra(buffer, passphrase) {
@@ -96,7 +97,8 @@ export async function eseguiBackup() {
   ${righePulizia}
   <p style="color:#7b909b;font-size:12px;">Contiene dati personali e credenziali: non inoltrare. Ripristino: vedi README nel repository.</p>
 </div>`,
-    attachmentName: contenuto ? `infermieriweb-backup-${data}.json.gz.enc` : "",
+    // Brevo accetta solo estensioni note: il file è cifrato, ma va chiamato .txt
+    attachmentName: contenuto ? `infermieriweb-backup-${data}-cifrato.txt` : "",
     attachmentBase64: contenuto ? contenuto.toString("base64") : "",
   });
 

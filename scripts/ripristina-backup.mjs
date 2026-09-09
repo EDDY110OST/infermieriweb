@@ -2,7 +2,7 @@
 /**
  * Rilegge un backup cifrato di InfermieriWeb.
  *
- *   BACKUP_KEY='la-passphrase' node scripts/ripristina-backup.mjs infermieriweb-backup-2026-09-09.json.gz.enc
+ *   BACKUP_KEY='la-passphrase' node scripts/ripristina-backup.mjs infermieriweb-backup-2026-09-09-cifrato.txt
  *
  * Scrive accanto al file l'archivio in chiaro (.json) e stampa i conteggi.
  * Formato: "IWBK1" | sale(16) | iv(12) | tag(16) | testo cifrato (AES-256-GCM su JSON gzippato).
@@ -15,7 +15,7 @@ const file = process.argv[2];
 const passphrase = process.env.BACKUP_KEY || process.argv[3] || "";
 
 if (!file || !passphrase) {
-  console.error("Uso: BACKUP_KEY='...' node scripts/ripristina-backup.mjs <file.json.gz.enc>");
+  console.error("Uso: BACKUP_KEY='...' node scripts/ripristina-backup.mjs <infermieriweb-backup-AAAA-MM-GG-cifrato.txt>");
   process.exit(1);
 }
 
@@ -41,7 +41,7 @@ try {
   process.exit(1);
 }
 
-const uscita = file.replace(/\.json\.gz\.enc$/, "") + ".json";
+const uscita = file.replace(/(-cifrato)?\.(txt|json\.gz\.enc)$/, "") + ".json";
 writeFileSync(uscita, json);
 const dump = JSON.parse(json);
 console.log(`✅ Backup del ${dump.creato} ripristinato in ${uscita}`);
