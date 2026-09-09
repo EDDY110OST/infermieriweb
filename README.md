@@ -41,13 +41,21 @@ npx astro build        # build di verifica
 `NETLIFY_DATABASE_URL` (connessione Postgres — ⚠️ production punta al DB del branch `piattaforma`),
 `SESSION_SECRET` (firma sessioni e token), `BREVO_API_KEY`, `EMAIL_FROM`,
 `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`PUBLIC_VAPID_PUBLIC_KEY` (notifiche push),
-`BACKUP_EMAIL` (facoltativa, destinatario dei backup).
+`BACKUP_EMAIL` (facoltativa, destinatario dei backup: default `info@infermieriweb.it`),
+`BACKUP_KEY` (**obbligatoria**: passphrase con cui si cifra il backup — senza, il dump non parte),
+`PULIZIA_ATTIVA` (facoltativa: `0` mette in pausa la cancellazione dei dati scaduti).
 
 ## Backup e ripristino
 
-- **Automatico**: ogni notte alle 03:00 UTC la funzione `backup-notturno` spedisce
-  l'intero database (JSON) via email. Backup manuale: `/admin` → Manutenzione.
-- **Ripristino**: rinominare l'allegato `.txt` in `.json`; contiene
+- **Automatico**: ogni notte alle 03:00 (ora italiana) lo scheduler interno chiama
+  `/api/cron/backup`: prima la **pulizia dei dati scaduti** (`src/lib/pulizia.js`,
+  tempi dichiarati nell'informativa privacy), poi l'intero database compresso,
+  **cifrato AES-256** e spedito via email. Backup manuale: `/admin` → Manutenzione.
+- ⚠️ Senza `BACKUP_KEY` il dump **non viene spedito** (mai in chiaro: contiene dati
+  personali di pazienti e professionisti) e la pulizia resta in pausa: arriva solo
+  l'email di avviso.
+- **Ripristino**: `BACKUP_KEY='…' node scripts/ripristina-backup.mjs infermieriweb-backup-AAAA-MM-GG.json.gz.enc`
+  → scrive il `.json` in chiaro, che contiene
   `{ tabelle: { nome: [righe…] } }`. Reinserire con uno script Node usando
   `sql.query('INSERT INTO … VALUES …')` tabella per tabella (rispettare l'ordine:
   professionals → professional_users/services/coverage_areas/opening_hours →

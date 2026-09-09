@@ -71,6 +71,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   cancel_token text NOT NULL DEFAULT ''::text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   reminded_at timestamp with time zone,
+  consent_privacy_at timestamp with time zone, -- prova del consenso privacy (art. 7.1 GDPR)
+  consent_health_at timestamp with time zone,  -- consenso esplicito art. 9 (solo domicilio)
+  consent_text text NOT NULL DEFAULT ''::text, -- testo esatto della spunta accettata
   CONSTRAINT bookings_pkey PRIMARY KEY (id)
 );
 CREATE INDEX ix_bookings_prof_start ON bookings USING btree (professional_id, start_dt);

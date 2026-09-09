@@ -26,6 +26,8 @@ export async function POST({ request }) {
   const email = String(body.email || "").trim();
   const address = String(body.address || "").trim();
   const city = String(body.city || "").trim();
+  // Testo esatto della spunta accettata: conservato come prova del consenso (art. 7.1 GDPR)
+  const consentText = String(body.consent_text || "").replace(/\s+/g, " ").trim().slice(0, 600);
 
   if (!professionalId || !serviceId || isNaN(start.getTime())) return json({ error: "Dati prenotazione incompleti" }, 400);
   if (name.length < 2 || phone.length < 6) return json({ error: "Nome e telefono sono obbligatori" }, 400);
@@ -44,7 +46,7 @@ export async function POST({ request }) {
   }
 
   const [service] = await sql`
-    SELECT s.duration_min, s.name AS service_name, s.price_cents,
+    SELECT s.duration_min, s.name AS service_name, s.price_cents, s.catalog_key,
            p.lead_minutes, p.cancel_hours, p.name AS professional_name, p.email AS professional_email,
            p.slug AS professional_slug, p.status
     FROM services s JOIN professionals p ON p.id = s.professional_id
@@ -58,11 +60,17 @@ export async function POST({ request }) {
   const end = new Date(start.getTime() + service.duration_min * 60000);
   const cancelToken = randomBytes(24).toString("hex");
 
+  // Le consulenze tra colleghi non riguardano la salute di chi prenota: in quel
+  // caso si registra solo il consenso privacy, non quello esplicito dell'art. 9.
+  const consulenza = String(service.catalog_key || "").startsWith("consulenza-");
+  const consensoSalute = consulenza ? null : new Date().toISOString();
+
   // Inserimento atomico: fallisce se lo slot è stato preso nel frattempo
   const inserted = await sql`
-    INSERT INTO bookings (professional_id, service_id, start_dt, end_dt, customer_name, customer_phone, customer_email, address, city, status, source, cancel_token)
+    INSERT INTO bookings (professional_id, service_id, start_dt, end_dt, customer_name, customer_phone, customer_email, address, city, status, source, cancel_token, consent_privacy_at, consent_health_at, consent_text)
     SELECT ${professionalId}, ${serviceId}, ${start.toISOString()}, ${end.toISOString()},
-           ${name}, ${phone}, ${email}, ${address}, ${city}, 'pending', 'online', ${cancelToken}
+           ${name}, ${phone}, ${email}, ${address}, ${city}, 'pending', 'online', ${cancelToken},
+           now(), ${consensoSalute}, ${consentText}
     WHERE NOT EXISTS (
       SELECT 1 FROM bookings
       WHERE professional_id = ${professionalId}

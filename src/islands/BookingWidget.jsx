@@ -89,6 +89,13 @@ export default function BookingWidget({ professionalId, services, servizioInizia
   const servizioSel = services.find((s) => s.id === Number(servizio));
   const consulenza = eConsulenza(servizioSel);
 
+  // Testo della spunta di consenso: viene mandato al server e conservato con la
+  // prenotazione come prova di COSA ha accettato il paziente (art. 7.1 GDPR).
+  // ⚠️ Se cambi il testo della label qui sotto, cambia anche queste due righe.
+  const testoConsenso = consulenza
+    ? "Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al consulente scelto. Ho letto l'informativa privacy."
+    : "Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al professionista scelto. Poiché la prestazione scelta può indicare un'esigenza di salute, presto anche il consenso esplicito a questo trattamento. Ho letto l'informativa privacy.";
+
   const prenota = async (e) => {
     e.preventDefault();
     setErrore("");
@@ -101,6 +108,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professional_id: professionalId, service_id: servizio, start: slot.start, ...dati,
+          consent_text: testoConsenso,
           name: !consulenza && perAltri && paziente.trim() ? `${paziente.trim()} (prenotato da ${dati.name})` : dati.name,
           address: consulenza ? "" : dati.address,
           city: consulenza ? "" : dati.city,
@@ -269,6 +277,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
             </>
           )}
 
+          {/* ⚠️ Testo allineato a `testoConsenso` (viene salvato come prova del consenso) */}
           <div className="pf-check">
             <input id="bw-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
             <label htmlFor="bw-privacy" style={{ margin: 0, fontWeight: 400 }}>
