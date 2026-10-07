@@ -156,6 +156,7 @@ export async function DELETE({ request, url }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
   const id = Number(url.searchParams.get("id"));
   if (!id) return json({ error: "Id mancante" }, 400);
-  await sql`DELETE FROM articles WHERE id = ${id}`;
-  return json({ ok: true });
+  const tolti = await sql`DELETE FROM articles WHERE id = ${id} RETURNING slug`;
+  if (!tolti.length) return json({ error: "Articolo non trovato: forse è già stato eliminato" }, 404);
+  return json({ ok: true, slug: tolti[0].slug });
 }

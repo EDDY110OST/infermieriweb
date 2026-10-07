@@ -227,7 +227,9 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   const [spec, setSpec] = useState({ voci: [], scelte: [], massimo: 5 });
   const [nuovaSpec, setNuovaSpec] = useState("");
 
-  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); clearTimeout(timerMsg.current); timerMsg.current = setTimeout(() => setMsg(null), 8000); };
   const inScheda = (k) => (servizi || []).some((s) => s.catalog_key === k);
   const vocePerKey = (k) => (listino || []).find((v) => v.key === k);
 
@@ -792,21 +794,37 @@ function EliminaProfessionista({ p, onFatto }) {
 function Professionisti({ filtroStato }) {
   const [lista, setLista] = useState(null);
   const [msg, setMsg] = useState(null);
-  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 9000); };
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); clearTimeout(timerMsg.current); timerMsg.current = setTimeout(() => setMsg(null), 9000); };
   const [modifica, setModifica] = useState(null); // { id, nome }
   const carica = useCallback(() => {
     fetch("/api/admin/professionisti").then((r) => r.json()).then((d) => setLista(d.professionisti || []));
   }, []);
   useEffect(carica, [carica]);
 
+  // Messaggio di esito in cima all'elenco: dopo un'azione su una card in fondo va portato in vista
+  const msgRef = useRef(null);
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
+
+  // Sospendi / Riattiva: la domanda è in pagina (ConfermaInline), non window.confirm
   const cambiaStato = async (p, status) => {
-    const verbo = status === "suspended" ? "Sospendo" : "Riattivo";
-    if (!window.confirm(`${verbo} ${p.name}?${status === "suspended" ? " La scheda sparirà dalla ricerca." : ""}`)) return;
-    await fetch("/api/admin/professionisti", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: p.id, status }),
-    });
+    try {
+      const r = await fetch("/api/admin/professionisti", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: p.id, status }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return avvisa("err", d.error || "Non sono riuscito a cambiare lo stato: riprova");
+      avvisa("ok", status === "suspended"
+        ? `${p.name} sospeso ✅ La scheda non compare più nella ricerca.`
+        : d.status === "network"
+          ? `${p.name} riattivato ✅ È senza P.IVA: resta «in rete», non prenotabile.`
+          : `${p.name} riattivato ✅ La scheda torna nella ricerca.`);
+    } catch {
+      avvisa("err", "Errore di rete: riprova tra poco");
+    }
     carica();
   };
 
@@ -820,7 +838,7 @@ function Professionisti({ filtroStato }) {
   return (
     <div>
       <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>👨‍⚕️ {filtroStato ? "Stato approvazione" : "Elenco infermieri"} ({visibili.length})</h2>
-      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
+      {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
       {visibili.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessun professionista{filtroStato ? " in questo stato" : ""}.</p></div>}
       {visibili.map((p) => (
         <div className="pf-panel" key={p.id} style={{ marginBottom: 12 }}>
@@ -852,8 +870,8 @@ function Professionisti({ filtroStato }) {
             <button className="pf-btn compatto" onClick={() => setModifica({ id: p.id, nome: p.name })}>✏️ Modifica scheda</button>
             {p.status !== "deleted" && p.status !== "suspended" && <CorreggiEmail p={p} onFatto={carica} />}
             {p.status !== "suspended"
-              ? <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(p, "suspended")}>Sospendi</button>
-              : <button className="pf-btn compatto" onClick={() => cambiaStato(p, "active")}>Riattiva</button>}
+              ? <ConfermaInline etichetta="Sospendi" domanda={`Sospendo ${p.name}? La scheda sparirà dalla ricerca.`} conferma="Sì, sospendi" onConferma={() => cambiaStato(p, "suspended")} />
+              : <ConfermaInline etichetta="Riattiva" className="pf-btn compatto" classeConferma="pf-btn compatto" domanda={`Riattivo ${p.name}?`} conferma="Sì, riattiva" onConferma={() => cambiaStato(p, "active")} />}
             {p.status === "suspended" && (
               <EliminaProfessionista p={p} onFatto={(d) => {
                 avvisa("ok", `Profilo eliminato ✅ Prenotazioni future annullate: ${d.future_annullate} (email inviate: ${d.email_inviate}) · passate conservate senza dati: ${d.passate_conservate} · recensioni cancellate: ${d.recensioni_cancellate}.`);
@@ -882,22 +900,32 @@ function Candidature({ aggiornaBadge }) {
   }, [aggiornaBadge]);
   useEffect(carica, [carica]);
 
+  // Errori e rifiuti: messaggio in pagina (niente alert/confirm: i browser li sopprimono)
+  const [msg, setMsg] = useState(null);
+  const msgRef = useRef(null);
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
+
   const gestisci = async (id, action) => {
-    if (action === "reject" && !window.confirm("Rifiuto questa candidatura? Il candidato riceverà una email.")) return;
+    const nome = (candidature.find((x) => x.id === id) || {}).name || "la candidatura";
     const v = verifiche[id] || {};
     if (action === "approve" && (!v.piva || !v.albo)) {
-      alert("Prima di approvare devi confermare di aver verificato SIA la partita IVA (Agenzia delle Entrate) SIA l'iscrizione all'albo (FNOPI). Spunta entrambe le caselle.");
-      return;
+      return setMsg({ tipo: "err", testo: "Prima di approvare spunta le due caselle: partita IVA verificata (Agenzia delle Entrate) e iscrizione all'albo verificata (FNOPI)." });
     }
-    const r = await fetch("/api/admin/candidature", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action, verificaPiva: !!(verifiche[id]||{}).piva, verificaAlbo: !!(verifiche[id]||{}).albo }),
-    });
-    const d = await r.json();
-    if (!r.ok) return alert(d.error);
+    let r, d;
+    try {
+      r = await fetch("/api/admin/candidature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action, verificaPiva: !!v.piva, verificaAlbo: !!v.albo }),
+      });
+      d = await r.json().catch(() => ({}));
+    } catch {
+      return setMsg({ tipo: "err", testo: "Errore di rete: riprova tra poco" });
+    }
+    if (!r.ok) return setMsg({ tipo: "err", testo: d.error || "Operazione non riuscita: riprova" });
     // la card sparisce dall'elenco (non è più «in attesa»): l'esito resta in cima, in vista
-    if (action === "approve") setEsiti((e) => ({ ...e, [id]: { ...d, nome: (candidature.find((x) => x.id === id) || {}).name } }));
+    if (action === "approve") { setMsg(null); setEsiti((e) => ({ ...e, [id]: { ...d, nome } })); }
+    else setMsg({ tipo: "ok", testo: `Candidatura di ${nome} rifiutata. Gli è arrivata una email.` });
     carica();
   };
   const esitiRef = useRef(null);
@@ -909,6 +937,7 @@ function Candidature({ aggiornaBadge }) {
   return (
     <div>
       <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>🪪 Verifica documenti — candidature in attesa ({candidature.length})</h2>
+      {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
       {nEsiti > 0 && (
         <div ref={esitiRef} style={{ scrollMarginTop: 96 }}>
           {Object.entries(esiti).map(([id, e]) => (
@@ -962,9 +991,9 @@ function Candidature({ aggiornaBadge }) {
                 : <p style={{ margin: "6px 0 0" }}>⚠️ Email NON partita — comunica tu le credenziali: <code>{esiti[c.id].credenziali.email}</code> / <code>{esiti[c.id].credenziali.password}</code></p>}
             </div>
           ) : (
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <button className="pf-btn" disabled={!((verifiche[c.id]||{}).piva && (verifiche[c.id]||{}).albo)} onClick={() => gestisci(c.id, "approve")}>✅ Approva e attiva</button>
-              <button className="pf-btn pericolo" onClick={() => gestisci(c.id, "reject")}>Rifiuta</button>
+              <ConfermaInline etichetta="Rifiuta" className="pf-btn pericolo" domanda={`Rifiuto la candidatura di ${c.name}? Riceverà una email.`} conferma="Sì, rifiuta" onConferma={() => gestisci(c.id, "reject")} />
             </div>
           )}
         </div>
@@ -1102,7 +1131,9 @@ function Servizi() {
   }, []);
   useEffect(carica, [carica]);
   useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
-  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); clearTimeout(timerMsg.current); timerMsg.current = setTimeout(() => setMsg(null), 8000); };
 
   // Le prestazioni "disattivate" comparivano qui senza nessun modo di toglierle:
   // bisognava sapere che si fa da Infermieri → Modifica scheda. Stesso endpoint, stessa regola
@@ -1172,7 +1203,9 @@ function Listino() {
   const [modifica, setModifica] = useState(null); // {id, nome, min, sugg, durata}
   const [nuova, setNuova] = useState({ aperta: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
 
-  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); clearTimeout(timerMsg.current); timerMsg.current = setTimeout(() => setMsg(null), 8000); };
   const carica = useCallback(() => {
     fetch("/api/admin/listino").then((r) => r.json()).then((d) => setVoci(d.voci || []));
   }, []);
@@ -1218,19 +1251,28 @@ function Listino() {
     carica();
   };
 
-  const elimina = async (v) => {
-    if (!window.confirm(`Eliminare "${v.nome}" dal listino?`)) return;
-    let r = await fetch(`/api/admin/listino?id=${v.id}`, { method: "DELETE" });
-    let d = await r.json();
-    if (r.status === 409) {
-      if (!window.confirm(`${d.error}\n\nOK = toglila anche dalle loro schede. Annulla = non faccio nulla.`)) return;
-      r = await fetch(`/api/admin/listino?id=${v.id}&anche_dalle_schede=1`, { method: "DELETE" });
-      d = await r.json();
+  // Elimina in due passaggi IN PAGINA (niente window.confirm): «Elimino X?» e, se la voce è
+  // nelle schede di qualcuno, una seconda domanda: «la tolgo anche dalle loro schede?».
+  const [eliminando, setEliminando] = useState(null); // { id, fase: "domanda" | "in-uso", testo }
+  const [inCorsoElimina, setInCorsoElimina] = useState(false);
+  const elimina = async (v, ancheDalleSchede = false) => {
+    setInCorsoElimina(true);
+    try {
+      const r = await fetch(`/api/admin/listino?id=${v.id}${ancheDalleSchede ? "&anche_dalle_schede=1" : ""}`, { method: "DELETE" });
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 409 && !ancheDalleSchede) return setEliminando({ id: v.id, fase: "in-uso", testo: d.error });
+      setEliminando(null);
+      if (!r.ok) return avvisa("err", d.error || "Non sono riuscito a eliminarla: riprova");
+      avvisa("ok", `"${v.nome}" eliminata dal listino${d.archiviate || d.cancellate ? ` (tolta da ${(d.archiviate || 0) + (d.cancellate || 0)} scheda/e)` : ""}.`);
+      carica();
+    } catch {
+      avvisa("err", "Errore di rete: riprova tra poco");
+    } finally {
+      setInCorsoElimina(false);
     }
-    if (!r.ok) return avvisa("err", d.error);
-    avvisa("ok", `"${v.nome}" eliminata dal listino${d.archiviate || d.cancellate ? ` (tolta da ${(d.archiviate || 0) + (d.cancellate || 0)} scheda/e)` : ""}.`);
-    carica();
   };
+  const msgRef = useRef(null);
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
 
   if (!voci) return <Caricamento />;
   const generali = voci.filter((v) => !v.professional_id);
@@ -1263,7 +1305,16 @@ function Listino() {
           <span className="pf-note" style={{ margin: 0 }}>{Number(v.in_uso) > 0 ? `usata da ${v.in_uso}` : "non usata"}</span>
           <button className="pf-btn secondario compatto" onClick={() => setModifica({ id: v.id, nome: v.nome, min: (v.min_cents / 100).toFixed(2).replace(".", ","), sugg: (v.sugg_cents / 100).toFixed(2).replace(".", ","), durata: String(v.durata_min) })}>Modifica</button>
           <button className="pf-btn secondario compatto" onClick={() => ritira(v)}>{v.active ? "Ritira" : "Rimetti"}</button>
-          <button className="pf-btn pericolo compatto" onClick={() => elimina(v)}>Elimina</button>
+          {eliminando?.id !== v.id && <button className="pf-btn pericolo compatto" onClick={() => setEliminando({ id: v.id, fase: "domanda" })}>Elimina</button>}
+          {eliminando?.id === v.id && (
+            <span className="pf-conferma-inline" role="group" aria-label={`Elimina ${v.nome}`} style={{ width: "100%" }}>
+              <span style={{ flex: "1 1 220px" }}>{eliminando.fase === "domanda" ? `Elimino «${v.nome}» dal listino?` : eliminando.testo}</span>
+              <button type="button" className="pf-btn pericolo compatto" disabled={inCorsoElimina} onClick={() => elimina(v, eliminando.fase === "in-uso")}>
+                {inCorsoElimina ? "…" : eliminando.fase === "domanda" ? "Sì, elimina" : "Sì, toglila anche dalle schede"}
+              </button>
+              <button type="button" className="pf-btn secondario compatto" disabled={inCorsoElimina} onClick={() => setEliminando(null)}>{eliminando.fase === "domanda" ? "No" : "No, lascia stare"}</button>
+            </span>
+          )}
         </>
       )}
     </div>
@@ -1279,7 +1330,7 @@ function Listino() {
         <strong> Elimina</strong> = via del tutto (se è in uso te lo diciamo prima).
         Per una prestazione destinata a <strong>un solo infermiere</strong>, aprila da Infermieri → «✏️ Modifica scheda».
       </p>
-      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
+      {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
 
       <div className="pf-panel" style={{ marginBottom: 14 }}>
         {!nuova.aperta ? (
@@ -1335,7 +1386,9 @@ function Specializzazioni() {
   const [msg, setMsg] = useState(null);
   const [nuova, setNuova] = useState("");
   const [modifica, setModifica] = useState(null); // {id, nome}
-  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); clearTimeout(timerMsg.current); timerMsg.current = setTimeout(() => setMsg(null), 8000); };
   const carica = useCallback(() => {
     fetch("/api/admin/specializzazioni").then((r) => r.json()).then((d) => setVoci(d.voci || []));
   }, []);
@@ -1478,13 +1531,22 @@ function RecensioniModerazione({ aggiornaBadge }) {
   }, [aggiornaBadge]);
   useEffect(carica, [carica]);
 
+  // esito in pagina (niente alert: i browser lo sopprimono) e portato in vista
+  const [msg, setMsg] = useState(null);
+  const msgRef = useRef(null);
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
   const modera = async (id, action) => {
-    const r = await fetch("/api/admin/recensioni", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
-    });
-    if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || "Errore nella moderazione"); return; }
+    try {
+      const r = await fetch("/api/admin/recensioni", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); return setMsg({ tipo: "err", testo: d.error || "Errore nella moderazione" }); }
+      setMsg({ tipo: "ok", testo: action === "publish" ? "Recensione pubblicata ✅" : "Recensione rifiutata." });
+    } catch {
+      return setMsg({ tipo: "err", testo: "Errore di rete: riprova tra poco" });
+    }
     carica();
   };
 
@@ -1492,6 +1554,7 @@ function RecensioniModerazione({ aggiornaBadge }) {
   return (
     <div>
       <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>⭐ Recensioni da moderare ({recensioni.length})</h2>
+      {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
       {recensioni.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna recensione in attesa.</p></div>}
       {recensioni.map((r) => (
         <div className="pf-panel" key={r.id} style={{ marginBottom: 14 }}>
@@ -1788,19 +1851,35 @@ function Sicurezza() {
     caricaTfa();
   };
 
-  const spegniTfa = async (e) => {
+  // Disattiva 2FA: prima la domanda IN PAGINA (niente window.confirm), poi la richiesta
+  const [chiediSpegni, setChiediSpegni] = useState(false);
+  const [spegnendo, setSpegnendo] = useState(false);
+  const tfaMsgRef = useRef(null);
+  useEffect(() => { if (tfaMsg) tfaMsgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [tfaMsg]);
+  const spegniTfa = (e) => {
     e.preventDefault();
-    if (!window.confirm("Disattivo la verifica in due passaggi? L'account resterà protetto dalla sola password.")) return;
-    const r = await fetch("/api/panel/2fa", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "disable", password: disattiva.password, code: disattiva.code }),
-    });
-    const d = await r.json();
-    if (!r.ok) return setTfaMsg({ err: d.error });
-    setDisattiva({ password: "", code: "" });
-    setTfaMsg({ ok: "Due fattori disattivati." });
-    caricaTfa();
+    setTfaMsg(null);
+    setChiediSpegni(true);
+  };
+  const confermaSpegniTfa = async () => {
+    setSpegnendo(true);
+    try {
+      const r = await fetch("/api/panel/2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "disable", password: disattiva.password, code: disattiva.code }),
+      });
+      const d = await r.json().catch(() => ({}));
+      setChiediSpegni(false);
+      if (!r.ok) return setTfaMsg({ err: d.error || "Non sono riuscito a disattivarla" });
+      setDisattiva({ password: "", code: "" });
+      setTfaMsg({ ok: "Due fattori disattivati." });
+      caricaTfa();
+    } catch {
+      setTfaMsg({ err: "Errore di rete: riprova tra poco" });
+    } finally {
+      setSpegnendo(false);
+    }
   };
 
   return (
@@ -1832,8 +1911,7 @@ function Sicurezza() {
         <h3 style={{ marginTop: 0, color: "var(--iw-navy)" }}>
           Verifica in due passaggi (2FA) {tfa?.enabled ? <span className="stato done">ATTIVA</span> : <span className="stato noshow">spenta</span>}
         </h3>
-        {tfaMsg?.err && <div className="pf-errore">{tfaMsg.err}</div>}
-        {tfaMsg?.ok && <div className="pf-successo">{tfaMsg.ok}</div>}
+        {tfaMsg && <div ref={tfaMsgRef} className={tfaMsg.err ? "pf-errore" : "pf-successo"} style={{ scrollMarginTop: 96 }}>{tfaMsg.err || tfaMsg.ok}</div>}
 
         {tfa && !tfa.enabled && !setup && (
           <div>
@@ -1875,7 +1953,13 @@ function Sicurezza() {
                 <input inputMode="numeric" maxLength={6} required value={disattiva.code} onChange={(e) => setDisattiva({ ...disattiva, code: e.target.value.replace(/\D/g, "") })} />
               </div>
             </div>
-            <button className="pf-btn pericolo">Disattiva 2FA</button>
+            {!chiediSpegni ? <button className="pf-btn pericolo">Disattiva 2FA</button> : (
+              <span className="pf-conferma-inline" role="group" aria-label="Disattiva la verifica in due passaggi">
+                <span>Disattivo la verifica in due passaggi? L'account resterà protetto dalla sola password.</span>
+                <button type="button" className="pf-btn pericolo compatto" disabled={spegnendo} onClick={confermaSpegniTfa}>{spegnendo ? "…" : "Sì, disattiva"}</button>
+                <button type="button" className="pf-btn secondario compatto" disabled={spegnendo} onClick={() => setChiediSpegni(false)}>No</button>
+              </span>
+            )}
           </form>
         )}
         <p className="pf-note" style={{ marginTop: 10 }}>
@@ -1900,9 +1984,12 @@ function BlogAdmin() {
   }, []);
   useEffect(carica, [carica]);
 
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
   const avvisa = (tipo, testo) => {
     setMessaggio({ tipo, testo });
-    setTimeout(() => setMessaggio(null), 6000);
+    clearTimeout(timerMsg.current);
+    timerMsg.current = setTimeout(() => setMessaggio(null), 8000);
   };
 
   // BUG (7/10/26): l'editor si apre SOPRA l'elenco; cliccando «Modifica» su un articolo in
@@ -2003,11 +2090,19 @@ function BlogAdmin() {
     else { const d = await r.json().catch(() => ({})); avvisa("err", d.error || "Errore nell'operazione"); }
   };
 
+  // Elimina: la domanda è in pagina (ConfermaInline). Con window.confirm, dopo qualche
+  // finestra il browser la sopprimeva e il tasto sembrava morto (stesso bug delle prestazioni).
   const elimina = async (art) => {
-    if (!window.confirm(`Elimino definitivamente "${art.title}"?`)) return;
-    const r = await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE" });
-    if (r.ok) { avvisa("ok", "Articolo eliminato."); carica(); }
-    else { const d = await r.json().catch(() => ({})); avvisa("err", d.error || "Errore nell'eliminazione"); }
+    try {
+      const r = await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE" });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return avvisa("err", d.error || "Errore nell'eliminazione: riprova");
+      setArticoli((lista) => (lista || []).filter((a) => a.id !== art.id)); // sparisce subito
+      avvisa("ok", `«${art.title}» eliminato ✅ Non è più sul sito.`);
+    } catch {
+      avvisa("err", "Errore di rete: l'articolo non è stato eliminato, riprova tra poco");
+    }
+    carica();
   };
 
   return (
@@ -2088,10 +2183,10 @@ function BlogAdmin() {
             </div>
           </div>
           <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
-          <span style={{ display: "flex", gap: 6 }}>
+          <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw, body_html: art.body_html || "", body_format: art.body_format === "html" ? "html" : "raw" })}>Modifica</button>
             <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
-            <button className="pf-btn pericolo compatto" onClick={() => elimina(art)}>Elimina</button>
+            <ConfermaInline etichetta="Elimina" domanda={`Elimino «${art.title}» per sempre?`} conferma="Sì, elimina" onConferma={() => elimina(art)} />
           </span>
         </div>
       ))}

@@ -1037,7 +1037,7 @@ label.pf-tipo, .pf-book label.pf-tipo {
   background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: 14px;
   padding: 14px 16px; margin-bottom: 10px;
 }
-.pf-giorno-card .testa { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.pf-giorno-card .testa { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
 .pf-giorno-card .testa strong { color: var(--iw-navy); font-size: 18px; min-width: 90px; }
 .pf-giorno-card .chiuso { color: var(--iw-muted); font-size: 15px; }
 .pf-giorno-card .fascia-riga { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }

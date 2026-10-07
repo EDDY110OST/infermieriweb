@@ -248,14 +248,30 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     if (r.ok) carica();
   };
 
-  const cambiaStato = async (id, status, conferma) => {
-    if (conferma && !window.confirm(conferma)) return;
-    const r = await panelFetch("/api/panel/prenotazioni", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-    if (r.ok) carica();
+  // «Fatta» / «Annulla»: la domanda per annullare è in pagina (ConfermaInline, niente
+  // window.confirm che i browser sopprimono) e l'esito si vede subito, portato in vista.
+  const [esitoAgenda, setEsitoAgenda] = useState(null);
+  const esitoAgendaRef = useRef(null);
+  useEffect(() => { if (esitoAgenda) esitoAgendaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [esitoAgenda]);
+  const cambiaStato = async (b, status) => {
+    try {
+      const r = await panelFetch("/api/panel/prenotazioni", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: b.id, status }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return setEsitoAgenda({ tipo: "err", testo: d.error || "Non sono riuscito a salvare: riprova", n: b.id + status });
+      setEsitoAgenda({
+        tipo: "ok", n: b.id + status,
+        testo: status === "done"
+          ? `✅ ${b.customer_name}: prestazione segnata come fatta.`
+          : `Prenotazione di ${b.customer_name} annullata.${b.customer_email ? " Il paziente riceve un'email." : " Era telefonica: avvisa tu il paziente."}`,
+      });
+      carica();
+    } catch {
+      setEsitoAgenda({ tipo: "err", testo: "Errore di rete: riprova tra poco", n: b.id + status });
+    }
   };
 
   const creaBlocco = async (e) => {
@@ -300,6 +316,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   return (
     <div>
       <h2 style={{ color: "var(--iw-navy)", fontSize: 26, margin: "0 0 14px" }}>La tua agenda</h2>
+      {esitoAgenda && <div ref={esitoAgendaRef} key={esitoAgenda.n} className={esitoAgenda.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{esitoAgenda.testo}</div>}
       <div className="pf-panel-toolbar">
         {statoPush === "pronte" && <button className="pf-btn secondario" onClick={attivaNotifiche}>🔔 Attiva notifiche</button>}
         {statoPush === "attive" && <span className="pf-push-ok">🔔 Notifiche attive</span>}
@@ -496,8 +513,10 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
                     {e.dato.source === "online" && (e.dato.accepted_at
                       ? <span className="stato done" title="Hai confermato al paziente che ci sarai">✓ Accettata</span>
                       : <button className="pf-btn compatto" onClick={() => accetta(e.dato.id)} title="Dici al paziente che ci sarai">Accetta</button>)}
-                    <button className="pf-btn secondario compatto" onClick={() => cambiaStato(e.dato.id, "done")}>Fatta</button>
-                    <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(e.dato.id, "cancelled", `Annullo la prenotazione di ${e.dato.customer_name}? ${e.dato.customer_email ? "Il paziente verrà avvisato via email." : "È una prenotazione telefonica: ricordati di avvisare tu il paziente."}`)}>Annulla</button>
+                    <button className="pf-btn secondario compatto" onClick={() => cambiaStato(e.dato, "done")}>Fatta</button>
+                    <ConfermaInline etichetta="Annulla" conferma="Sì, annulla"
+                      domanda={`Annullo la prenotazione di ${e.dato.customer_name}? ${e.dato.customer_email ? "Il paziente verrà avvisato via email." : "È telefonica: avvisa tu il paziente."}`}
+                      onConferma={() => cambiaStato(e.dato, "cancelled")} />
                   </span>
                 )}
               </div>
@@ -543,9 +562,12 @@ function TabServizi({ tipo, onCambiaTipo }) {
   }, []);
   useEffect(carica, [carica]);
 
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
   const avvisa = (tipo, testo) => {
     setMessaggio({ tipo, testo });
-    setTimeout(() => setMessaggio(null), 6000);
+    clearTimeout(timerMsg.current);
+    timerMsg.current = setTimeout(() => setMessaggio(null), 8000);
   };
   // Il messaggio sta in cima alla scheda: dopo un'azione su una riga in fondo va portato in vista
   const msgRef = useRef(null);
@@ -584,7 +606,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
     carica();
   };
 
-  // La conferma è in pagina (ConfermaInline), non confirm(): i browser sopprimono le finestre
+  // La conferma è in pagina (ConfermaInline), non la finestra nativa: i browser sopprimono le finestre
   // native dopo qualche clic di fila (e in alcune app installate non compaiono), e allora il
   // cestino sembrava non fare nulla. La riga sparisce subito e il messaggio spiega l'esito.
   const elimina = async (s) => {
@@ -811,13 +833,15 @@ function TabOrari() {
       ? { ...g, fasce: g.fasce.map((f, k) => (k === i ? { ...f, [campo]: valore } : f)) }
       : g)));
 
+  // La domanda è in pagina (ConfermaInline accanto al tasto), niente finestra nativa
   const copiaSuTutti = (weekday) => {
     const modello = giorni.find((g) => g.weekday === weekday);
     if (!modello.fasce.length) return;
-    if (!confirm(`Copiare gli orari di ${modello.nome} su TUTTI gli altri giorni?`)) return;
     setGiorni(giorni.map((g) => ({ ...g, fasce: modello.fasce.map((f) => ({ ...f })) })));
-    setMessaggio({ tipo: "ok", testo: "Orari copiati su tutti i giorni — ricordati di premere Salva" });
+    setMessaggio({ tipo: "ok", testo: `Orari di ${modello.nome} copiati su tutti i giorni. Ricordati di premere «Salva orari».` });
   };
+  const msgRef = useRef(null);
+  useEffect(() => { if (messaggio) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [messaggio]);
 
   if (!giorni) return <p className="pf-note">Caricamento…</p>;
 
@@ -836,18 +860,18 @@ function TabOrari() {
         tra una fascia e l'altra. Le fasce tra le <strong>22:00 e le 07:00</strong> 🌙 sono notturne: lì
         valgono i prezzi maggiorati che hai impostato nella scheda Servizi.
       </p>
-      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+      {messaggio && <div ref={msgRef} className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{messaggio.testo}</div>}
 
       {giorni.map((g) => (
         <div className="pf-giorno-card" key={g.weekday}>
           <div className="testa">
             <strong>{g.nome}</strong>
             {g.fasce.length === 0 && <span className="chiuso">Chiuso</span>}
-            <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            <span style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
               {g.fasce.length > 0 && (
-                <button type="button" className="pf-btn secondario compatto" onClick={() => copiaSuTutti(g.weekday)} title="Copia questi orari su tutti i giorni">
-                  Copia su tutti
-                </button>
+                <ConfermaInline etichetta="Copia su tutti"
+                  className="pf-btn secondario compatto" classeConferma="pf-btn compatto" conferma="Sì, copia"
+                  domanda={`Copio gli orari di ${g.nome} su tutti gli altri giorni?`} onConferma={() => copiaSuTutti(g.weekday)} />
               )}
               <button type="button" className="pf-btn secondario compatto" onClick={() => aggiungiFascia(g.weekday)}>+ Fascia</button>
             </span>
@@ -879,9 +903,12 @@ function TabZone() {
   const [nuova, setNuova] = useState({ city: "", province: "", region: "", sigla: "" });
   const [messaggio, setMessaggio] = useState(null);
 
+  // il timer del messaggio precedente non deve cancellare quello nuovo (azioni di fila)
+  const timerMsg = useRef(null);
   const avvisa = (tipo, testo) => {
     setMessaggio({ tipo, testo });
-    setTimeout(() => setMessaggio(null), 4000);
+    clearTimeout(timerMsg.current);
+    timerMsg.current = setTimeout(() => setMessaggio(null), 8000);
   };
 
   const carica = () =>
@@ -912,17 +939,31 @@ function TabZone() {
     }
   };
 
+  // «×» sul comune: la domanda compare sotto l'elenco (in pagina, niente finestra nativa)
+  const [daTogliere, setDaTogliere] = useState(null);
+  const [togliendo, setTogliendo] = useState(false);
+  const msgRef = useRef(null);
+  const domandaRef = useRef(null);
+  useEffect(() => { if (messaggio) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [messaggio]);
+  useEffect(() => { if (daTogliere) domandaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [daTogliere]);
   const togli = async (z) => {
-    if (!confirm(`Togliere ${z.city} dalle tue zone? Non comparirai più nelle ricerche di quel comune.`)) return;
-    const r = await panelFetch("/api/panel/zone", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: z.id }),
-    });
-    const d = await r.json();
-    if (!r.ok) return avvisa("err", d.error);
-    avvisa("ok", "Zona rimossa");
-    carica();
+    setTogliendo(true);
+    try {
+      const r = await panelFetch("/api/panel/zone", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: z.id }),
+      });
+      const d = await r.json().catch(() => ({}));
+      setDaTogliere(null);
+      if (!r.ok) return avvisa("err", d.error || "Non sono riuscito a togliere il comune: riprova");
+      avvisa("ok", `${z.city} tolto dalle tue zone ✅`);
+      carica();
+    } catch {
+      avvisa("err", "Errore di rete: riprova tra poco");
+    } finally {
+      setTogliendo(false);
+    }
   };
 
   if (!zone) return <p className="pf-note">Caricamento…</p>;
@@ -933,16 +974,23 @@ function TabZone() {
         I comuni che copri a domicilio: decidono dove compari nelle ricerche, sulla mappa
         e nelle pagine di zona. Più comuni copri, più pazienti ti trovano.
       </p>
-      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+      {messaggio && <div ref={msgRef} className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{messaggio.testo}</div>}
 
       <div className="pf-zone-lista">
         {zone.map((z) => (
           <span className="pf-zona" key={z.id}>
             📍 {z.city} <small>({z.province})</small>
-            <button type="button" aria-label={`Togli ${z.city}`} onClick={() => togli(z)}>×</button>
+            <button type="button" aria-label={`Togli ${z.city}`} onClick={() => setDaTogliere(z)}>×</button>
           </span>
         ))}
       </div>
+      {daTogliere && (
+        <div ref={domandaRef} className="pf-conferma-inline" role="group" aria-label={`Togli ${daTogliere.city}`} style={{ display: "flex", marginTop: 12, scrollMarginTop: 96 }}>
+          <span style={{ flex: "1 1 220px" }}>Tolgo {daTogliere.city} dalle tue zone? Non comparirai più nelle ricerche di quel comune.</span>
+          <button type="button" className="pf-btn pericolo compatto" disabled={togliendo} onClick={() => togli(daTogliere)}>{togliendo ? "…" : "Sì, togli"}</button>
+          <button type="button" className="pf-btn secondario compatto" disabled={togliendo} onClick={() => setDaTogliere(null)}>No</button>
+        </div>
+      )}
 
       <form className="pf-panel pf-book" onSubmit={aggiungi} style={{ marginTop: 18 }}>
         <h2>+ Aggiungi un comune</h2>
