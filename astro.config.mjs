@@ -11,6 +11,16 @@ export default defineConfig({
   // Statico di default; le pagine/API con `export const prerender = false`
   // girano come funzioni server su Netlify (motore prenotazioni).
   adapter: node({ mode: "standalone" }),
+  // Su Render il server sta dietro un proxy (https → http interno): senza
+  // questi domini Astro non si fida di X-Forwarded-Host/Proto, vede un'origine
+  // diversa da quella del browser e rifiuta con 403 le richieste di modifica
+  // senza Content-Type (Elimina articolo/listino/prestazione, Esci, Backup).
+  security: {
+    allowedDomains: [
+      { hostname: "infermieriweb.it", protocol: "https" },
+      { hostname: "www.infermieriweb.it", protocol: "https" },
+    ],
+  },
   integrations: [react(), sitemap({
     // pagine riservate o strumentali: fuori dalla sitemap (sono anche noindex).
     // Confronto sul percorso esatto: "includes" escludeva per sbaglio /recensioni.

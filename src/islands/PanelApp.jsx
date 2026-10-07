@@ -297,7 +297,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   };
 
   const rimuoviBlocco = async (id) => {
-    await panelFetch(`/api/panel/blocchi?id=${id}`, { method: "DELETE" });
+    await panelFetch(`/api/panel/blocchi?id=${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
     carica();
   };
 
@@ -612,7 +612,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
   const elimina = async (s) => {
     let r, d;
     try {
-      r = await panelFetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE" });
+      r = await panelFetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
       d = await r.json().catch(() => ({}));
     } catch {
       return avvisa("err", "Errore di rete: riprova tra poco");
@@ -1602,7 +1602,7 @@ export default function PanelApp() {
   };
 
   const esci = async () => {
-    await fetch("/api/panel/logout", { method: "POST" });
+    await fetch("/api/panel/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
     setUtente(null);
     setTipo(null);
     setTab("agenda");

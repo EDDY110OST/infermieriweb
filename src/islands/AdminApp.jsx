@@ -369,7 +369,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   const rimuoviServizio = async (s) => {
     let r, d;
     try {
-      r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${pid}`, { method: "DELETE" });
+      r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${pid}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
       d = await r.json().catch(() => ({}));
     } catch {
       return avvisa("err", "Errore di rete: riprova tra poco");
@@ -1141,7 +1141,7 @@ function Servizi() {
   const togli = async (s) => {
     let r, d;
     try {
-      r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${s.professional_id}`, { method: "DELETE" });
+      r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${s.professional_id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
       d = await r.json().catch(() => ({}));
     } catch {
       return avvisa("err", "Errore di rete: riprova tra poco");
@@ -1258,7 +1258,7 @@ function Listino() {
   const elimina = async (v, ancheDalleSchede = false) => {
     setInCorsoElimina(true);
     try {
-      const r = await fetch(`/api/admin/listino?id=${v.id}${ancheDalleSchede ? "&anche_dalle_schede=1" : ""}`, { method: "DELETE" });
+      const r = await fetch(`/api/admin/listino?id=${v.id}${ancheDalleSchede ? "&anche_dalle_schede=1" : ""}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
       const d = await r.json().catch(() => ({}));
       if (r.status === 409 && !ancheDalleSchede) return setEliminando({ id: v.id, fase: "in-uso", testo: d.error });
       setEliminando(null);
@@ -1761,7 +1761,7 @@ function ImpostazioniBackup() {
   const [stato, setStato] = useState(null);
   const esegui = async () => {
     setStato("in corso…");
-    const r = await fetch("/api/admin/backup", { method: "POST" });
+    const r = await fetch("/api/admin/backup", { method: "POST", headers: { "Content-Type": "application/json" } });
     const d = await r.json();
     setStato(r.ok ? `✅ Backup spedito via email (${d.dimensioneKB} KB)` : `Errore: ${d.error || "invio non riuscito"}`);
   };
@@ -2094,7 +2094,7 @@ function BlogAdmin() {
   // finestra il browser la sopprimeva e il tasto sembrava morto (stesso bug delle prestazioni).
   const elimina = async (art) => {
     try {
-      const r = await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE" });
+      const r = await fetch(`/api/admin/blog?id=${art.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) return avvisa("err", d.error || "Errore nell'eliminazione: riprova");
       setArticoli((lista) => (lista || []).filter((a) => a.id !== art.id)); // sparisce subito
@@ -2730,7 +2730,7 @@ export default function AdminApp() {
   };
 
   const esci = async () => {
-    await fetch("/api/panel/logout", { method: "POST" });
+    await fetch("/api/panel/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
     setAutorizzato(false);
   };
 

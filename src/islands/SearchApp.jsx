@@ -93,6 +93,8 @@ export default function SearchApp() {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const markersRef = useRef([]);
+  // la mappa (Leaflet) arriva dopo i risultati: i segnaposti si ridisegnano quando è pronta
+  const [mappaPronta, setMappaPronta] = useState(false);
   const campoRef = useRef(null);
 
   useEffect(() => {
@@ -143,6 +145,7 @@ export default function SearchApp() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
       leafletRef.current = { L, map };
+      setMappaPronta(true);
     });
     return () => { attivo = false; };
   }, []);
@@ -176,7 +179,7 @@ export default function SearchApp() {
     }
     if (conPin.length === 1) map.setView([conPin[0].pin.lat, conPin[0].pin.lng], 10);
     else if (conPin.length > 1) map.fitBounds(conPin.map(({ pin }) => [pin.lat, pin.lng]), { padding: [40, 40] });
-  }, [risultati, caricamento, localita]);
+  }, [risultati, caricamento, localita, mappaPronta]);
 
   return (
     <div className="pf-search-layout">
