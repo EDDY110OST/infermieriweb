@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import CampoPassword from "./CampoPassword.jsx";
 import CercaComune from "./CercaComune.jsx";
 import ConfermaInline from "./ConfermaInline.jsx";
+
+// L'editor visuale degli articoli (TipTap) si carica solo quando serve: pesa ~120 KB
+const EditorArticolo = React.lazy(() => import("./EditorArticolo.jsx"));
 import { eConsulenza, TIPI_ATTIVITA } from "../data/listino.js";
 
 const dataIt = (iso) =>
@@ -1735,7 +1738,23 @@ function BlogAdmin() {
     if (messaggio) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [messaggio]);
 
-  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "", cover_data: "" });
+  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "", body_html: "", body_format: "html", cover_data: "" });
+
+  // Un articolo «raw» (testo con ## Titolo) si apre com'è; con questo tasto lo si porta
+  // nell'editor visuale (conversione fatta dal server). Diventa definitivo solo salvando.
+  const [converto, setConverto] = useState(false);
+  const convertiInVisuale = async () => {
+    setConverto(true);
+    try {
+      const r = await fetch(`/api/admin/blog?converti=${editor.id}`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return avvisa("err", d.error || "Conversione non riuscita");
+      setEditor((ed) => ({ ...ed, body_format: "html", body_html: d.html }));
+      avvisa("ok", "Articolo convertito nell'editor visuale: controlla il testo e salva. I riquadri speciali (sintesi, fonti, modulo) restano solo nel formato testo.");
+    } finally {
+      setConverto(false);
+    }
+  };
 
   // Copertina: ridimensionata nel browser (max 1200px, JPEG) e inviata come data URI
   const caricaCopertina = (e) => {
@@ -1840,8 +1859,25 @@ function BlogAdmin() {
           </div>
           <label>Sommario * <span style={{ fontWeight: 400 }}>(1-2 frasi: compare in elenco e su Google)</span></label>
           <textarea rows={2} maxLength={300} value={editor.excerpt} onChange={(e) => setEditor({ ...editor, excerpt: e.target.value })} />
-          <label>Testo * <span style={{ fontWeight: 400 }}>(riga con «## Titolo» = nuova sezione · riga vuota = nuovo paragrafo · «- » = elenco)</span></label>
-          <textarea rows={16} value={editor.body_raw} onChange={(e) => setEditor({ ...editor, body_raw: e.target.value })} style={{ fontFamily: "inherit" }} placeholder={"## Introduzione\n\nPrimo paragrafo...\n\n## Quando serve\n\n- primo punto\n- secondo punto"} />
+          {editor.body_format === "html" ? (
+            <>
+              <label>Testo * <span style={{ fontWeight: 400 }}>(grassetto, corsivo, sottolineato, colore, titoli, elenchi, link · «Titolo» = nuova sezione nell'indice)</span></label>
+              <React.Suspense fallback={<p className="pf-note">Carico l'editor…</p>}>
+                <EditorArticolo html={editor.body_html || ""} onChange={(h) => setEditor((ed) => ({ ...ed, body_html: h }))} />
+              </React.Suspense>
+            </>
+          ) : (
+            <>
+              <label>Testo * <span style={{ fontWeight: 400 }}>(riga con «## Titolo» = nuova sezione · riga vuota = nuovo paragrafo · «- » = elenco)</span></label>
+              <textarea rows={16} value={editor.body_raw} onChange={(e) => setEditor({ ...editor, body_raw: e.target.value })} style={{ fontFamily: "inherit" }} placeholder={"## Introduzione\n\nPrimo paragrafo...\n\n## Quando serve\n\n- primo punto\n- secondo punto"} />
+              {editor.id && (
+                <p className="pf-note" style={{ marginTop: -4 }}>
+                  Questo articolo è nel formato testo. <button type="button" className="pf-btn secondario compatto" disabled={converto} onClick={convertiInVisuale}>{converto ? "Converto…" : "Converti nell'editor visuale"}</button>
+                  {" "}(colori, grassetto, link cliccabili). Se usa i riquadri speciali «sintesi», «fonti» o «modulo», meglio lasciarlo così.
+                </p>
+              )}
+            </>
+          )}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="pf-btn" disabled={salvo} onClick={() => salva(true)}>{salvo ? "Salvo…" : "Pubblica"}</button>
             <button className="pf-btn secondario" disabled={salvo} onClick={() => salva(false)}>Salva bozza</button>
@@ -1862,7 +1898,7 @@ function BlogAdmin() {
           </div>
           <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
           <span style={{ display: "flex", gap: 6 }}>
-            <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw })}>Modifica</button>
+            <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw, body_html: art.body_html || "", body_format: art.body_format === "html" ? "html" : "raw" })}>Modifica</button>
             <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
             <button className="pf-btn pericolo compatto" onClick={() => elimina(art)}>Elimina</button>
           </span>

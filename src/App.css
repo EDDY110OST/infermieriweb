@@ -2130,6 +2130,19 @@ summary:focus-visible {
 .article-list li { line-height: 1.55; }
 .article-content a { color: var(--primary); font-weight: 600; }
 
+/* Articoli scritti con l'editor visuale (HTML sanificato): elenchi, sottotitoli, note, colori del marchio */
+.article-html ul, .article-html ol { margin: 0 0 18px; padding-left: 24px; }
+.article-html li { line-height: 1.55; margin-bottom: 6px; }
+.article-html h3 { font-size: 24px; margin: 20px 0 10px; }
+.article-html blockquote { margin: 0 0 18px; padding: 12px 18px; border-left: 4px solid var(--primary); background: rgba(0, 137, 123, 0.06); border-radius: 10px; }
+.article-html blockquote p:last-child { margin-bottom: 0; }
+.article-html u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.col-navy { color: #0b3954; }
+.col-verde { color: #00897b; }
+.col-rosso { color: #b91c1c; }
+.col-ambra { color: #b45309; }
+.col-grigio { color: #5c7280; }
+
 .article-note {
   border-left: 3px solid var(--primary);
   background: rgba(0, 137, 123, 0.06);

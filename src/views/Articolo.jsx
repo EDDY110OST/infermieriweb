@@ -51,8 +51,14 @@ function renderBlocchi(content, chiave) {
   return blocchi;
 }
 
+// Sezione dall'editor visuale: HTML già sanificato lato server (lista bianca) al salvataggio
+function BloccoHtml({ html }) {
+  return <div className="article-html" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 // Riconosce un marcatore [!nome] a inizio sezione: sintesi | documento | fonti
 function analizzaSezione(section) {
+  if (section.html !== undefined) return { variante: "html", content: [] };
   const content = Array.isArray(section.content) ? section.content : [section.content || ""];
   const primo = String(content[0] || "").trim();
   const m = primo.match(/^\[!(\w+)\]\s*/);
@@ -133,10 +139,34 @@ export default function Articolo({ article, related = [] }) {
 
           <article className="article-content">
             {(() => {
-              let ctaMostrata = false;
               const ctaPro = ["Normativa", "Per i professionisti", "Lavorare come infermiere"].includes(safeCategory);
-              return articleSections.map((section) => {
+              // la CTA compare una volta sola: dopo la prima sezione "di testo" (normale o html)
+              const primaConCta = articleSections.findIndex((s) => ["normale", "html"].includes(analizzaSezione(s).variante));
+              return articleSections.map((section, indice) => {
                 const { variante, content } = analizzaSezione(section);
+
+                if (variante === "html") {
+                  const mostraCtaHtml = indice === primaConCta;
+                  return (
+                    <section key={section.id} id={section.id} className="article-section">
+                      {section.title && <h2>{section.title}</h2>}
+                      <BloccoHtml html={section.html} />
+                      {mostraCtaHtml && (ctaPro ? (
+                        <div className="article-cta-card">
+                          <h3>Sei un infermiere in regola?</h3>
+                          <p>Crea la tua scheda gratuita su InfermieriWeb: ti trovano i pazienti della tua zona e gestisci gli appuntamenti dall'agenda online.</p>
+                          <a href="/lavora-con-noi" className="btn-primary">Crea la tua scheda</a>
+                        </div>
+                      ) : (
+                        <div className="article-cta-card">
+                          <h3>Hai bisogno di assistenza infermieristica?</h3>
+                          <p>Trova un infermiere che copre la tua zona: prezzi chiari, recensioni verificate e prenotazione online in un minuto. Gratis per te.</p>
+                          <a href="/cerca" className="btn-primary">Trova un infermiere</a>
+                        </div>
+                      ))}
+                    </section>
+                  );
+                }
 
                 if (variante === "sintesi") {
                   return (
@@ -179,8 +209,7 @@ export default function Articolo({ article, related = [] }) {
                   );
                 }
 
-                const mostraCta = !ctaMostrata;
-                if (mostraCta) ctaMostrata = true;
+                const mostraCta = indice === primaConCta;
                 return (
                   <section key={section.id} id={section.id} className="article-section">
                     <h2>{section.title}</h2>

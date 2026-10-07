@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
 import { parseBody, readingTime, slugifyTitolo } from "../../../lib/blog.js";
+import { sanificaHtml, testoNudo, sezioniDaHtml, rawToHtml } from "../../../lib/blog-html.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -13,24 +14,41 @@ const soloAdmin = (request) => {
 };
 
 // GET /api/admin/blog — tutti gli articoli (anche bozze)
-export async function GET({ request }) {
+// GET /api/admin/blog?converti=12 — l'HTML per aprire un articolo «raw» nell'editor visuale
+export async function GET({ request, url }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
+  const converti = Number(url.searchParams.get("converti"));
+  if (converti) {
+    const [a] = await sql`SELECT id, title, body_raw, body_html, body_format FROM articles WHERE id = ${converti}`;
+    if (!a) return json({ error: "Articolo non trovato" }, 404);
+    return json({ html: a.body_format === "html" ? a.body_html : rawToHtml(a.body_raw, a.title) });
+  }
   const articoli = await sql`
-    SELECT id, slug, title, category, excerpt, image, status, published_at, body_raw, updated_at
+    SELECT id, slug, title, category, excerpt, image, status, published_at, body_raw, body_html, body_format, updated_at
     FROM articles ORDER BY COALESCE(published_at, CURRENT_DATE) DESC, id DESC`;
   return json({ articoli });
 }
 
+// Due formati: 'raw' (testo con «## Titolo», come sempre) e 'html' (editor visuale: HTML
+// che QUI passa dalla lista bianca prima di essere salvato). In entrambi i casi si
+// calcolano le sezioni (indice, correlati, SEO) e il tempo di lettura.
 const valida = (body) => {
   const title = String(body.title || "").trim().slice(0, 160);
   const category = String(body.category || "").trim().slice(0, 60) || "Salute";
   const excerpt = String(body.excerpt || "").trim().slice(0, 300);
   const image = String(body.image || "").trim().slice(0, 300);
-  const bodyRaw = String(body.body_raw || "").trim().slice(0, 50000);
+  const formato = body.body_format === "html" ? "html" : "raw";
   if (title.length < 5) return { error: "Il titolo è troppo corto" };
-  if (bodyRaw.length < 50) return { error: "Il testo è troppo corto" };
   if (!excerpt) return { error: "Serve il sommario (excerpt): è la frase che compare in elenco e su Google" };
-  return { title, category, excerpt, image, bodyRaw };
+  if (formato === "html") {
+    const bodyHtml = sanificaHtml(String(body.body_html || "").slice(0, 200000));
+    const testo = testoNudo(bodyHtml);
+    if (testo.length < 50) return { error: "Il testo è troppo corto" };
+    return { title, category, excerpt, image, formato, bodyHtml, bodyRaw: "", sections: sezioniDaHtml(bodyHtml, title), reading: readingTime(testo) };
+  }
+  const bodyRaw = String(body.body_raw || "").trim().slice(0, 50000);
+  if (bodyRaw.length < 50) return { error: "Il testo è troppo corto" };
+  return { title, category, excerpt, image, formato, bodyHtml: "", bodyRaw, sections: parseBody(bodyRaw, title), reading: readingTime(bodyRaw) };
 };
 
 // Copertina caricata: data URI (base64) ridimensionata dal browser. undefined = non toccare.
@@ -69,11 +87,11 @@ export async function POST({ request }) {
   }
 
   const publish = !!body.publish;
-  const sections = JSON.stringify(parseBody(v.bodyRaw, v.title));
+  const sections = JSON.stringify(v.sections);
   const [nuovo] = await sql`
-    INSERT INTO articles (slug, title, category, excerpt, image, cover_data, reading_time, body_raw, sections, status, published_at)
-    VALUES (${slug}, ${v.title}, ${v.category}, ${v.excerpt}, ${image}, ${coverData}, ${readingTime(v.bodyRaw)},
-            ${v.bodyRaw}, ${sections}::jsonb, ${publish ? "published" : "draft"}, ${publish ? new Date().toISOString().slice(0, 10) : null})
+    INSERT INTO articles (slug, title, category, excerpt, image, cover_data, reading_time, body_raw, body_html, body_format, sections, status, published_at)
+    VALUES (${slug}, ${v.title}, ${v.category}, ${v.excerpt}, ${image}, ${coverData}, ${v.reading},
+            ${v.bodyRaw}, ${v.bodyHtml}, ${v.formato}, ${sections}::jsonb, ${publish ? "published" : "draft"}, ${publish ? new Date().toISOString().slice(0, 10) : null})
     RETURNING id, slug`;
   return json({ ok: true, id: nuovo.id, slug: nuovo.slug });
 }
@@ -94,7 +112,9 @@ export async function PATCH({ request }) {
     category: body.category ?? attuale.category,
     excerpt: body.excerpt ?? attuale.excerpt,
     image: body.image ?? attuale.image,
+    body_format: body.body_format ?? attuale.body_format,
     body_raw: body.body_raw ?? attuale.body_raw,
+    body_html: body.body_html ?? attuale.body_html,
   });
   if (v.error) return json(v, 400);
 
@@ -118,11 +138,14 @@ export async function PATCH({ request }) {
   }
   if (body.unpublish) status = "draft";
 
-  const sections = JSON.stringify(parseBody(v.bodyRaw, v.title));
+  const sections = JSON.stringify(v.sections);
+  // Passando a «html» il testo raw resta com'era (ritorno indietro possibile); con «raw» l'HTML si svuota
+  const bodyRaw = v.formato === "html" ? attuale.body_raw : v.bodyRaw;
   await sql`
     UPDATE articles SET title = ${v.title}, category = ${v.category}, excerpt = ${v.excerpt},
-      image = ${image}, cover_data = ${coverData}, body_raw = ${v.bodyRaw}, sections = ${sections}::jsonb,
-      reading_time = ${readingTime(v.bodyRaw)}, status = ${status}, published_at = ${publishedAt},
+      image = ${image}, cover_data = ${coverData}, body_raw = ${bodyRaw}, body_html = ${v.bodyHtml},
+      body_format = ${v.formato}, sections = ${sections}::jsonb,
+      reading_time = ${v.reading}, status = ${status}, published_at = ${publishedAt},
       updated_at = now()
     WHERE id = ${id}`;
   return json({ ok: true, status });
