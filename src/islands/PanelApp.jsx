@@ -968,12 +968,15 @@ function TabProfilo({ tipo, setTipo }) {
   const [password, setPassword] = useState({ attuale: "", nuova: "" });
   const [esitoPassword, setEsitoPassword] = useState(null);
   const [caricoFoto, setCaricoFoto] = useState(false);
+  // Specializzazioni: lista decisa dagli amministratori, io ne spunto fino a 5
+  const [spec, setSpec] = useState({ voci: [], scelte: [], massimo: 5 });
 
   useEffect(() => {
     panelFetch("/api/panel/profilo").then((r) => r.json()).then((d) => {
       setProfilo(d.profilo);
       if (d.profilo && setTipo) setTipo(d.profilo.tipo || "");
     });
+    panelFetch("/api/panel/specializzazioni").then((r) => r.json()).then((d) => setSpec({ voci: d.voci || [], scelte: d.scelte || [], massimo: d.massimo || 5 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -996,6 +999,9 @@ function TabProfilo({ tipo, setTipo }) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
       if (setTipo && d.tipo !== undefined) setTipo(d.tipo);
+      // le specializzazioni si salvano insieme al profilo
+      const rs = await panelFetch("/api/panel/specializzazioni", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys: spec.scelte }) });
+      if (!rs.ok) { const ds = await rs.json().catch(() => ({})); throw new Error(ds.error || "Errore nel salvataggio delle specializzazioni"); }
       if (d.pivaSegnalata) {
         setEsito({ tipo: "ok", testo: "✅ Partita IVA ricevuta! La verifichiamo e attiviamo la tua scheda pubblica al più presto: ti avviseremo. Da quel momento i pazienti potranno prenotarti online." });
       } else if (d.geocoded) {
@@ -1120,6 +1126,23 @@ function TabProfilo({ tipo, setTipo }) {
             <label htmlFor="pr-bio-cons">Presentazione per i colleghi <span style={{ fontWeight: 400 }}>(compare nelle pagine delle consulenze)</span></label>
             <textarea id="pr-bio-cons" rows={4} maxLength={1200} value={profilo.bio_consulenza || ""} onChange={(e) => setProfilo({ ...profilo, bio_consulenza: e.target.value })} placeholder="Racconta ai colleghi la tua esperienza nella libera professione: da quanto la fai, in cosa puoi aiutarli." />
             <p className="pf-note" style={{ marginTop: -6 }}>Se la lasci vuota, nelle pagine delle consulenze compare la presentazione normale.</p>
+          </>
+        )}
+
+        {spec.voci.length > 0 && (
+          <>
+            <label>Le tue specializzazioni <span style={{ fontWeight: 400 }}>(al massimo {spec.massimo}: compaiono sotto il tuo nome, come dichiarate da te)</span></label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginBottom: 12 }}>
+              {spec.voci.map((v) => {
+                const sel = spec.scelte.includes(v.key);
+                const pieno = !sel && spec.scelte.length >= spec.massimo;
+                return (
+                  <label key={v.key} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: pieno ? "not-allowed" : "pointer", opacity: pieno ? 0.5 : 1, fontWeight: 400 }}>
+                    <input type="checkbox" checked={sel} disabled={pieno} onChange={() => setSpec((s) => ({ ...s, scelte: sel ? s.scelte.filter((k) => k !== v.key) : [...s.scelte, v.key] }))} /> {v.nome}
+                  </label>
+                );
+              })}
+            </div>
           </>
         )}
 

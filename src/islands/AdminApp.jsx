@@ -219,6 +219,9 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   // Listino disponibile per QUESTO professionista: le voci generali + le sue su misura
   const [listino, setListino] = useState(null);
   const [suMisura, setSuMisura] = useState({ aperto: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
+  // Specializzazioni: lista fra cui scegliere (globali + su misura per lui) e scelte attuali
+  const [spec, setSpec] = useState({ voci: [], scelte: [], massimo: 5 });
+  const [nuovaSpec, setNuovaSpec] = useState("");
 
   const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
   const inScheda = (k) => (servizi || []).some((s) => s.catalog_key === k);
@@ -238,7 +241,39 @@ function ModificaScheda({ pid, nome, onIndietro }) {
     fetch(`/api/panel/servizi?pid=${pid}`).then((r) => r.json()).then((d) => setServizi(d.servizi || []));
     fetch(`/api/panel/zone?pid=${pid}`).then((r) => r.json()).then((d) => setZone(d.zone || []));
     fetch(`/api/panel/listino?pid=${pid}`).then((r) => r.json()).then((d) => setListino(d.voci || []));
+    fetch(`/api/panel/specializzazioni?pid=${pid}`).then((r) => r.json()).then((d) => setSpec({ voci: d.voci || [], scelte: d.scelte || [], massimo: d.massimo || 5 }));
   }, [pid]);
+
+  // La spunta cambia subito (risposta immediata al clic); se il salvataggio fallisce torna indietro
+  const salvaSpecializzazioni = async (scelte, prima) => {
+    let r, d;
+    try {
+      r = await fetch("/api/panel/specializzazioni", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pid, keys: scelte }) });
+      d = await r.json().catch(() => ({}));
+    } catch {
+      setSpec((s) => ({ ...s, scelte: prima }));
+      return avvisa("err", "Errore di rete: riprova tra poco");
+    }
+    if (!r.ok) { setSpec((s) => ({ ...s, scelte: prima })); return avvisa("err", d.error || "Errore nel salvataggio delle specializzazioni"); }
+    avvisa("ok", "Specializzazioni salvate ✅");
+  };
+  const toggleSpec = (key) => {
+    const gia = spec.scelte.includes(key);
+    const scelte = gia ? spec.scelte.filter((k) => k !== key) : [...spec.scelte, key];
+    if (scelte.length > spec.massimo) return avvisa("err", `Al massimo ${spec.massimo} specializzazioni`);
+    const prima = spec.scelte;
+    setSpec((s) => ({ ...s, scelte }));
+    salvaSpecializzazioni(scelte, prima);
+  };
+  // Specializzazione su misura: solo per questo professionista (come le prestazioni su misura)
+  const creaSpecSuMisura = async () => {
+    const r = await fetch("/api/admin/specializzazioni", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome: nuovaSpec, professional_id: pid }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return avvisa("err", d.error || "Errore");
+    setNuovaSpec("");
+    avvisa("ok", `"${nuovaSpec}" creata solo per ${nome}: ora può essere spuntata qui sotto.`);
+    carica();
+  };
   useEffect(carica, [carica]);
 
   const salvaProfilo = async () => {
@@ -497,6 +532,24 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         <div className="pf-book">
           <label>Aggiungi un comune coperto</label>
           <CercaComune id="ms-zona" valore="" onTesto={() => {}} onScegli={aggiungiZona} placeholder="Scrivi e scegli il comune…" />
+        </div>
+      </div>
+
+      {/* SPECIALIZZAZIONI */}
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>Specializzazioni <span className="pf-note" style={{ margin: 0, fontWeight: 400 }}>(dichiarate dal professionista · al massimo {spec.massimo})</span></h3>
+        {spec.voci.length === 0 && <p className="pf-note">La lista è vuota: aggiungi le voci da Infermieri → Specializzazioni.</p>}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px" }}>
+          {spec.voci.map((v) => (
+            <label key={v.key} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <input type="checkbox" checked={spec.scelte.includes(v.key)} onChange={() => toggleSpec(v.key)} /> {v.nome}{v.su_misura ? <span className="pf-note" style={{ margin: 0 }}> · su misura</span> : null}
+            </label>
+          ))}
+        </div>
+        <p className="pf-note" style={{ marginTop: 10 }}>Le spunte si salvano da sole. Sulla scheda pubblica compaiono sotto il nome, con la nota «dichiarate dal professionista».</p>
+        <div className="pf-book" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
+          <input style={{ marginBottom: 0, flex: 1, minWidth: 220 }} value={nuovaSpec} onChange={(e) => setNuovaSpec(e.target.value)} placeholder={`Specializzazione su misura solo per ${nome}`} />
+          <button className="pf-btn secondario compatto" disabled={nuovaSpec.trim().length < 3} onClick={creaSpecSuMisura}>✚ Crea su misura</button>
         </div>
       </div>
     </div>
@@ -1007,6 +1060,100 @@ function Listino() {
         <div className="pf-panel">
           <h3 style={{ marginTop: 0 }}>✚ Prestazioni su misura ({suMisura.length})</h3>
           <p className="pf-note" style={{ marginTop: 0 }}>Valgono per un solo professionista: nessun altro le vede nel proprio pannello.</p>
+          {suMisura.map(riga)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================ SPECIALIZZAZIONI (lista gestita da noi) ============================ */
+
+function Specializzazioni() {
+  const [voci, setVoci] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [nuova, setNuova] = useState("");
+  const [modifica, setModifica] = useState(null); // {id, nome}
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+  const carica = useCallback(() => {
+    fetch("/api/admin/specializzazioni").then((r) => r.json()).then((d) => setVoci(d.voci || []));
+  }, []);
+  useEffect(carica, [carica]);
+
+  const chiama = async (metodo, body, query = "") => {
+    const r = await fetch(`/api/admin/specializzazioni${query}`, { method: metodo, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { avvisa("err", d.error || "Errore"); return null; }
+    return d;
+  };
+  const crea = async () => {
+    const d = await chiama("POST", { nome: nuova });
+    if (!d) return;
+    avvisa("ok", `"${nuova}" aggiunta: da ora gli infermieri possono spuntarla.`); setNuova(""); carica();
+  };
+  const salva = async (v) => {
+    const d = await chiama("PATCH", { id: v.id, nome: modifica.nome });
+    if (!d) return;
+    avvisa("ok", "Salvato ✅"); setModifica(null); carica();
+  };
+  const ritira = async (v) => {
+    const d = await chiama("PATCH", { id: v.id, active: !v.active });
+    if (!d) return;
+    avvisa("ok", v.active ? `"${v.nome}" ritirata: non compare più né nei pannelli né sulle schede.` : `"${v.nome}" di nuovo disponibile.`); carica();
+  };
+  const elimina = async (v) => {
+    const d = await chiama("DELETE", null, `?id=${v.id}`);
+    if (!d) return;
+    avvisa("ok", `"${v.nome}" eliminata${d.tolte_da ? ` (tolta da ${d.tolte_da} scheda/e)` : ""}.`); carica();
+  };
+
+  if (!voci) return <Caricamento />;
+  const generali = voci.filter((v) => !v.professional_id);
+  const suMisura = voci.filter((v) => v.professional_id);
+  const riga = (v) => (
+    <div key={v.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "10px 0", borderBottom: "1px solid var(--iw-line, #eee)", opacity: v.active ? 1 : 0.55 }}>
+      {modifica && modifica.id === v.id ? (
+        <>
+          <input className="pf-book" style={{ flex: 1, minWidth: 200, marginBottom: 0 }} value={modifica.nome} onChange={(e) => setModifica({ ...modifica, nome: e.target.value })} />
+          <button className="pf-btn compatto" onClick={() => salva(v)}>Salva</button>
+          <button className="pf-btn secondario compatto" onClick={() => setModifica(null)}>Annulla</button>
+        </>
+      ) : (
+        <>
+          <strong style={{ flex: 1, minWidth: 180, color: "var(--iw-navy)" }}>
+            {v.nome}{!v.active && <span className="pf-note" style={{ margin: 0 }}> · ritirata</span>}
+            {v.professional_name && <span className="pf-note" style={{ margin: 0 }}> · solo per {v.professional_name}</span>}
+          </strong>
+          <span className="pf-note" style={{ margin: 0 }}>{Number(v.in_uso) > 0 ? `scelta da ${v.in_uso}` : "non ancora scelta"}</span>
+          <button className="pf-btn secondario compatto" onClick={() => setModifica({ id: v.id, nome: v.nome })}>Rinomina</button>
+          <button className="pf-btn secondario compatto" onClick={() => ritira(v)}>{v.active ? "Ritira" : "Rimetti"}</button>
+          <ConfermaInline etichetta="Elimina" domanda={`Elimino «${v.nome}»${Number(v.in_uso) > 0 ? ` anche da ${v.in_uso} scheda/e` : ""}?`} conferma="Sì, elimina" onConferma={() => elimina(v)} />
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div>
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>🎓 Specializzazioni</h2>
+      <p className="pf-note">
+        La lista fra cui gli infermieri possono scegliere (fino a 5 a testa, dal loro pannello o da «Modifica scheda»).
+        Sono <strong>dichiarate dal professionista</strong>: sulla scheda pubblica compaiono con questa nota.
+        <strong> Ritira</strong> = sparisce da pannelli e schede ma resta in lista. <strong>Elimina</strong> = via del tutto.
+      </p>
+      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
+      <div className="pf-panel pf-book" style={{ marginBottom: 14, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <input style={{ marginBottom: 0, flex: 1, minWidth: 240 }} value={nuova} onChange={(e) => setNuova(e.target.value)} placeholder="Nuova specializzazione (es. Ventilazione domiciliare)" />
+        <button className="pf-btn compatto" disabled={nuova.trim().length < 3} onClick={crea}>✚ Aggiungi alla lista</button>
+      </div>
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>Per tutti ({generali.length})</h3>
+        {generali.map(riga)}
+      </div>
+      {suMisura.length > 0 && (
+        <div className="pf-panel">
+          <h3 style={{ marginTop: 0 }}>Su misura ({suMisura.length})</h3>
+          <p className="pf-note" style={{ marginTop: 0 }}>Valgono per un solo professionista (si creano da Infermieri → Modifica scheda).</p>
           {suMisura.map(riga)}
         </div>
       )}
@@ -1852,7 +1999,7 @@ export default function AdminApp() {
     ),
     "inf-verifica": <Candidature aggiornaBadge={aggiornaBadge} />,
     "inf-stato": <Professionisti filtroStato="pending" />,
-    "inf-specializzazioni": <Servizi />,
+    "inf-specializzazioni": <Specializzazioni />,
     "inf-disponibilita": (
       <div className="pf-panel">
         <h2 style={{ marginTop: 0 }}>🗓️ Disponibilità</h2>

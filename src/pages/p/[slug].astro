@@ -9,11 +9,13 @@ import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
 import { eConsulenza } from "../../data/listino.js";
 import { CONSULENZE_PER_KEY } from "../../data/consulenze.js";
+import { specializzazioniPubbliche } from "../../lib/specializzazioni.js";
 
 const { slug } = Astro.params;
 const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
 
 const [pro] = await sql`
+  SELECT id, slug, name, profession, albo_name, albo_number, bio, bio_consulenza, photo_url, region, province, city,
          phone, google_rating, google_reviews_url, cancel_hours
   FROM professionals WHERE slug = ${slug} AND status = 'active'`;
 
@@ -37,6 +39,8 @@ if (!prenotabile) Astro.response.headers.set("X-Robots-Tag", "noindex");
 
 const coverage = await sql`
   SELECT city FROM coverage_areas WHERE professional_id = ${pro.id} ORDER BY city`;
+// Specializzazioni dichiarate dal professionista (lista gestita dagli admin)
+const specializzazioni = await specializzazioniPubbliche(pro.id);
 
 const reviews = await sql`
   SELECT rating, text, author_name, created_at FROM reviews
@@ -73,6 +77,7 @@ const schema = {
     priceCurrency: "EUR",
   })),
   address: { "@type": "PostalAddress", addressLocality: pro.city, addressCountry: "IT" },
+  ...(specializzazioni.length > 0 && { knowsAbout: specializzazioni.map((s) => s.nome) }),
   ...(Number(ratingAgg?.totale) > 0 && {
     aggregateRating: {
       "@type": "AggregateRating",
@@ -111,6 +116,12 @@ try {
         <h1>{pro.name}</h1>
         <p class="prof">{professione}{soloConsulente ? " consulente per la libera professione" : ""} · {pro.city} ({pro.province})</p>
         <span class="badge-albo">✓ {[pro.albo_name, pro.albo_number ? `n. ${pro.albo_number}` : ""].filter(Boolean).join(" ") || "Iscritto all'albo professionale"}</span>
+        {specializzazioni.length > 0 && (
+          <p class="pf-spec">
+            {specializzazioni.map((s) => <span class="pf-spec-chip">{s.nome}</span>)}
+            <span class="pf-spec-nota">Specializzazioni dichiarate dal professionista</span>
+          </p>
+        )}
         {Number(ratingAgg?.totale) > 0 ? (
           <span class="badge-albo">★ {String(ratingAgg.media).replace(".", ",")} · {ratingAgg.totale} recensioni verificate</span>
         ) : pro.google_rating ? (

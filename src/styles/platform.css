@@ -920,6 +920,10 @@
 
 /* Zone coperte in scheda: chip ordinati */
 .pf-zona-chip { display: inline-block; margin: 0 12px 6px 0; white-space: nowrap; }
+/* Specializzazioni dichiarate dal professionista (scheda pubblica) */
+.pf-spec { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pf-spec-chip { display: inline-block; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.45); color: #fff; border-radius: 999px; padding: 3px 11px; font-size: 14.5px; font-weight: 600; }
+.pf-spec-nota { color: rgba(255,255,255,0.8); font-size: 13px; width: 100%; margin: 0; }
 
 /* Hover e transizioni: la metà della sensazione di "curato" */
 .pf-cat, .pf-perche-card, .pf-step, .pf-pro-card, .article-card, .article-preview-card, .pf-panel {
