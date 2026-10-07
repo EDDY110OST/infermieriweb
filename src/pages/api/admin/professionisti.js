@@ -4,6 +4,7 @@ import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
 import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
 import { linkCambio } from "../../../lib/cambio.js";
+import { avvisoEmail, normalizzaEmail } from "../../../lib/email.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -47,6 +48,7 @@ export async function GET({ request, url }) {
     SELECT p.id, p.slug, p.name, p.profession, p.city, p.province, p.status,
            p.albo_name, p.albo_number, p.albo_date, p.vat_number, p.phone, p.email,
            p.photo_url, p.lat, p.lng, p.created_at,
+           (SELECT email FROM professional_users WHERE professional_id = p.id LIMIT 1) AS email_accesso,
            COALESCE(s.n, 0) AS servizi,
            COALESCE(b.n, 0) AS prenotazioni_totali,
            COALESCE(b.completate, 0) AS completate,
@@ -68,7 +70,8 @@ export async function GET({ request, url }) {
     WHERE p.status <> 'deleted'
     ORDER BY p.created_at DESC`;
 
-  return json({ professionisti });
+  // dominio sospetto (es. «gmail.co») → avviso visibile nella card
+  return json({ professionisti: professionisti.map((p) => ({ ...p, avviso_email: avvisoEmail(normalizzaEmail(p.email)) })) });
 }
 
 // PATCH /api/admin/professionisti {id, status} — attiva / sospende

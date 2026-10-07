@@ -1,4 +1,4 @@
-import { scryptSync, randomBytes, timingSafeEqual, createHmac } from "node:crypto";
+import { scryptSync, randomBytes, timingSafeEqual, createHmac, createHash } from "node:crypto";
 
 const SECRET = process.env.SESSION_SECRET || "";
 
@@ -37,6 +37,17 @@ export function readSession(token) {
   } catch {
     return null;
   }
+}
+
+// Link «scegli una nuova password» (recupero e benvenuto rimandato). Dentro c'è
+// un'impronta della password di quel momento: appena la password cambia, il link non
+// vale più (si usa una volta sola, anche se la scadenza non è ancora arrivata).
+export const improntaPassword = (passHash) =>
+  createHash("sha256").update(String(passHash || "")).digest("base64url").slice(0, 16);
+
+export function linkReimpostaPassword({ email, passHash, secondi }) {
+  const token = createSession({ scope: "reset-pro", email, fp: improntaPassword(passHash) }, secondi);
+  return `https://infermieriweb.it/reimposta-password?token=${encodeURIComponent(token)}`;
 }
 
 export function sessionFromRequest(request) {

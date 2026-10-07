@@ -994,8 +994,13 @@ function TabProfilo({ tipo, setTipo }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const salva = async (e) => {
-    e.preventDefault();
+  // Email con un dominio sospetto (gmail.co…): il server non salva e chiede conferma
+  const [avvisoEmail, setAvvisoEmail] = useState("");
+  // l'esito (o la domanda sull'email) va portato in vista: il tasto è in fondo a un modulo lungo
+  const esitoRef = useRef(null);
+  useEffect(() => { if (esito || avvisoEmail) esitoRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [esito, avvisoEmail]);
+  const salva = async (e, confermaEmail = false) => {
+    e?.preventDefault?.();
     setSalvo(true);
     setEsito(null);
     try {
@@ -1003,29 +1008,34 @@ function TabProfilo({ tipo, setTipo }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          bio: profilo.bio, bio_consulenza: profilo.bio_consulenza, phone: profilo.phone, address: profilo.address,
+          bio: profilo.bio, bio_consulenza: profilo.bio_consulenza, phone: profilo.phone, email: profilo.email, address: profilo.address,
           city: profilo.city, province: profilo.province, sigla: profilo.sigla,
           albo_name: profilo.albo_name, albo_number: profilo.albo_number,
           albo_date: profilo.albo_date, vat_number: profilo.vat_number,
-          tipo: profilo.tipo || tipo || "domicilio",
+          tipo: profilo.tipo || tipo || "domicilio", confermaEmail,
         }),
       });
       const d = await r.json();
+      if (d.conferma_email) { setAvvisoEmail(d.error); return; }
+      setAvvisoEmail("");
       if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
+      // l'email per entrare è cambiata: va detto in ogni caso, qualunque sia l'altro esito
+      const notaEmail = d.emailAccessoCambiata ? ` Da ora per entrare usi questa email: ${d.emailAccessoCambiata}.` : "";
+      if (d.emailAccessoCambiata) setProfilo((pr) => ({ ...pr, email: d.emailAccessoCambiata, email_accesso: d.emailAccessoCambiata }));
       if (setTipo && d.tipo !== undefined) setTipo(d.tipo);
       // le specializzazioni si salvano insieme al profilo
       const rs = await panelFetch("/api/panel/specializzazioni", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys: spec.scelte }) });
       if (!rs.ok) { const ds = await rs.json().catch(() => ({})); throw new Error(ds.error || "Errore nel salvataggio delle specializzazioni"); }
       if (d.pivaSegnalata) {
-        setEsito({ tipo: "ok", testo: "✅ Partita IVA ricevuta! La verifichiamo e attiviamo la tua scheda pubblica al più presto: ti avviseremo. Da quel momento i pazienti potranno prenotarti online." });
+        setEsito({ tipo: "ok", testo: "✅ Partita IVA ricevuta! La verifichiamo e attiviamo la tua scheda pubblica al più presto: ti avviseremo. Da quel momento i pazienti potranno prenotarti online." + notaEmail });
       } else if (d.geocoded) {
-        setEsito({ tipo: "ok", testo: d.geocoded.precision === "indirizzo"
+        setEsito({ tipo: "ok", testo: (d.geocoded.precision === "indirizzo"
           ? `✅ Salvato. Segnaposto aggiornato al tuo indirizzo: ${d.geocoded.matched}`
-          : `✅ Salvato. Indirizzo non trovato con precisione: segnaposto al centro di ${profilo.city}. Controlla via e civico.` });
+          : `✅ Salvato. Indirizzo non trovato con precisione: segnaposto al centro di ${profilo.city}. Controlla via e civico.`) + notaEmail });
       } else if (d.posizioneCambiata) {
-        setEsito({ tipo: "warn", testo: "Salvato, ma l'indirizzo non è stato trovato sulla mappa: scrivilo per esteso (es. Via Roma 12)." });
+        setEsito({ tipo: "warn", testo: "Salvato, ma l'indirizzo non è stato trovato sulla mappa: scrivilo per esteso (es. Via Roma 12)." + notaEmail });
       } else {
-        setEsito({ tipo: "ok", testo: "✅ Profilo salvato." });
+        setEsito({ tipo: "ok", testo: "✅ Profilo salvato." + notaEmail });
       }
     } catch (err) {
       setEsito({ tipo: "err", testo: err.message });
@@ -1133,6 +1143,9 @@ function TabProfilo({ tipo, setTipo }) {
         </p>
         <label htmlFor="pr-tel">Telefono</label>
         <input id="pr-tel" type="tel" value={profilo.phone || ""} onChange={(e) => setProfilo({ ...profilo, phone: e.target.value })} />
+        <label htmlFor="pr-email">Email <span style={{ fontWeight: 400 }}>(ricevi qui le prenotazioni ed è quella con cui entri)</span></label>
+        <input id="pr-email" type="email" value={profilo.email || ""} onChange={(e) => { setProfilo({ ...profilo, email: e.target.value }); setAvvisoEmail(""); }} autoComplete="email" />
+        <p className="pf-note" style={{ marginTop: -6 }}>Se la cambi, da quel momento entri con la nuova email. La password resta la stessa.</p>
         <label htmlFor="pr-bio">Presentazione (compare sulla tua scheda pubblica)</label>
         <textarea id="pr-bio" rows={4} maxLength={1200} value={profilo.bio || ""} onChange={(e) => setProfilo({ ...profilo, bio: e.target.value })} />
         {offreConsulenza(profilo.tipo || tipo) && (
@@ -1193,11 +1206,21 @@ function TabProfilo({ tipo, setTipo }) {
           e premi Salva: ci arriva la segnalazione e attiviamo la tua scheda.
         </p>
         {esito && (
-          <div className={esito.tipo === "err" ? "pf-errore" : "pf-successo"} style={esito.tipo === "warn" ? { background: "#fff7ed", color: "#b45309", borderColor: "#fed7aa" } : {}}>
+          <div ref={esitoRef} className={esito.tipo === "err" ? "pf-errore" : "pf-successo"} style={{ scrollMarginTop: 96, ...(esito.tipo === "warn" ? { background: "#fff7ed", color: "#b45309", borderColor: "#fed7aa" } : {}) }}>
             {esito.testo}
           </div>
         )}
-        <button className="pf-btn" disabled={salvo}>{salvo ? "Salvo…" : "Salva profilo"}</button>
+        {avvisoEmail ? (
+          <div ref={esitoRef} style={{ background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412", borderRadius: 10, padding: "10px 12px", marginBottom: 12, scrollMarginTop: 96 }}>
+            ⚠️ {avvisoEmail}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+              <button type="button" className="pf-btn compatto" disabled={salvo} onClick={() => salva(null, true)}>Sì, è giusta: salva</button>
+              <button type="button" className="pf-btn secondario compatto" disabled={salvo} onClick={() => { setAvvisoEmail(""); document.getElementById("pr-email")?.focus(); }}>La correggo</button>
+            </div>
+          </div>
+        ) : (
+          <button className="pf-btn" disabled={salvo}>{salvo ? "Salvo…" : "Salva profilo"}</button>
+        )}
         {profilo.status === "active" ? (
           <p className="pf-note" style={{ marginTop: 8 }}>
             La tua scheda pubblica: <a href={`/p/${profilo.slug}`} target="_blank" rel="noreferrer">infermieriweb.it/p/{profilo.slug}</a>

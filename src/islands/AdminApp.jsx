@@ -291,7 +291,9 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   };
   useEffect(carica, [carica]);
 
-  const salvaProfilo = async () => {
+  // Email sospetta (gmail.co…): il server non salva e chiede conferma → riquadro sopra «Salva»
+  const [avvisoEmailScheda, setAvvisoEmailScheda] = useState("");
+  const salvaProfilo = async (confermaEmail = false) => {
     setSalvo(true);
     try {
       const r = await fetch("/api/panel/profilo", {
@@ -300,12 +302,15 @@ function ModificaScheda({ pid, nome, onIndietro }) {
           pid, name: prof.name, full_name: prof.full_name, gender: prof.gender, profession: prof.profession,
           email: prof.email, phone: prof.phone, bio: prof.bio, bio_consulenza: prof.bio_consulenza, address: prof.address,
           city: prof.city, sigla: prof._sigla, albo_name: prof.albo_name, albo_number: prof.albo_number,
-          albo_date: prof.albo_date, vat_number: prof.vat_number,
+          albo_date: prof.albo_date, vat_number: prof.vat_number, confermaEmail,
         }),
       });
       const d = await r.json().catch(() => ({}));
+      if (d.conferma_email) return setAvvisoEmailScheda(d.error);
+      setAvvisoEmailScheda("");
       if (!r.ok) return avvisa("err", d.error || "Errore nel salvataggio: riprova");
-      avvisa("ok", "Dati salvati ✅" + (d.posizioneCambiata ? " (segnaposto mappa aggiornato)" : "")); carica();
+      avvisa("ok", "Dati salvati ✅" + (d.posizioneCambiata ? " (segnaposto mappa aggiornato)" : "")
+        + (d.emailAccessoCambiata ? ` Email cambiata anche per entrare: da ora ${nome} entra con ${d.emailAccessoCambiata}.` : "")); carica();
     } catch {
       avvisa("err", "Errore di rete: riprova tra poco");
     } finally {
@@ -444,7 +449,11 @@ function ModificaScheda({ pid, nome, onIndietro }) {
               <option value="">—</option><option value="Infermiere">Infermiere</option><option value="Infermiera">Infermiera</option>
             </select>
           </div>
-          <div><label>Email di contatto</label><input value={prof.email || ""} onChange={(e) => setProf({ ...prof, email: e.target.value })} /></div>
+          <div><label>Email <span style={{ fontWeight: 400 }}>(prenotazioni e accesso)</span></label><input type="email" value={prof.email || ""} onChange={(e) => { setProf({ ...prof, email: e.target.value }); setAvvisoEmailScheda(""); }} />
+            {prof.email_accesso && prof.email_accesso.toLowerCase() !== String(prof.email || "").trim().toLowerCase()
+              ? <p className="pf-note" style={{ marginTop: -6, overflowWrap: "anywhere" }}>Oggi per entrare usa <strong>{prof.email_accesso}</strong>. Salvando, anche l'accesso passa all'email qui sopra.</p>
+              : <p className="pf-note" style={{ marginTop: -6 }}>È anche l'email con cui entra nel pannello.</p>}
+          </div>
           <div><label>Telefono</label><input value={prof.phone || ""} onChange={(e) => setProf({ ...prof, phone: e.target.value })} /></div>
         </div>
         <label>Comune (base della scheda)</label>
@@ -462,7 +471,16 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         <textarea rows={4} value={prof.bio || ""} onChange={(e) => setProf({ ...prof, bio: e.target.value })} />
         <label>Presentazione per i colleghi (pagine delle consulenze) <span style={{ fontWeight: 400 }}>— vuota = si usa la bio</span></label>
         <textarea rows={3} value={prof.bio_consulenza || ""} onChange={(e) => setProf({ ...prof, bio_consulenza: e.target.value })} />
-        <button className="pf-btn" disabled={salvo} onClick={salvaProfilo}>{salvo ? "Salvo…" : "Salva dati"}</button>
+        {avvisoEmailScheda && (
+          <div style={BOX_AVVISO}>
+            ⚠️ {avvisoEmailScheda}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+              <button className="pf-btn compatto" disabled={salvo} onClick={() => salvaProfilo(true)}>Sì, è giusta: salva</button>
+              <button className="pf-btn secondario compatto" disabled={salvo} onClick={() => setAvvisoEmailScheda("")}>La correggo</button>
+            </div>
+          </div>
+        )}
+        {!avvisoEmailScheda && <button className="pf-btn" disabled={salvo} onClick={() => salvaProfilo(false)}>{salvo ? "Salvo…" : "Salva dati"}</button>}
       </div>
 
       {/* PRESTAZIONI */}
@@ -573,6 +591,145 @@ function ModificaScheda({ pid, nome, onIndietro }) {
 
 /* ============================ INFERMIERI ============================ */
 
+// «Correggi email e rimanda il benvenuto» (7/10/26). Caso vero: «gmail.co» nella
+// candidatura; l'admin aveva corretto solo la scheda e l'email per entrare era rimasta
+// sbagliata. Qui cambiano INSIEME (scheda + accesso) e il benvenuto riparte. Tre passi in
+// pagina, niente window.confirm: scrivi → controlla e conferma → esito.
+const BOX_AVVISO = { background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412", borderRadius: 10, padding: "8px 12px", marginBottom: 10 };
+
+function CorreggiEmail({ p, onFatto }) {
+  const [fase, setFase] = useState("chiuso"); // chiuso | scrivi | conferma | fatto
+  const [email, setEmail] = useState("");
+  const [verifica, setVerifica] = useState(null);
+  const [esito, setEsito] = useState(null);
+  const [errore, setErrore] = useState("");
+  const [inCorso, setInCorso] = useState(false);
+  const boxRef = useRef(null);
+  const tastiRef = useRef(null);
+  // ogni passo (e ogni errore) resta in vista con i suoi tasti, anche su telefono
+  useEffect(() => {
+    if (fase === "chiuso") return;
+    boxRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const t = setTimeout(() => tastiRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 350);
+    return () => clearTimeout(t);
+  }, [fase, errore]);
+
+  const chiama = async (extra) => {
+    const r = await fetch("/api/admin/email-professionista", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, email, ...extra }) });
+    return { r, d: await r.json().catch(() => ({})) };
+  };
+  const controlla = async () => {
+    setInCorso(true); setErrore("");
+    try {
+      const { r, d } = await chiama({ verifica: true });
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito a controllare l'email");
+      setVerifica(d); setFase("conferma");
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInCorso(false);
+    }
+  };
+  const conferma = async () => {
+    setInCorso(true); setErrore("");
+    try {
+      const { r, d } = await chiama({ forza: !!verifica?.avviso });
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito ad aggiornare l'email");
+      setEsito(d); setFase("fatto");
+      onFatto?.(d);
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInCorso(false);
+    }
+  };
+
+  if (fase === "chiuso") {
+    return <button className="pf-btn secondario compatto" onClick={() => { setEmail(p.email || p.email_accesso || ""); setErrore(""); setVerifica(null); setFase("scrivi"); }}>✉️ Correggi email e rimanda il benvenuto</button>;
+  }
+  return (
+    <div ref={boxRef} className="pf-book" style={{ width: "100%", marginTop: 10, padding: "12px 14px", border: "1px solid var(--iw-line)", borderRadius: 12, background: "var(--iw-bg)", scrollMarginTop: 96 }}>
+      {fase === "scrivi" && (
+        <>
+          <label htmlFor={`ce-${p.id}`}>Email giusta di {p.name} <span style={{ fontWeight: 400 }}>(vale per le prenotazioni e per entrare)</span></label>
+          <input id={`ce-${p.id}`} type="email" value={email} onChange={(e) => { setEmail(e.target.value); setErrore(""); }} onKeyDown={(e) => { if (e.key === "Enter" && email.trim()) { e.preventDefault(); controlla(); } }} autoComplete="off" autoFocus />
+          <p className="pf-note" style={{ marginTop: -6 }}>Poi controlli e confermi. Al nuovo indirizzo riparte il benvenuto. La password non cambia.</p>
+        </>
+      )}
+      {fase === "conferma" && verifica && (
+        <>
+          <strong style={{ color: "var(--iw-navy)" }}>Controlla e conferma</strong>
+          {verifica.cambiata ? (
+            <p style={{ margin: "6px 0 8px", overflowWrap: "anywhere" }}>Prima: <span style={{ textDecoration: "line-through", color: "var(--iw-muted)" }}>{verifica.prima || "(vuota)"}</span><br />Dopo: <strong>{verifica.email}</strong></p>
+          ) : (
+            <p style={{ margin: "6px 0 8px", overflowWrap: "anywhere" }}>L'email resta <strong>{verifica.email}</strong>: rimando solo il benvenuto.</p>
+          )}
+          <p className="pf-note" style={{ marginTop: 0 }}>Cambiano insieme l'email delle prenotazioni e quella per entrare. Il benvenuto riparte a questo indirizzo. La password non cambia.</p>
+          {verifica.avviso && <div style={BOX_AVVISO}>⚠️ {verifica.avviso}</div>}
+        </>
+      )}
+      {fase === "fatto" && esito && (
+        esito.emailed
+          ? <div className="pf-successo" style={{ marginBottom: 10, overflowWrap: "anywhere" }}>✅ Fatto. {esito.cambiata ? <>Da ora per entrare usa <strong>{esito.email}</strong>. </> : null}Benvenuto rimandato a <strong>{esito.email}</strong>.</div>
+          : <div className="pf-errore" style={{ marginBottom: 10, overflowWrap: "anywhere" }}>{esito.cambiata ? <>Email aggiornata: <strong>{esito.email}</strong>. </> : null}⚠️ Il benvenuto però NON è partito. Riprova più tardi con lo stesso tasto.</div>
+      )}
+      {errore && <div className="pf-errore" style={{ marginBottom: 10 }}>{errore}</div>}
+      <div ref={tastiRef} style={{ display: "flex", gap: 8, flexWrap: "wrap", scrollMarginBottom: 16 }}>
+        {fase === "scrivi" && <button className="pf-btn compatto" disabled={inCorso || !email.trim()} onClick={controlla}>{inCorso ? "Controllo…" : "Controlla"}</button>}
+        {fase === "conferma" && <button className="pf-btn compatto" disabled={inCorso} onClick={conferma}>{inCorso ? "Invio…" : verifica?.avviso ? "Sì, è giusta: aggiorna e rimanda" : "Sì, aggiorna e rimanda il benvenuto"}</button>}
+        {fase === "conferma" && <button className="pf-btn secondario compatto" disabled={inCorso} onClick={() => setFase("scrivi")}>Correggi ancora</button>}
+        <button className="pf-btn secondario compatto" disabled={inCorso} onClick={() => setFase("chiuso")}>{fase === "fatto" ? "Chiudi" : "Annulla"}</button>
+      </div>
+    </div>
+  );
+}
+
+// Email di una candidatura in attesa: si corregge PRIMA di approvare, così il benvenuto e
+// l'accesso nascono già giusti. Un dominio sospetto (gmail.co…) si vede subito.
+function EmailCandidatura({ c, onCambiata }) {
+  const [aperto, setAperto] = useState(false);
+  const [email, setEmail] = useState(c.email || "");
+  const [avviso, setAvviso] = useState("");
+  const [esito, setEsito] = useState(null);
+  const [inCorso, setInCorso] = useState(false);
+  const salva = async (forza) => {
+    setInCorso(true); setEsito(null);
+    try {
+      const r = await fetch("/api/admin/candidature", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: c.id, email, forza }) });
+      const d = await r.json().catch(() => ({}));
+      if (d.conferma_email) return setAvviso(d.error);
+      if (!r.ok) return setEsito({ tipo: "err", testo: d.error || "Errore nel salvataggio" });
+      setEsito({ tipo: "ok", testo: `✅ Email corretta: ${d.email}. Il benvenuto partirà a questo indirizzo quando approvi.` });
+      setAperto(false); setAvviso("");
+      onCambiata?.();
+    } catch {
+      setEsito({ tipo: "err", testo: "Errore di rete: riprova tra poco" });
+    } finally {
+      setInCorso(false);
+    }
+  };
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap", maxWidth: "100%" }}>
+      {!aperto ? (
+        <>
+          <span style={{ overflowWrap: "anywhere" }}>{c.email}</span>
+          <button type="button" className="pf-btn secondario compatto" onClick={() => { setEmail(c.email || ""); setEsito(null); setAvviso(""); setAperto(true); }}>Correggi email</button>
+          {c.avviso_email && !esito && <span style={{ ...BOX_AVVISO, display: "block", width: "100%", margin: "4px 0 0", fontSize: 15 }}>⚠️ {c.avviso_email}</span>}
+        </>
+      ) : (
+        <span className="pf-book" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", width: "100%" }}>
+          <input type="email" aria-label="Email giusta del candidato" style={{ marginBottom: 0, width: 280, maxWidth: "100%" }} value={email} onChange={(e) => { setEmail(e.target.value); setAvviso(""); }} autoComplete="off" autoFocus />
+          {!avviso && <button type="button" className="pf-btn compatto" disabled={inCorso || !email.trim()} onClick={() => salva(false)}>{inCorso ? "Salvo…" : "Salva email"}</button>}
+          {avviso && <span style={{ ...BOX_AVVISO, display: "block", width: "100%", margin: 0, fontSize: 15 }}>⚠️ {avviso}</span>}
+          {avviso && <button type="button" className="pf-btn compatto" disabled={inCorso} onClick={() => salva(true)}>Sì, è giusta: salva</button>}
+          <button type="button" className="pf-btn secondario compatto" disabled={inCorso} onClick={() => { setAperto(false); setAvviso(""); }}>Annulla</button>
+        </span>
+      )}
+      {esito && <span className={esito.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ display: "block", width: "100%", padding: "6px 10px", margin: "4px 0 0", fontSize: 15 }}>{esito.testo}</span>}
+    </span>
+  );
+}
+
 // Eliminazione definitiva di un professionista (solo se SOSPESO): doppia conferma,
 // la seconda scrivendo lo slug. Mostra prima cosa succederà (numeri dall'anteprima).
 function EliminaProfessionista({ p, onFatto }) {
@@ -677,10 +834,14 @@ function Professionisti({ filtroStato }) {
             <span className={`stato ${statoDi(p.status)[0]}`}>{statoDi(p.status)[1]}</span>
           </div>
           <div className="pf-note" style={{ margin: "8px 0" }}>
-            🪪 {p.albo_name} n. {p.albo_number} (dal {p.albo_date || "—"}) · P.IVA {p.vat_number || "—"} · 📞 {p.phone}
+            🪪 {p.albo_name} n. {p.albo_number} (dal {p.albo_date || "—"}) · P.IVA {p.vat_number || "—"} · 📞 {p.phone} · ✉️ <span style={{ overflowWrap: "anywhere" }}>{p.email || "—"}</span>
             {/* la mappa prende i segnaposti dalle zone coperte: manca davvero solo se non c'è né l'una né l'altra cosa */}
             {!p.lat && !p.zone?.length && <> · ⚠️ senza segnaposto mappa</>}
           </div>
+          {p.email_accesso && p.email_accesso.toLowerCase() !== String(p.email || "").toLowerCase() && (
+            <div style={{ ...BOX_AVVISO, fontSize: 15, overflowWrap: "anywhere" }}>⚠️ Per entrare usa ancora <strong>{p.email_accesso}</strong>, diversa dall'email della scheda. Allineale con «Correggi email e rimanda il benvenuto».</div>
+          )}
+          {p.avviso_email && <div style={{ ...BOX_AVVISO, fontSize: 15 }}>⚠️ {p.avviso_email}</div>}
           <div className="pf-note" style={{ margin: "0 0 10px" }}>
             💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} richieste · ✅ {p.completate} completate · ❌ {p.annullate} annullate <span style={{ color: "var(--iw-muted)" }}>({p.prenotazioni_30gg} richieste negli ultimi 30 gg)</span>
             {Number(p.recensioni) > 0 && <> · ⭐ {String(p.rating).replace(".", ",")} ({p.recensioni})</>}
@@ -688,6 +849,7 @@ function Professionisti({ filtroStato }) {
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="pf-btn compatto" onClick={() => setModifica({ id: p.id, nome: p.name })}>✏️ Modifica scheda</button>
+            {p.status !== "deleted" && p.status !== "suspended" && <CorreggiEmail p={p} onFatto={carica} />}
             {p.status !== "suspended"
               ? <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(p, "suspended")}>Sospendi</button>
               : <button className="pf-btn compatto" onClick={() => cambiaStato(p, "active")}>Riattiva</button>}
@@ -733,15 +895,31 @@ function Candidature({ aggiornaBadge }) {
     });
     const d = await r.json();
     if (!r.ok) return alert(d.error);
-    if (action === "approve") setEsiti((e) => ({ ...e, [id]: d }));
+    // la card sparisce dall'elenco (non è più «in attesa»): l'esito resta in cima, in vista
+    if (action === "approve") setEsiti((e) => ({ ...e, [id]: { ...d, nome: (candidature.find((x) => x.id === id) || {}).name } }));
     carica();
   };
+  const esitiRef = useRef(null);
+  const nEsiti = Object.keys(esiti).length;
+  useEffect(() => { if (nEsiti) esitiRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [nEsiti]);
 
   if (!candidature) return <Caricamento />;
 
   return (
     <div>
       <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>🪪 Verifica documenti — candidature in attesa ({candidature.length})</h2>
+      {nEsiti > 0 && (
+        <div ref={esitiRef} style={{ scrollMarginTop: 96 }}>
+          {Object.entries(esiti).map(([id, e]) => (
+            <div key={id} className="pf-successo" style={{ marginBottom: 12, overflowWrap: "anywhere" }}>
+              <strong>✅ {e.nome || "Candidatura"} approvato. Scheda: /p/{e.slug}</strong>
+              {e.emailed
+                ? <p style={{ margin: "6px 0 0" }}>Benvenuto inviato a <strong>{e.credenziali?.email}</strong>.</p>
+                : <p style={{ margin: "6px 0 0" }}>⚠️ Email NON partita — comunica tu le credenziali: <code>{e.credenziali?.email}</code>{e.credenziali?.password ? <> / <code>{e.credenziali.password}</code></> : " (password scelta da lui in candidatura)"}</p>}
+            </div>
+          ))}
+        </div>
+      )}
       {candidature.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessuna candidatura da esaminare. 🎉</p></div>}
       {candidature.map((c) => (
         <div className="pf-panel" key={c.id} style={{ marginBottom: 14 }}>
@@ -752,7 +930,7 @@ function Candidature({ aggiornaBadge }) {
           <p style={{ margin: "6px 0", fontSize: 17, color: "var(--iw-slate)" }}>
             {c.profession} · {c.albo_name} n. {c.albo_number} (dal {c.albo_date}) · P.IVA {c.vat_number}<br />
             🧭 Attività: <strong>{(TIPI_ATTIVITA.find((t) => t.key === c.tipo) || TIPI_ATTIVITA[0]).nome}</strong><br />
-            📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ {c.email}
+            📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ <EmailCandidatura c={c} onCambiata={carica} />
           </p>
           {c.message && <p style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
 

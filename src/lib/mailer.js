@@ -20,11 +20,17 @@ const NOTA_NO_REPLY = `<strong style="color: #5c7280;">Questa è un'email automa
   indirizzo</strong>, le risposte non vengono lette da nessuno. Per assistenza scrivi a
   <a href="mailto:${ASSISTENZA_EMAIL}" style="color: #00897b;">${ASSISTENZA_EMAIL}</a>.`;
 
-export async function sendEmail({ to, toName, subject, html, replyTo }) {
+export async function sendEmail(opzioni) {
+  return (await sendEmailDettaglio(opzioni)).ok;
+}
+
+// Come sendEmail, ma dice anche PERCHÉ un invio non è riuscito (serve all'elenco delle
+// email non partite in «Scrivi agli infermieri»).
+export async function sendEmailDettaglio({ to, toName, subject, html, replyTo }) {
   html = String(html).replace("{{NOTA_RISPOSTE}}", replyTo ? NOTA_CON_RISPOSTA : NOTA_NO_REPLY);
   if (!API_KEY) {
     console.log(`[mailer] BREVO_API_KEY assente: email NON inviata a ${to} ("${subject}")`);
-    return false;
+    return { ok: false, errore: "servizio email non configurato" };
   }
   try {
     const r = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -38,28 +44,44 @@ export async function sendEmail({ to, toName, subject, html, replyTo }) {
         htmlContent: html,
       }),
     });
-    if (!r.ok) console.error("[mailer] Brevo ha risposto", r.status, await r.text());
-    return r.ok;
+    if (r.ok) return { ok: true };
+    const testo = await r.text().catch(() => "");
+    console.error("[mailer] Brevo ha risposto", r.status, testo);
+    let motivo = testo;
+    try { motivo = JSON.parse(testo).message || testo; } catch { /* testo semplice */ }
+    return { ok: false, errore: `Brevo ${r.status}${motivo ? ": " + String(motivo).slice(0, 160) : ""}` };
   } catch (err) {
     console.error("[mailer] errore invio:", err.message);
-    return false;
+    return { ok: false, errore: `rete: ${err.message}` };
   }
 }
 
-const layout = (contenuto) => `
-<div style="font-family: Arial, Helvetica, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
-  <div style="background: linear-gradient(120deg, #0b3954, #00897b); border-radius: 14px 14px 0 0; padding: 22px 26px;">
-    <span style="color: #fff; font-size: 20px; font-weight: bold;">InfermieriWeb.it</span>
-  </div>
-  <div style="border: 1px solid #e3ecec; border-top: none; border-radius: 0 0 14px 14px; padding: 26px;">
-    ${contenuto}
+const PIEDE_STANDARD = `
     <p style="color: #7b909b; font-size: 12px; margin-top: 28px; border-top: 1px solid #e3ecec; padding-top: 14px;">
       {{NOTA_RISPOSTE}}
     </p>
     <p style="color: #7b909b; font-size: 12px; margin-top: 10px;">
       InfermieriWeb.it — la piattaforma che mette in contatto pazienti e professionisti sanitari.
       La prenotazione è gratuita: il compenso si regola direttamente con il professionista.
-    </p>
+    </p>`;
+
+// Piè di pagina delle comunicazioni agli infermieri («Scrivi agli infermieri»): le
+// risposte arrivano a noi (replyTo = casella di assistenza), niente nota sugli appuntamenti.
+export const PIEDE_COMUNICAZIONE = `
+    <p style="color: #7b909b; font-size: 12px; margin-top: 28px; border-top: 1px solid #e3ecec; padding-top: 14px;">
+      Puoi rispondere a questa email: la risposta arriva a noi, a
+      <a href="mailto:${ASSISTENZA_EMAIL}" style="color: #00897b;">${ASSISTENZA_EMAIL}</a>.<br>
+      Ricevi questa email perché sei iscritto come professionista su InfermieriWeb.
+    </p>`;
+
+export const layout = (contenuto, piede = PIEDE_STANDARD) => `
+<div style="font-family: Arial, Helvetica, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
+  <div style="background: linear-gradient(120deg, #0b3954, #00897b); border-radius: 14px 14px 0 0; padding: 22px 26px;">
+    <span style="color: #fff; font-size: 20px; font-weight: bold;">InfermieriWeb.it</span>
+  </div>
+  <div style="border: 1px solid #e3ecec; border-top: none; border-radius: 0 0 14px 14px; padding: 26px;">
+    ${contenuto}
+    ${piede}
   </div>
 </div>`;
 
@@ -213,20 +235,39 @@ export function emailDisdettaPaziente({ booking, professional, service, cambioLi
   };
 }
 
-export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug, senzaPiva = false }) {
+// Benvenuto RIMANDATO (7/10/26, «Correggi email e rimanda il benvenuto»): nessuna
+// password in chiaro. resetLink = tasto per sceglierne una (vale oreLink ore, una volta).
+//  - passwordScelta = l'aveva scelta lui in candidatura → resta quella; il tasto serve
+//    solo se l'ha dimenticata;
+//  - altrimenti (password temporanea) → il tasto è il modo per sceglierla.
+export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug, senzaPiva = false, resetLink = "", passwordScelta = true, rimandato = false, emailCambiata = true, oreLink = 72 }) {
+  const rigaPassword = resetLink
+    ? `<tr><td style="padding: 10px 14px; color: #7b909b;">Password</td><td style="padding: 10px 0; font-weight: bold;">${passwordScelta ? "quella che hai scelto tu (non cambia)" : "la scegli tu con il tasto qui sotto"}</td></tr>`
+    : passwordTemporanea
+      ? `<tr><td style="padding: 10px 14px; color: #7b909b;">Password temporanea</td><td style="padding: 10px 0; font-weight: bold;">${passwordTemporanea}</td></tr>`
+      : `<tr><td style="padding: 10px 14px; color: #7b909b;">Password</td><td style="padding: 10px 0; font-weight: bold;">quella che hai scelto in registrazione</td></tr>`;
+  const tastoPassword = resetLink ? `
+        <p style="text-align: center; margin: 18px 0 6px;">
+          <a href="${resetLink}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 28px; border-radius: 999px; font-weight: bold; font-size: 16px;">${passwordScelta ? "Hai dimenticato la password? Scegline una nuova" : "Scegli la tua password"}</a>
+        </p>
+        <p style="color: #7b909b; font-size: 13px; text-align: center; margin: 0 0 14px;">${passwordScelta ? "Se la ricordi, non devi fare nulla. " : "Se l'hai già cambiata, continua a usare la tua. "}Il tasto vale ${oreLink} ore e si usa una volta. Dopo, usa «Password dimenticata?» nella pagina di accesso.</p>` : "";
+  const subject = rimandato
+    ? (emailCambiata ? "La tua email su InfermieriWeb è stata corretta ✅" : "Ti rimandiamo il benvenuto su InfermieriWeb")
+    : (senzaPiva ? "Benvenuto su InfermieriWeb: il tuo profilo è attivo 🎉" : "Benvenuto su InfermieriWeb: la tua agenda è pronta 🎉");
+  const introRimandato = emailCambiata
+    ? `<p>Abbiamo corretto la tua email. Da ora per entrare usi <strong>${email}</strong>. Qui sotto trovi di nuovo tutto quello che serve.</p>`
+    : `<p>Ti rimandiamo il benvenuto. Per entrare usi <strong>${email}</strong>. Qui sotto trovi di nuovo tutto quello che serve.</p>`;
   if (senzaPiva) {
     return {
-      subject: "Benvenuto su InfermieriWeb: il tuo profilo è attivo 🎉",
+      subject,
       html: layout(`
         <h2 style="color: #0b3954; margin-top: 0;">Benvenuto nella rete, ${name}!</h2>
-        <p>La tua candidatura è stata approvata e il tuo profilo professionale è attivo.</p>
+        ${rimandato ? introRimandato : "<p>La tua candidatura è stata approvata e il tuo profilo professionale è attivo.</p>"}
         <table style="width: 100%; font-size: 15px; margin: 14px 0; background: #f6f9f9; border-radius: 10px;">
           <tr><td style="padding: 10px 14px; color: #7b909b;">Accesso</td><td style="padding: 10px 0; font-weight: bold;">${SITE}/area-professionisti</td></tr>
           <tr><td style="padding: 10px 14px; color: #7b909b;">Email</td><td style="padding: 10px 0; font-weight: bold;">${email}</td></tr>
-          ${passwordTemporanea
-            ? `<tr><td style="padding: 10px 14px; color: #7b909b;">Password temporanea</td><td style="padding: 10px 0; font-weight: bold;">${passwordTemporanea}</td></tr>`
-            : `<tr><td style="padding: 10px 14px; color: #7b909b;">Password</td><td style="padding: 10px 0; font-weight: bold;">quella che hai scelto in registrazione</td></tr>`}
-        </table>
+          ${rigaPassword}
+        </table>${tastoPassword}
         <p><strong>Come funziona per te (senza partita IVA):</strong></p>
         <p style="margin: 4px 0;">📌 La tua registrazione è <strong>salvata</strong>. Finché non hai la partita IVA il tuo profilo NON compare nelle ricerche dei pazienti e non è prenotabile: è normale, la prestazione a domicilio richiede di operare come libero professionista.</p>
         <p style="margin: 4px 0;">📋 Intanto <strong>completa il profilo</strong>: entra con le tue credenziali${passwordTemporanea ? ", cambia la password temporanea" : ""}, carica la foto e scrivi due righe su di te — così quando ti attiviamo sei subito pronto.</p>
@@ -238,17 +279,15 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
     };
   }
   return {
-    subject: "Benvenuto su InfermieriWeb: la tua agenda è pronta 🎉",
+    subject,
     html: layout(`
       <h2 style="color: #0b3954; margin-top: 0;">Benvenuto nella rete, ${name}!</h2>
-      <p>La tua candidatura è stata approvata: la tua scheda e la tua agenda sono pronte.</p>
+      ${rimandato ? introRimandato : "<p>La tua candidatura è stata approvata: la tua scheda e la tua agenda sono pronte.</p>"}
       <table style="width: 100%; font-size: 15px; margin: 14px 0; background: #f6f9f9; border-radius: 10px;">
         <tr><td style="padding: 10px 14px; color: #7b909b;">Accesso</td><td style="padding: 10px 0; font-weight: bold;">${SITE}/area-professionisti</td></tr>
         <tr><td style="padding: 10px 14px; color: #7b909b;">Email</td><td style="padding: 10px 0; font-weight: bold;">${email}</td></tr>
-        ${passwordTemporanea
-          ? `<tr><td style="padding: 10px 14px; color: #7b909b;">Password temporanea</td><td style="padding: 10px 0; font-weight: bold;">${passwordTemporanea}</td></tr>`
-          : `<tr><td style="padding: 10px 14px; color: #7b909b;">Password</td><td style="padding: 10px 0; font-weight: bold;">quella che hai scelto in registrazione</td></tr>`}
-      </table>
+        ${rigaPassword}
+      </table>${tastoPassword}
       <p><strong>I tuoi primi passi (15 minuti in tutto):</strong></p>
       <p style="margin: 4px 0;">1️⃣ Entra con le tue credenziali${passwordTemporanea ? " e <strong>cambia subito la password temporanea</strong> (scheda Profilo)" : ""}</p>
       <p style="margin: 4px 0;">2️⃣ Carica la tua <strong>foto</strong> e il tuo <strong>indirizzo</strong> (il segnaposto sulla mappa si posiziona da solo)</p>

@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
-import { createSession } from "../../../lib/auth.js";
+import { linkReimpostaPassword } from "../../../lib/auth.js";
 import { sendEmail, emailRecuperoPasswordProfessionista } from "../../../lib/mailer.js";
 import { consenti, ipDa } from "../../../lib/ratelimit.js";
 
@@ -22,11 +22,11 @@ export async function POST({ request }) {
   }
 
   const [utente] = await sql`
-    SELECT name FROM professional_users WHERE lower(email) = ${email}`;
+    SELECT name, pass_hash FROM professional_users WHERE lower(email) = ${email}`;
 
   if (utente) {
-    const token = createSession({ scope: "reset-pro", email }, 60 * 60);
-    const resetLink = `https://infermieriweb.it/reimposta-password?token=${encodeURIComponent(token)}`;
+    // vale 60 minuti e una volta sola (impronta della password attuale, vedi lib/auth.js)
+    const resetLink = linkReimpostaPassword({ email, passHash: utente.pass_hash, secondi: 60 * 60 });
     const mail = emailRecuperoPasswordProfessionista({ name: utente.name, resetLink });
     await sendEmail({ to: email, toName: utente.name, ...mail });
   }

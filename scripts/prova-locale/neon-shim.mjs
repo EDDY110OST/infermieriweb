@@ -12,7 +12,7 @@ const qui = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA = process.env.IW_SCHEMA_SQL || path.resolve(qui, "../../db/schema.sql");
 const SEED = process.env.IW_SEED_JSON || path.join(qui, "seed.json");
 // ordine di inserimento = ordine delle chiavi esterne
-const ORDINE = ["professionals", "professional_users", "catalog_services", "services", "articles", "coverage_areas",
+const ORDINE = ["applications", "professionals", "professional_users", "catalog_services", "services", "articles", "coverage_areas",
   "opening_hours", "day_overrides", "blocks", "bookings", "reviews"];
 
 let pronto = null;

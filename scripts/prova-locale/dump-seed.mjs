@@ -14,6 +14,7 @@ const destinazione = process.env.IW_SEED_JSON || path.join(path.dirname(fileURLT
 
 const out = {};
 out.professionals = await sql`SELECT * FROM professionals ORDER BY id`;
+out.applications = await sql`SELECT * FROM applications ORDER BY id`;
 out.professional_users = await sql`SELECT * FROM professional_users ORDER BY id`;
 out.catalog_services = await sql`SELECT * FROM catalog_services ORDER BY id`;
 out.services = await sql`SELECT * FROM services ORDER BY id`;

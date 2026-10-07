@@ -5,6 +5,7 @@ import { sessionFromRequest, pidBersaglio, adminSuAltro } from "../../../lib/aut
 import { geocodeWithFallback } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
 import { TIPI_ATTIVITA } from "../../../data/listino.js";
+import { normalizzaEmail, emailValida, avvisoEmail, emailUsataDaAltri, registraCambioEmail } from "../../../lib/email.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -22,7 +23,9 @@ export async function GET({ request }) {
            edited_by, edited_at, tipo
     FROM professionals WHERE id = ${pid}`;
   if (!profilo) return json({ error: "Profilo non trovato" }, 404);
-  return json({ profilo });
+  // l'email con cui si entra (deve essere uguale a quella della scheda: se no si vede)
+  const [accesso] = await sql`SELECT email FROM professional_users WHERE professional_id = ${pid} LIMIT 1`;
+  return json({ profilo: { ...profilo, email_accesso: accesso?.email || "" } });
 }
 
 // PATCH /api/panel/profilo — il professionista aggiorna i suoi dati;
@@ -69,7 +72,8 @@ export async function PATCH({ request }) {
   }
 
   // Campi identità: modificabili SOLO dall'admin (il professionista non cambia
-  // da solo il proprio nome pubblico, l'appellativo, la professione o l'email di contatto).
+  // da solo il proprio nome pubblico, l'appellativo o la professione). L'email invece
+  // la cambia anche lui (dal 7/10/26, vedi sotto).
   let name = attuale.name, full_name = attuale.full_name, gender = attuale.gender,
       profession = attuale.profession, email = attuale.email;
   if (admin) {
@@ -77,9 +81,33 @@ export async function PATCH({ request }) {
     if (body.full_name !== undefined) full_name = String(body.full_name).trim().slice(0, 160);
     if (body.gender !== undefined) { const g = String(body.gender).trim().toLowerCase(); gender = (g === "f" || g === "m") ? g : ""; }
     if (body.profession !== undefined) profession = String(body.profession).trim().slice(0, 80) || attuale.profession;
-    if (body.email !== undefined) {
-      const e = String(body.email).trim().toLowerCase().slice(0, 160);
-      if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return json({ error: "Email di contatto non valida" }, 400);
+  }
+
+  // Email (7/10/26): una sola, per le prenotazioni E per entrare. Cambia nelle DUE tabelle
+  // (professionals + professional_users) nella stessa istruzione dell'aggiornamento, con
+  // il controllo dei doppioni. Prima l'admin correggeva solo la scheda e l'accesso restava
+  // sbagliato (caso «gmail.co»). Un dominio sospetto chiede conferma (confermaEmail), non
+  // blocca. Vuota = resta com'era.
+  const [accesso] = await sql`SELECT email FROM professional_users WHERE professional_id = ${pid} LIMIT 1`;
+  let emailAccessoCambiata = null;
+  let avvisoEmailTesto = null;
+  let emailPrima = attuale.email;
+  if (body.email !== undefined) {
+    const e = normalizzaEmail(body.email);
+    if (e) {
+      if (!emailValida(e)) return json({ error: "Email non valida: controlla che ci siano la @ e il dominio completo (es. nome@gmail.com)" }, 400);
+      const cambiaScheda = e !== normalizzaEmail(attuale.email);
+      const cambiaAccesso = !!accesso && e !== normalizzaEmail(accesso.email);
+      if (cambiaScheda || cambiaAccesso) {
+        const altro = await emailUsataDaAltri(e, pid);
+        if (altro) return json({ error: "Questa email è già usata per entrare da un altro professionista: due persone non possono avere la stessa email" }, 409);
+        avvisoEmailTesto = avvisoEmail(e);
+        if (avvisoEmailTesto && !body.confermaEmail) {
+          return json({ conferma_email: true, error: avvisoEmailTesto, email: e }, 409);
+        }
+        if (cambiaAccesso) emailAccessoCambiata = e;
+        emailPrima = accesso?.email || attuale.email;
+      }
       email = e;
     }
   }
@@ -117,27 +145,54 @@ export async function PATCH({ request }) {
     geocoded = await geocodeWithFallback({ address, city, province });
   }
 
-  if (geocoded) {
-    await sql`
-      UPDATE professionals
-      SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
-          bio = ${bio}, bio_consulenza = ${bio_consulenza}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
-          region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
-          albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo},
-          lat = ${geocoded.lat}, lng = ${geocoded.lng}
-      WHERE id = ${pid}`;
-  } else {
-    await sql`
-      UPDATE professionals
-      SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
-          bio = ${bio}, bio_consulenza = ${bio_consulenza}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
-          region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
-          albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo}
-      WHERE id = ${pid}`;
+  // Le due UPDATE qui sotto cambiano anche l'email per entrare (CTE «accesso») quando serve:
+  // una sola istruzione, quindi o cambiano tutte e due o nessuna.
+  const nuovaAccesso = emailAccessoCambiata || "";
+  try {
+    if (geocoded) {
+      await sql`
+        WITH accesso AS (
+          UPDATE professional_users SET email = ${nuovaAccesso}
+          WHERE professional_id = ${pid} AND ${!!emailAccessoCambiata}::boolean RETURNING id
+        )
+        UPDATE professionals
+        SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
+            bio = ${bio}, bio_consulenza = ${bio_consulenza}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
+            region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
+            albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo},
+            lat = ${geocoded.lat}, lng = ${geocoded.lng}
+        WHERE id = ${pid}`;
+    } else {
+      await sql`
+        WITH accesso AS (
+          UPDATE professional_users SET email = ${nuovaAccesso}
+          WHERE professional_id = ${pid} AND ${!!emailAccessoCambiata}::boolean RETURNING id
+        )
+        UPDATE professionals
+        SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
+            bio = ${bio}, bio_consulenza = ${bio_consulenza}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
+            region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
+            albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo}
+        WHERE id = ${pid}`;
+    }
+  } catch (e) {
+    if (e?.code === "23505") return json({ error: "Questa email è appena stata presa da un altro account: scegline un'altra" }, 409);
+    throw e;
   }
 
   if (adminSuAltro(session, body.pid)) {
     await sql`UPDATE professionals SET edited_by = ${session.name || "admin"}, edited_at = now() WHERE id = ${pid}`;
+  }
+  if (emailAccessoCambiata) {
+    // la candidatura approvata segue (si ritrova per email, anche per l'eliminazione)
+    await sql`
+      UPDATE applications SET email = ${emailAccessoCambiata}
+      WHERE status = 'approved' AND lower(email) IN (${normalizzaEmail(emailPrima)}, ${normalizzaEmail(attuale.email)})`;
+    await registraCambioEmail({
+      chi: session?.name || "", pid, prima: emailPrima, dopo: emailAccessoCambiata,
+      origine: admin && adminSuAltro(session, body.pid) ? "modifica-scheda" : "pannello",
+      extra: { avviso_confermato: !!avvisoEmailTesto },
+    });
   }
 
   // Un profilo "network" (senza P.IVA) che aggiunge ORA una P.IVA valida: avvisa l'admin
@@ -166,5 +221,7 @@ export async function PATCH({ request }) {
     posizioneCambiata,
     pivaSegnalata,
     tipo,
+    emailAccessoCambiata,
+    avvisoEmail: avvisoEmailTesto,
   });
 }

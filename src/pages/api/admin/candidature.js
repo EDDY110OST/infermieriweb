@@ -7,6 +7,7 @@ import { sessionFromRequest, hashPassword } from "../../../lib/auth.js";
 import { geocodePerMappa, jitterPerId } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
 import { sendEmail, emailBenvenutoProfessionista } from "../../../lib/mailer.js";
+import { normalizzaEmail, emailValida, avvisoEmail, emailUsataDaAltri, registraCambioEmail } from "../../../lib/email.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -28,7 +29,8 @@ export async function GET({ request }) {
     SELECT id, name, email, phone, profession, albo_name, albo_number, albo_date,
            vat_number, city, province, address, message, created_at, tipo
     FROM applications WHERE status = 'new' ORDER BY created_at`;
-  return json({ candidature });
+  // dominio sospetto (es. «gmail.co»): si vede PRIMA di approvare, così si corregge
+  return json({ candidature: candidature.map((c) => ({ ...c, avviso_email: avvisoEmail(normalizzaEmail(c.email)) })) });
 }
 
 // POST /api/admin/candidature {id, action: "approve"|"reject"}
@@ -64,7 +66,9 @@ export async function POST({ request }) {
   const verificatoDa = admin?.email || admin?.name || "admin";
 
   // --- APPROVAZIONE ---
-  const [utenteEsistente] = await sql`SELECT id FROM professional_users WHERE lower(email) = ${cand.email.toLowerCase()}`;
+  // email sempre minuscola e senza spazi: è la stessa per la scheda e per entrare
+  cand.email = normalizzaEmail(cand.email);
+  const [utenteEsistente] = await sql`SELECT id FROM professional_users WHERE lower(email) = ${cand.email}`;
   if (utenteEsistente) return json({ error: "Esiste già un account con questa email" }, 409);
 
   // slug unico
@@ -135,4 +139,32 @@ export async function POST({ request }) {
     credenziali: { email: cand.email, password: passwordTemporanea },
     geocodificato: geo ? geo.precision : null,
   });
+}
+
+// PATCH /api/admin/candidature {id, email, forza?} — corregge l'email di una candidatura
+// PRIMA di approvarla (caso vero: «gmail.co»): così il benvenuto e l'accesso nascono già
+// giusti. Dominio sospetto → 409 con conferma_email (l'admin conferma con forza: true).
+export async function PATCH({ request }) {
+  const admin = sessionFromRequest(request);
+  if (!admin || admin.role !== "admin") return json({ error: "Riservato agli amministratori" }, 403);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
+  const id = Number(body.id);
+  if (!id) return json({ error: "Id mancante" }, 400);
+  const [cand] = await sql`SELECT id, email FROM applications WHERE id = ${id} AND status = 'new'`;
+  if (!cand) return json({ error: "Candidatura non trovata o già gestita" }, 404);
+
+  const nuova = normalizzaEmail(body.email);
+  if (!emailValida(nuova)) return json({ error: "Email non valida: controlla che ci siano la @ e il dominio completo (es. nome@gmail.com)" }, 400);
+  const altro = await emailUsataDaAltri(nuova, 0);
+  if (altro) return json({ error: `Questa email è già usata per entrare da ${altro.name}` }, 409);
+  const [doppia] = await sql`SELECT id FROM applications WHERE lower(email) = ${nuova} AND status = 'new' AND id <> ${id}`;
+  if (doppia) return json({ error: "C'è già un'altra candidatura in attesa con questa email" }, 409);
+
+  const avviso = avvisoEmail(nuova);
+  if (avviso && !body.forza) return json({ conferma_email: true, error: avviso, email: nuova }, 409);
+
+  await sql`UPDATE applications SET email = ${nuova} WHERE id = ${id}`;
+  await registraCambioEmail({ chi: admin.name || "admin", pid: null, prima: cand.email, dopo: nuova, origine: "candidatura", extra: { candidatura: id } });
+  return json({ ok: true, email: nuova, prima: cand.email, avviso });
 }
