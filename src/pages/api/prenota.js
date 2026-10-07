@@ -5,6 +5,7 @@ import { sql } from "../../lib/db.js";
 import { createSession } from "../../lib/auth.js";
 import { sendEmail, emailConvalidaPrenotazione } from "../../lib/mailer.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
+import { leggiToken } from "../../lib/cambio.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -28,6 +29,10 @@ export async function POST({ request }) {
   const city = String(body.city || "").trim();
   // Testo esatto della spunta accettata: conservato come prova del consenso (art. 7.1 GDPR)
   const consentText = String(body.consent_text || "").replace(/\s+/g, " ").trim().slice(0, 600);
+  // Cambio infermiere: il link firmato dice QUALE prenotazione vecchia questa sostituisce.
+  // La vecchia si annulla solo alla convalida della nuova (vedi /api/conferma).
+  const cambio = body.cambio ? leggiToken(body.cambio, "cambio") : null;
+  const replaces = cambio ? Number(cambio.bid) || null : null;
 
   if (!professionalId || !serviceId || isNaN(start.getTime())) return json({ error: "Dati prenotazione incompleti" }, 400);
   if (name.length < 2 || phone.length < 6) return json({ error: "Nome e telefono sono obbligatori" }, 400);
@@ -67,10 +72,10 @@ export async function POST({ request }) {
 
   // Inserimento atomico: fallisce se lo slot è stato preso nel frattempo
   const inserted = await sql`
-    INSERT INTO bookings (professional_id, service_id, start_dt, end_dt, customer_name, customer_phone, customer_email, address, city, status, source, cancel_token, consent_privacy_at, consent_health_at, consent_text)
+    INSERT INTO bookings (professional_id, service_id, start_dt, end_dt, customer_name, customer_phone, customer_email, address, city, status, source, cancel_token, consent_privacy_at, consent_health_at, consent_text, replaces)
     SELECT ${professionalId}, ${serviceId}, ${start.toISOString()}, ${end.toISOString()},
            ${name}, ${phone}, ${email}, ${address}, ${city}, 'pending', 'online', ${cancelToken},
-           now(), ${consensoSalute}, ${consentText}
+           now(), ${consensoSalute}, ${consentText}, ${replaces}
     WHERE NOT EXISTS (
       SELECT 1 FROM bookings
       WHERE professional_id = ${professionalId}
@@ -107,6 +112,7 @@ export async function POST({ request }) {
     ok: true,
     pending: true, // in attesa di convalida via email entro 60 minuti
     booking_id: inserted[0].id,
+    cambio: !!replaces,
     emailed: emailedPaziente,
     professional: service.professional_name,
     service: service.service_name,

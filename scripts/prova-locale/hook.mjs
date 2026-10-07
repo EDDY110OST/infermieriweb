@@ -17,4 +17,21 @@
 // Variabili utili: IW_SHIM_LOG=1 (riepilogo seed), IW_SHIM_LOG=2 (ogni query),
 // IW_SEED_JSON / IW_SCHEMA_SQL per percorsi diversi. Il file seed.json è in .gitignore.
 import { register } from "node:module";
+import { appendFileSync } from "node:fs";
 register("./loader.mjs", import.meta.url);
+
+// Email: con IW_MAIL_DUMP=<file> e BREVO_API_KEY qualsiasi, le chiamate a Brevo NON partono:
+// ogni email finisce come riga JSON nel file (destinatario, oggetto, html) e si può leggere
+// nelle prove (link di convalida, accetta, cambio infermiere…). Nessuna email a persone vere.
+if (process.env.IW_MAIL_DUMP) {
+  const fetchVero = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    if (String(url).startsWith("https://api.brevo.com/")) {
+      let body = {};
+      try { body = JSON.parse(opts?.body || "{}"); } catch { /* vuoto */ }
+      appendFileSync(process.env.IW_MAIL_DUMP, JSON.stringify({ at: new Date().toISOString(), to: body.to, replyTo: body.replyTo, subject: body.subject, html: body.htmlContent }) + "\n");
+      return new Response(JSON.stringify({ messageId: "prova-locale" }), { status: 201, headers: { "Content-Type": "application/json" } });
+    }
+    return fetchVero(url, opts);
+  };
+}

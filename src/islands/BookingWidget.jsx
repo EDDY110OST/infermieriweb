@@ -23,7 +23,7 @@ const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 // telefono: niente indirizzo, niente "per un familiare", testi da collega a collega.
 const eConsulenza = (s) => String(s?.catalog_key || "").startsWith("consulenza-");
 
-export default function BookingWidget({ professionalId, services, servizioIniziale, zone = [] }) {
+export default function BookingWidget({ professionalId, services, servizioIniziale, zone = [], cambio = "" }) {
   // il prezzo dipende dallo slot: di notte (22-07) vale la maggiorazione del professionista
   const prezzoSlot = (sv, sl) => (sl?.notte && sl?.price_cents ? sl.price_cents : sv?.price_cents);
   const giorni = useMemo(() => prossimiGiorni(14), []);
@@ -109,6 +109,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         body: JSON.stringify({
           professional_id: professionalId, service_id: servizio, start: slot.start, ...dati,
           consent_text: testoConsenso,
+          cambio: cambio || undefined,
           name: !consulenza && perAltri && paziente.trim() ? `${paziente.trim()} (prenotato da ${dati.name})` : dati.name,
           address: consulenza ? "" : dati.address,
           city: consulenza ? "" : dati.city,
@@ -165,6 +166,12 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
   return (
     <form className="pf-book" onSubmit={prenota}>
+      {cambio && (
+        <div className="pf-successo" style={{ marginBottom: 12 }}>
+          <strong>Stai scegliendo un altro infermiere.</strong>
+          <p style={{ margin: "6px 0 0", fontSize: 16 }}>Quando convalidi questa prenotazione, quella vecchia si annulla da sola e avvisiamo noi il tuo infermiere precedente.</p>
+        </div>
+      )}
       <label htmlFor="bw-servizio">Prestazione *</label>
       <select id="bw-servizio" required value={servizio} onChange={(e) => setServizio(Number(e.target.value))}>
         <option value={0} disabled>Scegli la prestazione…</option>

@@ -1,0 +1,114 @@
+---
+export const prerender = false;
+
+import Platform from "../layouts/Platform.astro";
+import Icona from "../components/Icona.astro";
+import { prenotazionePerCambio, alternativePer, leggiToken } from "../lib/cambio.js";
+
+// Il paziente arriva qui dall'email «scegli un altro infermiere» (link firmato).
+// Mostra SOLO chi copre esattamente il suo comune e fa la stessa prestazione.
+const token = Astro.url.searchParams.get("token") || "";
+const sessione = leggiToken(token, "cambio");
+const b = sessione ? await prenotazionePerCambio(sessione.bid) : null;
+const passata = b ? new Date(b.start_dt).getTime() < Date.now() : false;
+const alternative = b && !passata && !b.replaced_by ? await alternativePer(b) : [];
+const consulenza = b ? String(b.catalog_key || "").startsWith("consulenza-") : false;
+
+const quando = b
+  ? (() => {
+      const t = new Date(b.start_dt).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    })()
+  : "";
+const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
+const titolo = !b ? "Questo link non funziona più" : b.replaced_by ? "Hai già cambiato infermiere" : passata ? "L'appuntamento è passato" : "Scegli un altro infermiere";
+---
+
+<Platform title="Scegli un altro infermiere | InfermieriWeb" description="Un altro infermiere della tua zona per la stessa prestazione." path="/cambia-infermiere" robots="noindex, nofollow">
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">La tua prenotazione</span>
+    <h1>{titolo}</h1>
+    {b && !b.replaced_by && !passata && (
+      <p class="sottotitolo">
+        {b.status === "cancelled"
+          ? `${b.professional_name} ha annullato l'appuntamento di ${quando}.`
+          : `${b.professional_name} non ha ancora confermato l'appuntamento di ${quando}. La tua prenotazione è ancora valida.`}
+      </p>
+    )}
+  </section>
+
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 780px;">
+      {!b && (
+        <div class="pf-panel">
+          <div class="pf-errore">Il link non è valido o è scaduto. Puoi cercare un infermiere nella tua zona da qui sotto.</div>
+          <p style="margin: 14px 0 0;"><a class="pf-btn" href="/cerca">Cerca un infermiere</a></p>
+        </div>
+      )}
+
+      {b && b.replaced_by && (
+        <div class="pf-panel">
+          <div class="pf-successo"><strong>Fatto: hai già scelto un altro infermiere.</strong><p style="margin: 6px 0 0;">Trovi tutto nell'email di conferma della nuova prenotazione.</p></div>
+        </div>
+      )}
+
+      {b && !b.replaced_by && passata && (
+        <div class="pf-panel">
+          <p style="color: var(--iw-slate); margin: 0 0 14px;">L'appuntamento di {quando} è già passato. Se ti serve ancora la prestazione, puoi prenotare di nuovo.</p>
+          <a class="pf-btn" href="/cerca">Cerca un infermiere</a>
+        </div>
+      )}
+
+      {b && !b.replaced_by && !passata && (
+        <>
+          <div class="pf-panel" style="margin-bottom: 18px;">
+            <p style="margin: 0; color: var(--iw-slate); font-size: 18px;">
+              <strong style="color: var(--iw-navy);">{b.service_name}</strong>{b.city ? ` a ${b.city}` : ""}<br />
+              <strong style="color: var(--iw-navy);">{quando}</strong> · con {b.professional_name}
+              {b.status === "cancelled" ? <span class="stato cancelled" style="margin-left: 8px;">annullata</span> : <span class="stato active" style="margin-left: 8px;">ancora valida</span>}
+            </p>
+          </div>
+
+          {alternative.length > 0 ? (
+            <>
+              <div class="pf-center" style="margin-bottom: 18px;">
+                <span class="pf-kicker">{alternative.length === 1 ? "Un altro infermiere" : `${alternative.length} altri infermieri`}</span>
+                <h2>{consulenza ? "Chi offre la stessa consulenza" : `Chi copre ${b.city} per ${b.service_name}`}</h2>
+                <p style="color: var(--iw-slate); margin: 6px auto 0; max-width: 560px;">
+                  Scegli uno di loro e prenota l'orario che preferisci. {b.status === "cancelled" ? "" : "La prenotazione vecchia si annulla da sola quando convalidi quella nuova: avvisiamo noi il tuo infermiere precedente."}
+                </p>
+              </div>
+              <div class="pf-pro-list">
+                {alternative.map((p) => (
+                  <div class="pf-pro-card">
+                    <img class="foto" src={p.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${p.name}`} width="80" height="80" loading="lazy" />
+                    <div class="info">
+                      <a class="nome" href={`/p/${p.slug}?servizio=${p.service_id}&cambio=${encodeURIComponent(token)}#prenota`}>{p.name}</a>
+                      <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province}){consulenza ? " · online o telefono" : ` · copre ${b.city}`}</div>
+                      {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
+                      <div class="prezzo">{b.service_name}: {consulenza ? `${euro(p.price_cents)}/ora` : `da ${euro(p.price_cents)}`}</div>
+                    </div>
+                    <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}&cambio=${encodeURIComponent(token)}#prenota`}>Prenota con {p.name}</a>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div class="pf-panel">
+              <h2 style="margin-top: 0;">Per ora nessun altro infermiere {consulenza ? "offre questa consulenza" : `copre ${b.city || "la tua zona"} per questa prestazione`}</h2>
+              <p style="color: var(--iw-slate);">
+                {b.status === "cancelled"
+                  ? "Puoi riprovare più tardi (la rete cresce ogni settimana) oppure prenotare un nuovo orario con lo stesso infermiere."
+                  : `La tua prenotazione con ${b.professional_name} resta valida. Puoi riaprire questo link più tardi: se qualcuno si aggiunge, lo trovi qui.`}
+              </p>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a class="pf-btn secondario" href={`/p/${b.professional_slug}`}>Scheda di {b.professional_name}</a>
+                <a class="pf-btn" href="/cerca">Cerca nella tua zona</a>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  </section>
+</Platform>

@@ -237,6 +237,17 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     }
   };
 
+  // «Accetta»: dice al paziente che ci sarò. Se non lo premo entro 24 ore, al paziente
+  // viene proposto di scegliere un altro infermiere (la prenotazione resta comunque mia).
+  const accetta = async (id) => {
+    const r = await panelFetch("/api/panel/prenotazioni", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, accetta: true }),
+    });
+    if (r.ok) carica();
+  };
+
   const cambiaStato = async (id, status, conferma) => {
     if (conferma && !window.confirm(conferma)) return;
     const r = await panelFetch("/api/panel/prenotazioni", {
@@ -481,7 +492,10 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
                 </div>
                 <span className={`stato ${e.dato.status}`}>{STATI[e.dato.status]}</span>
                 {e.dato.status === "active" && (
-                  <span style={{ display: "flex", gap: 6 }}>
+                  <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {e.dato.source === "online" && (e.dato.accepted_at
+                      ? <span className="stato done" title="Hai confermato al paziente che ci sarai">✓ Accettata</span>
+                      : <button className="pf-btn compatto" onClick={() => accetta(e.dato.id)} title="Dici al paziente che ci sarai">Accetta</button>)}
                     <button className="pf-btn secondario compatto" onClick={() => cambiaStato(e.dato.id, "done")}>Fatta</button>
                     <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(e.dato.id, "cancelled", `Annullo la prenotazione di ${e.dato.customer_name}? ${e.dato.customer_email ? "Il paziente verrà avvisato via email." : "È una prenotazione telefonica: ricordati di avvisare tu il paziente."}`)}>Annulla</button>
                   </span>

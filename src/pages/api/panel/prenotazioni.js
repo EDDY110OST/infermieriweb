@@ -6,6 +6,7 @@ import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
 import { romeDateTime } from "../../../lib/slots.js";
 import { tokenRecensione } from "../../../lib/recensioni.js";
 import { emailRichiestaRecensione } from "../../../lib/mailer.js";
+import { linkCambio } from "../../../lib/cambio.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -72,6 +73,18 @@ export async function PATCH({ request }) {
     return json({ error: "Richiesta non valida" }, 400);
   }
   const id = Number(body.id);
+
+  // "Accetta": il professionista dice al paziente che ci sarà (accepted_at). La prenotazione
+  // è già valida; serve solo a non far partire la proposta di cambio infermiere.
+  if (body.accetta === true) {
+    const r = await sql`
+      UPDATE bookings SET accepted_at = COALESCE(accepted_at, now())
+      WHERE id = ${id} AND professional_id = ${session.pid} AND status = 'active'
+      RETURNING id, accepted_at`;
+    if (!r.length) return json({ error: "Prenotazione non trovata o non più attiva" }, 404);
+    return json({ ok: true, accepted_at: r[0].accepted_at });
+  }
+
   const status = String(body.status || "");
   if (!id || !["cancelled", "done", "noshow", "active"].includes(status)) {
     return json({ error: "Dati non validi" }, 400);
@@ -85,7 +98,7 @@ export async function PATCH({ request }) {
     FROM professionals p, services s
     WHERE b.professional_id = p.id AND s.id = b.service_id
       AND b.id = ${id} AND b.professional_id = ${session.pid}
-    RETURNING b.customer_name, b.customer_email, b.start_dt,
+    RETURNING b.id, b.customer_name, b.customer_email, b.start_dt, b.source,
               s.name AS service_name, p.name AS professional_name, p.email AS professional_email, p.slug`;
   if (!updated.length) return json({ error: "Prenotazione non trovata" }, 404);
 
@@ -101,17 +114,20 @@ export async function PATCH({ request }) {
     await sendEmail({ to: b.customer_email, toName: b.customer_name, replyTo: b.professional_email || undefined, ...invito });
   }
 
-  // Se il professionista disdice, il paziente viene avvisato via email
+  // Se il professionista disdice, il paziente viene avvisato via email, con il link per
+  // scegliere subito un altro infermiere che copre il suo comune (cambio infermiere, 7/10/26)
   if (status === "cancelled" && b.customer_email) {
     const avviso = emailDisdettaPaziente({
       booking: { name: b.customer_name, start: b.start_dt },
       professional: { name: b.professional_name, slug: b.slug },
       service: { name: b.service_name },
+      cambioLink: b.source === "online" ? linkCambio(b.id) : null,
     });
-    await sendEmail({
+    const inviata = await sendEmail({
       to: b.customer_email, toName: b.customer_name,
       replyTo: b.professional_email || undefined, ...avviso,
     });
+    if (inviata && b.source === "online") await sql`UPDATE bookings SET cambio_inviato_at = now() WHERE id = ${b.id}`;
   }
 
   return json({ ok: true });

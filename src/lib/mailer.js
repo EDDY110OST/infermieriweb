@@ -123,7 +123,7 @@ export function emailConvalidaPrenotazione({ booking, professional, service, con
   };
 }
 
-export function emailNotificaProfessionista({ booking, service }) {
+export function emailNotificaProfessionista({ booking, service, accettaLink }) {
   return {
     subject: `Nuova prenotazione: ${service.name} — ${dataEstesa(booking.start)}`,
     html: layout(`
@@ -137,10 +137,38 @@ export function emailNotificaProfessionista({ booking, service }) {
         ${booking.address ? `<tr><td style="padding: 5px 0; color: #7b909b;">Indirizzo</td><td style="font-weight: bold;">${booking.address}${booking.city ? ", " + booking.city : ""}</td></tr>` : ""}
         ${service.consulenza ? `<tr><td style="padding: 5px 0; color: #7b909b;">Modalità</td><td style="font-weight: bold;">Online o per telefono (consulenza a ora): contatta tu il collega per accordarvi sul canale</td></tr>` : ""}
       </table>
+      ${accettaLink ? `
+      <div style="background: #f0fdfa; border: 1px solid #ccebe6; border-radius: 12px; padding: 16px 18px; margin: 18px 0;">
+        <p style="margin: 0 0 6px; font-weight: bold; color: #0b3954; font-size: 16px;">Ci sarai? Dillo al paziente con un tocco.</p>
+        <p style="margin: 0 0 12px; font-size: 14px; color: #46626e;">Premi il tasto: il paziente sa che hai visto la prenotazione.
+        Se non lo premi entro 24 ore, gli proponiamo di scegliere un altro infermiere.
+        La prenotazione resta tua finché lui non cambia.</p>
+        <p style="text-align: center; margin: 0;">
+          <a href="${accettaLink}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">✓ Confermo che ci sarò</a>
+        </p>
+      </div>` : ""}
       <p style="text-align: center; margin: 22px 0;">
-        <a href="${SITE}/area-professionisti" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Apri la tua agenda</a>
+        <a href="${SITE}/area-professionisti" style="background: ${accettaLink ? "#0b3954" : "#00897b"}; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Apri la tua agenda</a>
       </p>
       <p style="color: #7b909b; font-size: 13px;">Rispondendo a questa email scrivi direttamente al paziente.</p>
+    `),
+  };
+}
+
+// Al vecchio infermiere, quando il paziente ha convalidato una prenotazione con un altro
+export function emailSostituitoProfessionista({ booking, service }) {
+  return {
+    subject: `Prenotazione annullata: il paziente ha scelto un altro infermiere — ${dataEstesa(booking.start)}`,
+    html: layout(`
+      <h2 style="color: #dc2626; margin-top: 0;">Il paziente ha scelto un altro infermiere</h2>
+      <p>Il paziente <strong>${booking.name}</strong> ha prenotato la stessa prestazione con un altro infermiere.
+      La sua prenotazione con te è annullata:</p>
+      <table style="width: 100%; font-size: 15px; margin: 14px 0;">
+        <tr><td style="padding: 5px 0; color: #7b909b;">Prestazione</td><td style="font-weight: bold;">${service.name}</td></tr>
+        <tr><td style="padding: 5px 0; color: #7b909b;">Quando era</td><td style="font-weight: bold; text-transform: capitalize;">${dataEstesa(booking.start)}</td></tr>
+      </table>
+      <p style="color: #7b909b; font-size: 13px;">L'orario è tornato libero nella tua agenda. Per non perdere le prossime prenotazioni,
+      premi «Confermo che ci sarò» appena ne arriva una: così il paziente sa che hai visto.</p>
     `),
   };
 }
@@ -160,18 +188,26 @@ export function emailDisdettaProfessionista({ booking, service }) {
   };
 }
 
-export function emailDisdettaPaziente({ booking, professional, service }) {
+export function emailDisdettaPaziente({ booking, professional, service, cambioLink }) {
   return {
     subject: `Il tuo appuntamento è stato annullato: ${service.name} — ${dataEstesa(booking.start)}`,
     html: layout(`
       <h2 style="color: #dc2626; margin-top: 0;">Appuntamento annullato</h2>
       <p>Ciao ${booking.name},</p>
-      <p>purtroppo <strong>${professional.name}</strong> ha dovuto annullare l'appuntamento
+      <p>ci dispiace: <strong>${professional.name}</strong> ha dovuto annullare l'appuntamento
       di <strong style="text-transform: capitalize;">${dataEstesa(booking.start)}</strong> (${service.name}).</p>
+      ${cambioLink ? `
+      <p>Puoi scegliere subito un altro infermiere della tua zona che fa la stessa prestazione.
+      Non costa nulla e ci vuole un minuto:</p>
+      <p style="text-align: center; margin: 22px 0;">
+        <a href="${cambioLink}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">Scegli un altro infermiere</a>
+      </p>
+      <p>Oppure prenota un nuovo orario con ${professional.name}:
+      <a href="${SITE}/p/${professional.slug}" style="color: #00897b; font-weight: bold;">apri la sua scheda</a>.</p>` : `
       <p>Puoi prenotare un nuovo orario in ogni momento:</p>
       <p style="text-align: center; margin: 22px 0;">
         <a href="${SITE}/p/${professional.slug}" style="background: #00897b; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Prenota un nuovo orario</a>
-      </p>
+      </p>`}
       <p style="color: #7b909b; font-size: 13px;">Rispondendo a questa email scrivi direttamente al professionista.</p>
     `),
   };
@@ -286,6 +322,44 @@ export function emailRichiestaRecensione({ booking, professional, service, revie
         <a href="${reviewUrl}" style="background: #f5a623; color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: bold;">Lascia la tua recensione</a>
       </p>
       <p style="color: #7b909b; font-size: 13px;">Solo chi ha davvero prenotato può recensire: per questo le recensioni su InfermieriWeb sono verificate.</p>
+    `),
+  };
+}
+
+// Al paziente: l'infermiere non ha confermato (motivo 'non-risposta') oppure ha annullato
+// ('annullata'). Il link apre /cambia-infermiere con chi copre il suo comune.
+export function emailCambiaInfermiere({ booking, professional, service, link, motivo, quante }) {
+  const annullata = motivo === "annullata";
+  const dove = booking.city ? ` a ${booking.city}` : "";
+  return {
+    subject: annullata
+      ? `Il tuo appuntamento è stato annullato: scegli un altro infermiere — ${service.name}`
+      : `${professional.name} non ha ancora confermato: vuoi scegliere un altro infermiere?`,
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">${annullata ? "Scegli un altro infermiere" : "Il tuo infermiere non ha ancora confermato"}</h2>
+      <p>Ciao ${booking.name},</p>
+      ${annullata
+        ? `<p>ci dispiace: <strong>${professional.name}</strong> ha dovuto annullare l'appuntamento di
+           <strong style="text-transform: capitalize;">${dataEstesa(booking.start)}</strong> (${service.name}).</p>`
+        : `<p><strong>${professional.name}</strong> non ha ancora confermato di venire da te per
+           <strong>${service.name}</strong> il <strong style="text-transform: capitalize;">${dataEstesa(booking.start)}</strong>.</p>
+           <p><strong>La tua prenotazione è ancora valida.</strong> Se preferisci andare sul sicuro,
+           puoi scegliere un altro infermiere${dove} che fa la stessa prestazione.</p>`}
+      ${quante > 0
+        ? `<p>${quante === 1 ? "C'è un altro infermiere" : `Ci sono ${quante} altri infermieri`}${dove} che ${quante === 1 ? "fa" : "fanno"} <strong>${service.name}</strong>.
+           Guarda gli orari e scegli: non costa nulla e ci vuole un minuto.</p>
+           <p style="text-align: center; margin: 24px 0;">
+             <a href="${link}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">Scegli un altro infermiere</a>
+           </p>`
+        : `<p>In questo momento nessun altro infermiere della rete copre${dove || " la tua zona"} per questa prestazione.
+           Puoi controllare qui se qualcuno si aggiunge:</p>
+           <p style="text-align: center; margin: 24px 0;">
+             <a href="${link}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">Vedi chi è disponibile</a>
+           </p>`}
+      ${annullata
+        ? ""
+        : `<p style="color: #46626e;">Se invece vuoi aspettare ${professional.name}, non devi fare nulla.
+           Se poi scegli un altro infermiere, la vecchia prenotazione si annulla da sola e avvisiamo noi ${professional.name}.</p>`}
     `),
   };
 }

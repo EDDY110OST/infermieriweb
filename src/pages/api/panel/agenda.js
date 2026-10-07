@@ -21,7 +21,7 @@ export async function GET({ request, url }) {
 
   const bookings = await sql`
     SELECT b.id, b.start_dt, b.end_dt, b.customer_name, b.customer_phone, b.customer_email,
-           b.address, b.city, b.status, b.source, s.name AS service_name
+           b.address, b.city, b.status, b.source, b.accepted_at, s.name AS service_name
     FROM bookings b JOIN services s ON s.id = b.service_id
     WHERE b.professional_id = ${session.pid}
       AND b.status NOT IN ('pending', 'expired')

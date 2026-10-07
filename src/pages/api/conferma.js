@@ -3,8 +3,9 @@ export const prerender = false;
 import { sql } from "../../lib/db.js";
 import { readSession, createSession } from "../../lib/auth.js";
 import { conTitolo } from "../../lib/appellativo.js";
-import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista } from "../../lib/mailer.js";
+import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista, emailSostituitoProfessionista } from "../../lib/mailer.js";
 import { pushToProfessional } from "../../lib/push.js";
+import { linkAccetta } from "../../lib/cambio.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -22,7 +23,7 @@ export async function POST({ request }) {
 
   const [b] = await sql`
     SELECT b.id, b.status, b.created_at, b.start_dt, b.customer_name, b.customer_phone,
-           b.customer_email, b.address, b.city, b.cancel_token, b.professional_id,
+           b.customer_email, b.address, b.city, b.cancel_token, b.professional_id, b.replaces,
            s.name AS service_name, s.catalog_key AS service_key, p.name AS professional_name, p.full_name AS professional_full_name, p.gender AS professional_gender, p.email AS professional_email,
            p.slug AS professional_slug, p.cancel_hours
     FROM bookings b
@@ -64,10 +65,43 @@ export async function POST({ request }) {
   const conferma = emailConfermaPaziente({ booking, professional, service: svc, cancelToken: b.cancel_token, areaLink });
   await sendEmail({ to: b.customer_email, toName: b.customer_name, replyTo: professional.email || undefined, ...conferma });
 
-  // SOLO ORA il professionista: email + push
+  // SOLO ORA il professionista: email (col tasto «Confermo che ci sarò») + push
   if (professional.email) {
-    const notifica = emailNotificaProfessionista({ booking, service: svc });
+    const notifica = emailNotificaProfessionista({ booking, service: svc, accettaLink: linkAccetta(b.id) });
     await sendEmail({ to: professional.email, toName: professional.name, replyTo: b.customer_email, ...notifica });
+  }
+
+  // Cambio infermiere: questa prenotazione ne sostituisce una vecchia → la vecchia si
+  // annulla da sola (se era ancora attiva) e il vecchio infermiere viene avvisato.
+  if (b.replaces) {
+    const [vecchia] = await sql`
+      SELECT b.id, b.status, b.start_dt, b.customer_name, b.professional_id,
+             s.name AS service_name, p.name AS professional_name, p.email AS professional_email
+      FROM bookings b JOIN services s ON s.id = b.service_id JOIN professionals p ON p.id = b.professional_id
+      WHERE b.id = ${b.replaces}`;
+    if (vecchia) {
+      await sql`UPDATE bookings SET replaced_by = ${b.id} WHERE id = ${vecchia.id}`;
+      if (vecchia.status === "active") {
+        await sql`
+          UPDATE bookings SET status = 'cancelled', cancelled_by = 'paziente', cancelled_at = now()
+          WHERE id = ${vecchia.id} AND status = 'active'`;
+        if (vecchia.professional_email) {
+          const avviso = emailSostituitoProfessionista({
+            booking: { name: vecchia.customer_name, start: vecchia.start_dt },
+            service: { name: vecchia.service_name },
+          });
+          await sendEmail({ to: vecchia.professional_email, toName: vecchia.professional_name, ...avviso });
+        }
+        const quandoVecchia = new Date(vecchia.start_dt).toLocaleString("it-IT", {
+          timeZone: "Europe/Rome", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+        });
+        await pushToProfessional(vecchia.professional_id, {
+          title: "❌ Il paziente ha scelto un altro infermiere",
+          body: `${vecchia.service_name} · ${quandoVecchia} — ${vecchia.customer_name}. L'orario è tornato libero.`,
+          tag: `booking-${vecchia.id}`,
+        });
+      }
+    }
   }
   const quando = new Date(b.start_dt).toLocaleString("it-IT", {
     timeZone: "Europe/Rome", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",

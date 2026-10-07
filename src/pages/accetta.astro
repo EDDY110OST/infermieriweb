@@ -1,0 +1,69 @@
+---
+export const prerender = false;
+
+import Platform from "../layouts/Platform.astro";
+import { sql } from "../lib/db.js";
+import { leggiToken } from "../lib/cambio.js";
+
+// Il tasto «Confermo che ci sarò» dell'email all'infermiere: un link firmato, nessun login.
+// Segna accepted_at; la prenotazione era già valida (serve a non proporre il cambio al paziente).
+const token = Astro.url.searchParams.get("token") || "";
+const sessione = leggiToken(token, "accetta");
+let esito = "non-valido"; // non-valido | fatto | gia | non-attiva
+let b = null;
+if (sessione) {
+  [b] = await sql`
+    SELECT b.id, b.status, b.start_dt, b.accepted_at, b.customer_name, b.address, b.city, s.name AS service_name
+    FROM bookings b JOIN services s ON s.id = b.service_id
+    WHERE b.id = ${sessione.bid}`;
+  if (!b) esito = "non-valido";
+  else if (b.status !== "active") esito = "non-attiva";
+  else if (b.accepted_at) esito = "gia";
+  else {
+    await sql`UPDATE bookings SET accepted_at = now() WHERE id = ${b.id} AND accepted_at IS NULL`;
+    esito = "fatto";
+  }
+}
+const quando = b
+  ? (() => {
+      const t = new Date(b.start_dt).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    })()
+  : "";
+---
+
+<Platform title="Conferma al paziente | InfermieriWeb" description="Hai confermato al paziente che ci sarai." path="/accetta" robots="noindex, nofollow">
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Area professionisti</span>
+    <h1>{esito === "fatto" || esito === "gia" ? "Grazie, il paziente lo sa" : "Questo link non funziona più"}</h1>
+  </section>
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 560px;">
+      {(esito === "fatto" || esito === "gia") && (
+        <div class="pf-panel">
+          <div class="pf-successo">
+            <strong>{esito === "fatto" ? "Hai confermato che ci sarai ✅" : "Avevi già confermato ✅"}</strong>
+            <p style="margin: 8px 0 0;">
+              <strong>{b.service_name}</strong> con {b.customer_name}<br />
+              <strong>{quando}</strong>{b.address ? <span><br />{b.address}{b.city ? `, ${b.city}` : ""}</span> : null}
+            </p>
+          </div>
+          <p style="color: var(--iw-slate); margin: 14px 0;">Il paziente non riceverà la proposta di cambiare infermiere. Se qualcosa cambia, annulla dall'agenda: lo avvisiamo noi.</p>
+          <a class="pf-btn" href="/area-professionisti">Apri la tua agenda</a>
+        </div>
+      )}
+      {esito === "non-attiva" && (
+        <div class="pf-panel">
+          <div class="pf-errore">Questa prenotazione non è più attiva (annullata o già passata).</div>
+          <p style="margin: 14px 0;"><a class="pf-btn" href="/area-professionisti">Apri la tua agenda</a></p>
+        </div>
+      )}
+      {esito === "non-valido" && (
+        <div class="pf-panel">
+          <div class="pf-errore">Il link non è valido o è scaduto. Apri la tua agenda e premi «Accetta» sulla prenotazione.</div>
+          <p style="margin: 14px 0;"><a class="pf-btn" href="/area-professionisti">Apri la tua agenda</a></p>
+        </div>
+      )}
+    </div>
+  </section>
+</Platform>

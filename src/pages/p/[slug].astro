@@ -13,6 +13,8 @@ import { specializzazioniPubbliche } from "../../lib/specializzazioni.js";
 
 const { slug } = Astro.params;
 const servizioIniziale = Number(Astro.url.searchParams.get("servizio")) || null;
+// Cambio infermiere: il link firmato arrivato per email dice quale prenotazione sostituire
+const cambioToken = String(Astro.url.searchParams.get("cambio") || "").slice(0, 600);
 
 const [pro] = await sql`
   SELECT id, slug, name, profession, albo_name, albo_number, bio, bio_consulenza, photo_url, region, province, city,
@@ -108,7 +110,7 @@ try {
 } catch { /* statistiche best-effort */ }
 ---
 
-<Platform title={titolo} description={descrizione} path={path} ogImage={new URL(pro.photo_url, SITE_URL).href} ogImageAlt={`Foto di ${pro.name}`} schemas={schemas} robots={prenotabile ? undefined : "noindex, follow"}>
+<Platform title={titolo} description={descrizione} path={path} ogImage={new URL(pro.photo_url, SITE_URL).href} ogImageAlt={`Foto di ${pro.name}`} schemas={schemas} robots={prenotabile && !cambioToken ? undefined : "noindex, follow"}>
   <section class="pf-profile-hero">
     <div class="pf-profile-card">
       <img class="foto" src={pro.photo_url || "/avatar-infermiere.svg"} alt={`Foto di ${pro.name}`} width="132" height="132" />
@@ -251,7 +253,7 @@ try {
       <div class="pf-panel" id="prenota" style="position: sticky; top: 90px;">
         <h2>{soloConsulente ? "Prenota una consulenza" : "Prenota online"}</h2>
         {services.length > 0 ? (
-          <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} zone={zone} />
+          <BookingWidget client:visible professionalId={pro.id} services={services.map((s) => ({ ...s }))} servizioIniziale={servizioIniziale} zone={zone} cambio={cambioToken} />
         ) : (
           <p class="pf-note">
             Questo professionista sta completando il suo profilo: le prenotazioni online

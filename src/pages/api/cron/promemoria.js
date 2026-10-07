@@ -15,6 +15,7 @@ export async function GET({ request, url }) {
 // tra 24 e 25 ore, una sola volta (guardia reminded_at).
 import { neon } from "@neondatabase/serverless";
 import { tokenRecensione } from "../../../lib/recensioni.js";
+import { inviaEmailCambio, DAL_GIORNO_ACCETTA } from "../../../lib/cambio.js";
 import { sendEmail, emailRichiestaRecensione } from "../../../lib/mailer.js";
 
 const SITE = "https://infermieriweb.it";
@@ -61,6 +62,26 @@ async function esegui() {
     }
     if (daCompletare.length) console.log(`[auto-completa] ${daCompletare.length} appuntamenti completati + invito recensione.`);
   } catch (e) { console.log("[auto-completa] errore:", e?.message || e); }
+
+  // Cambio infermiere per mancata risposta (7/10/26): prenotazione online convalidata da
+  // più di 24 ore (2 ore se l'appuntamento era a meno di 24 ore dalla richiesta) e
+  // l'infermiere non ha premuto «Confermo che ci sarò» → al paziente la proposta di
+  // scegliere un altro infermiere. Una volta sola; la prenotazione resta valida.
+  try {
+    const senzaRisposta = await sql`
+      SELECT b.id FROM bookings b
+      WHERE b.status = 'active' AND b.source = 'online'
+        AND b.accepted_at IS NULL AND b.cambio_inviato_at IS NULL
+        AND b.customer_email <> ''
+        AND b.created_at >= ${DAL_GIORNO_ACCETTA}::timestamptz
+        AND b.start_dt > now() + interval '1 hour'
+        AND (b.created_at < now() - interval '24 hours'
+             OR (b.start_dt < b.created_at + interval '24 hours' AND b.created_at < now() - interval '2 hours'))
+      ORDER BY b.start_dt LIMIT 50`;
+    let inviate = 0;
+    for (const b of senzaRisposta) { if (await inviaEmailCambio(b.id, "non-risposta")) inviate++; }
+    if (senzaRisposta.length) console.log(`[cambio-infermiere] ${inviate}/${senzaRisposta.length} proposte inviate.`);
+  } catch (e) { console.log("[cambio-infermiere] errore:", e?.message || e); }
 
   if (!API_KEY) {
     console.log("[promemoria] BREVO_API_KEY assente: salto il giro.");
