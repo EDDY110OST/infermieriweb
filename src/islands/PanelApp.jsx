@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FASCE, fasciaDi, eConsulenza, TIPI_ATTIVITA, offreDomicilio, offreConsulenza } from "../data/listino.js";
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
+import ConfermaInline from "./ConfermaInline.jsx";
 
 // Ogni chiamata del pannello: se torna 401 la sessione è scaduta -> avvisa tutto il pannello,
 // così invece di schede vuote o pagine bianche l'infermiere viene riportato al login.
@@ -530,8 +531,11 @@ function TabServizi({ tipo, onCambiaTipo }) {
 
   const avvisa = (tipo, testo) => {
     setMessaggio({ tipo, testo });
-    setTimeout(() => setMessaggio(null), 4000);
+    setTimeout(() => setMessaggio(null), 6000);
   };
+  // Il messaggio sta in cima alla scheda: dopo un'azione su una riga in fondo va portato in vista
+  const msgRef = useRef(null);
+  useEffect(() => { if (messaggio) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [messaggio]);
 
   const aggiungi = async (e) => {
     e.preventDefault();
@@ -566,12 +570,22 @@ function TabServizi({ tipo, onCambiaTipo }) {
     carica();
   };
 
+  // La conferma è in pagina (ConfermaInline), non confirm(): i browser sopprimono le finestre
+  // native dopo qualche clic di fila (e in alcune app installate non compaiono), e allora il
+  // cestino sembrava non fare nulla. La riga sparisce subito e il messaggio spiega l'esito.
   const elimina = async (s) => {
-    if (!confirm(`Eliminare "${s.name}" dalla tua scheda?\n\nSe vuoi solo sospenderla temporaneamente, togli la spunta "attiva" invece di eliminarla.`)) return;
-    const r = await panelFetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE" });
-    const d = await r.json();
-    if (!r.ok) return avvisa("err", d.error);
-    avvisa("ok", `"${s.name}" eliminata dalla tua scheda`);
+    let r, d;
+    try {
+      r = await panelFetch(`/api/panel/servizi?id=${s.id}`, { method: "DELETE" });
+      d = await r.json().catch(() => ({}));
+    } catch {
+      return avvisa("err", "Errore di rete: riprova tra poco");
+    }
+    if (!r.ok) return avvisa("err", d.error || "Non sono riuscito a eliminare la prestazione: riprova");
+    setServizi((lista) => (lista || []).filter((x) => x.id !== s.id));
+    avvisa("ok", d.archiviata
+      ? `«${s.name}» eliminata dalla tua scheda ✅ Le ${d.prenotazioni} prenotazion${d.prenotazioni === 1 ? "e" : "i"} già ricevute restano in agenda e nelle statistiche.`
+      : `«${s.name}» eliminata dalla tua scheda ✅`);
     carica();
   };
 
@@ -620,7 +634,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
             <input type="checkbox" checked={s.active} onChange={(e) => cambia(s.id, "active", e.target.checked)} /> attiva
           </label>
           {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
-          <button className="pf-elimina" onClick={() => elimina(s)} type="button" title={`Elimina ${s.name}`} aria-label={`Elimina ${s.name}`}>🗑</button>
+          <ConfermaInline className="pf-elimina" etichetta="🗑" title={`Elimina ${s.name}`} domanda={`Elimino «${s.name}»?`} conferma="Sì, elimina" onConferma={() => elimina(s)} />
         </div>
         {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {euroDaCent(voce.min_cents)} € · consigliato {euroDaCent(voce.sugg_cents)} €{consulenza ? " all'ora" : ""}{voce.su_misura ? " · prestazione riservata a te" : ""}</p>}
       </div>
@@ -693,7 +707,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
         <br />Togli la spunta <strong>"attiva"</strong> per sospendere una prestazione (sparisce
         dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla dalla tua scheda. Il campo <strong>🌙 notte</strong> è la tua maggiorazione per le prenotazioni tra le 22:00 e le 07:00 (vuoto = di notte non la fai).
       </p>
-      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+      {messaggio && <div ref={msgRef} className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{messaggio.testo}</div>}
 
       {mostraDomicilio && (
         <section style={{ marginBottom: 26 }}>

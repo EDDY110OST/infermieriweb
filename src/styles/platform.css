@@ -971,6 +971,16 @@ label.pf-tipo, .pf-book label.pf-tipo {
 }
 .pf-elimina:hover { background: #fee2e2; border-color: #fca5a5; }
 
+/* Conferma in pagina (al posto di window.confirm): domanda + Sì/No accanto al tasto */
+.pf-conferma-inline {
+  display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 15px; font-weight: 600; color: var(--iw-navy);
+  background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 4px 8px;
+}
+
+/* Editor aperti dall'admin: quando scorriamo fino a loro, restano sotto la testata sticky */
+.adm-editor-top { scroll-margin-top: 96px; }
+
 /* Slot notturno nel widget di prenotazione */
 .pf-slot { position: relative; }
 

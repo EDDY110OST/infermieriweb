@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import CampoPassword from "./CampoPassword.jsx";
 import CercaComune from "./CercaComune.jsx";
+import ConfermaInline from "./ConfermaInline.jsx";
 import { eConsulenza, TIPI_ATTIVITA } from "../data/listino.js";
 
 const dataIt = (iso) =>
@@ -218,9 +219,18 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   const [listino, setListino] = useState(null);
   const [suMisura, setSuMisura] = useState({ aperto: false, nome: "", categoria: "domicilio", min: "", sugg: "", durata: "30" });
 
-  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 4500); };
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
   const inScheda = (k) => (servizi || []).some((s) => s.catalog_key === k);
   const vocePerKey = (k) => (listino || []).find((v) => v.key === k);
+
+  // L'editor sostituisce l'elenco, ma la pagina resta scorsa dov'era la card cliccata:
+  // si riparte dall'intestazione, così la scheda si vede dall'inizio (anche da telefono).
+  const topRef = useRef(null);
+  useEffect(() => { topRef.current?.scrollIntoView({ block: "start" }); }, [pid]);
+  // Esito delle azioni (Togli, prezzo…): va portato in vista, altrimenti chi ha scorso
+  // in fondo all'elenco delle prestazioni non lo vede e crede che non sia successo nulla.
+  const msgRef = useRef(null);
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
 
   const carica = useCallback(() => {
     fetch(`/api/panel/profilo?pid=${pid}`).then((r) => r.json()).then((d) => setProf(d.profilo || null));
@@ -294,11 +304,22 @@ function ModificaScheda({ pid, nome, onIndietro }) {
     carica();
   };
 
+  // Togli dalla scheda. La conferma è in pagina (ConfermaInline), non window.confirm:
+  // le finestre native vengono soppresse dal browser dopo qualche clic di fila e il tasto
+  // sembrava morto. Dopo la risposta la riga sparisce subito e si spiega cos'è successo.
   const rimuoviServizio = async (s) => {
-    if (!window.confirm(`Tolgo "${s.name}" dalla scheda?`)) return;
-    const r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${pid}`, { method: "DELETE" });
-    const d = await r.json();
-    if (!r.ok) return avvisa("err", d.error);
+    let r, d;
+    try {
+      r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${pid}`, { method: "DELETE" });
+      d = await r.json().catch(() => ({}));
+    } catch {
+      return avvisa("err", "Errore di rete: riprova tra poco");
+    }
+    if (!r.ok) return avvisa("err", d.error || "Non sono riuscito a togliere la prestazione: riprova");
+    setServizi((lista) => (lista || []).filter((x) => x.id !== s.id));
+    avvisa("ok", d.archiviata
+      ? `«${s.name}» tolta dalla scheda ✅ Aveva ${d.prenotazioni} prenotazion${d.prenotazioni === 1 ? "e" : "i"} nello storico: lì resta leggibile, ma non è più visibile né prenotabile.`
+      : `«${s.name}» tolta dalla scheda ✅`);
     carica();
   };
   const aggiungiServizio = async () => {
@@ -330,17 +351,22 @@ function ModificaScheda({ pid, nome, onIndietro }) {
   const disponibili = (listino || []).filter((v) => v.categoria !== "consulenza" && !inScheda(v.key));
   const disponibiliConsulenze = (listino || []).filter((v) => v.categoria === "consulenza" && !inScheda(v.key));
 
+  // Griglie dei campi: su telefono le colonne fisse facevano sbordare la pagina (il
+  // campo data non si restringe sotto ~150px) → colonne che vanno a capo da sole.
+  const griglia2 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 };
+  const griglia3 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 };
+
   return (
-    <div>
+    <div ref={topRef} className="adm-editor-top">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
         <h2 style={{ margin: 0, color: "var(--iw-navy)" }}>✏️ Modifica scheda — {nome}</h2>
-        <span style={{ display: "flex", gap: 8 }}>
+        <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {prof.status === "active" && <a className="pf-btn secondario compatto" href={`/p/${prof.slug}`} target="_blank" rel="noreferrer">Vedi scheda</a>}
           <button className="pf-btn secondario compatto" onClick={onIndietro}>← Torna all'elenco</button>
         </span>
       </div>
       {prof.edited_by && <p className="pf-note" style={{ marginTop: 0 }}>Ultima modifica da: <strong>{prof.edited_by}</strong>{prof.edited_at ? ` · ${new Date(prof.edited_at).toLocaleString("it-IT")}` : ""}</p>}
-      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
+      {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
 
       {/* FOTO */}
       <div className="pf-panel" style={{ marginBottom: 14, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
@@ -354,7 +380,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       {/* DATI */}
       <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Dati e identità</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div style={griglia2}>
           <div><label>Nome pubblico (es. Dott. Mario R.)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} /></div>
           <div><label>Nome completo (riservato)</label><input value={prof.full_name || ""} onChange={(e) => setProf({ ...prof, full_name: e.target.value })} /></div>
           <div><label>Sesso (appellativo)</label>
@@ -374,10 +400,10 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         <CercaComune id="ms-city" valore={prof.city} onTesto={(t) => setProf({ ...prof, city: t, _sigla: null })} onScegli={(c) => setProf({ ...prof, city: c.nome, province: c.provincia, region: c.regione, _sigla: c.sigla })} />
         <label>Indirizzo (facoltativo)</label>
         <input value={prof.address || ""} onChange={(e) => setProf({ ...prof, address: e.target.value })} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        <div style={griglia3}>
           <div><label>OPI di Appartenenza</label><input value={prof.albo_name || ""} onChange={(e) => setProf({ ...prof, albo_name: e.target.value })} /></div>
           <div><label>N. iscrizione</label><input value={prof.albo_number || ""} onChange={(e) => setProf({ ...prof, albo_number: e.target.value })} /></div>
-          <div><label>Data iscrizione</label><input type="date" value={prof.albo_date || ""} onChange={(e) => setProf({ ...prof, albo_date: e.target.value })} /></div>
+          <div style={{ minWidth: 0 }}><label>Data iscrizione</label><input type="date" style={{ minWidth: 0 }} value={prof.albo_date || ""} onChange={(e) => setProf({ ...prof, albo_date: e.target.value })} /></div>
         </div>
         <label>Partita IVA (11 cifre, oppure vuota)</label>
         <input value={prof.vat_number || ""} onChange={(e) => setProf({ ...prof, vat_number: e.target.value })} />
@@ -399,10 +425,11 @@ function ModificaScheda({ pid, nome, onIndietro }) {
               </label>
               {voce && <span className="pf-note" style={{ margin: 0 }}>min {euro(voce.min_cents)}{voce.su_misura ? " · su misura" : ""}</span>}
               <button className="pf-btn secondario compatto" onClick={() => salvaServizio(s, { active: !s.active })}>{s.active ? "Disattiva" : "Attiva"}</button>
-              <button className="pf-btn pericolo compatto" onClick={() => rimuoviServizio(s)}>Togli</button>
+              <ConfermaInline etichetta="Togli" domanda={`Tolgo «${s.name}» dalla scheda?`} onConferma={() => rimuoviServizio(s)} />
             </div>
           );
         })}
+        {servizi && servizi.length === 0 && <p className="pf-note">Nessuna prestazione in scheda.</p>}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }} className="pf-book">
           <select style={{ marginBottom: 0, flex: 1, minWidth: 200 }} value={nuovoServizio.key} onChange={(e) => { const v = vocePerKey(e.target.value); setNuovoServizio({ key: e.target.value, prezzo: v ? (v.sugg_cents / 100).toFixed(2).replace(".", ",") : "" }); }}>
             <option value="">+ Aggiungi prestazione…</option>
@@ -438,7 +465,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
                 <option value="domicilio">A domicilio (per i pazienti)</option>
                 <option value="consulenza">Consulenza a ora (per i colleghi)</option>
               </select>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div style={{ ...griglia3, gap: 8 }}>
                 <div><label>Minimo (€)</label><input inputMode="decimal" value={suMisura.min} onChange={(e) => setSuMisura({ ...suMisura, min: e.target.value })} /></div>
                 <div><label>Consigliato (€)</label><input inputMode="decimal" value={suMisura.sugg} onChange={(e) => setSuMisura({ ...suMisura, sugg: e.target.value })} /></div>
                 <div><label>Durata (min)</label><input type="number" min={5} max={480} step={5} disabled={suMisura.categoria === "consulenza"} value={suMisura.categoria === "consulenza" ? 60 : suMisura.durata} onChange={(e) => setSuMisura({ ...suMisura, durata: e.target.value })} /></div>
@@ -751,9 +778,34 @@ function NuovaPrenotazione() {
 
 function Servizi() {
   const [servizi, setServizi] = useState(null);
-  useEffect(() => {
+  const [msg, setMsg] = useState(null);
+  const msgRef = useRef(null);
+  const carica = useCallback(() => {
     fetch("/api/admin/servizi").then((r) => r.json()).then((d) => setServizi(d.servizi || []));
   }, []);
+  useEffect(carica, [carica]);
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 6000); };
+
+  // Le prestazioni "disattivate" comparivano qui senza nessun modo di toglierle:
+  // bisognava sapere che si fa da Infermieri → Modifica scheda. Stesso endpoint, stessa regola
+  // (con prenotazioni nello storico = archiviata, altrimenti cancellata).
+  const togli = async (s) => {
+    let r, d;
+    try {
+      r = await fetch(`/api/panel/servizi?id=${s.id}&pid=${s.professional_id}`, { method: "DELETE" });
+      d = await r.json().catch(() => ({}));
+    } catch {
+      return avvisa("err", "Errore di rete: riprova tra poco");
+    }
+    if (!r.ok) return avvisa("err", d.error || "Non sono riuscito a togliere la prestazione: riprova");
+    setServizi((lista) => (lista || []).filter((x) => x.id !== s.id));
+    avvisa("ok", d.archiviata
+      ? `«${s.name}» tolta dalla scheda di ${s.professional_name} ✅ Aveva ${d.prenotazioni} prenotazion${d.prenotazioni === 1 ? "e" : "i"} nello storico: lì resta leggibile, ma non è più visibile né prenotabile.`
+      : `«${s.name}» tolta dalla scheda di ${s.professional_name} ✅`);
+    carica();
+  };
+
   if (!servizi) return <Caricamento />;
 
   const perProfessionista = servizi.reduce((acc, s) => {
@@ -767,7 +819,9 @@ function Servizi() {
       <p className="pf-note">
         Qui vedi cosa ha scelto ciascun professionista dal listino, col suo prezzo. Il <strong>listino</strong> —
         cioè quali prestazioni possono scegliere — lo decidiamo noi dalla sezione «Listino (lo decidiamo noi)».
+        <br /><strong>Togli</strong> la leva dalla sua scheda (prezzi, attiva/disattiva e nuove prestazioni: da Infermieri → Modifica scheda).
       </p>
+      {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
       {Object.entries(perProfessionista).map(([nome, rows]) => (
         <div className="pf-panel" key={nome} style={{ marginBottom: 14 }}>
           <strong style={{ color: "var(--iw-navy)", fontSize: 18 }}>{nome} <span className="pf-note">· {rows[0].city}</span></strong>
@@ -777,7 +831,10 @@ function Servizi() {
                 <span className="nome">{s.name}</span> {!s.active && <span className="stato cancelled">disattivata</span>}
                 <div className="durata">{s.duration_min} min · {s.prenotazioni} prenotazioni ricevute</div>
               </div>
-              <div className="prezzo">da {euro(s.price_cents)}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <div className="prezzo">da {euro(s.price_cents)}</div>
+                <ConfermaInline etichetta="Togli" domanda={`Tolgo «${s.name}» dalla scheda di ${nome}?`} onConferma={() => togli(s)} />
+              </div>
             </div>
           ))}
         </div>

@@ -12,8 +12,8 @@ export async function GET({ request }) {
   if (!session || session.role !== "admin") return json({ error: "Riservato agli amministratori" }, 403);
 
   const servizi = await sql`
-    SELECT s.id, s.name, s.duration_min, s.price_cents, s.active,
-           p.name AS professional_name, p.slug, p.city,
+    SELECT s.id, s.name, s.duration_min, s.price_cents, s.active, s.catalog_key,
+           s.professional_id, p.name AS professional_name, p.slug, p.city,
            COALESCE(b.n, 0) AS prenotazioni
     FROM services s
     JOIN professionals p ON p.id = s.professional_id

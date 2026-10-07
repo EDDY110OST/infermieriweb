@@ -113,6 +113,18 @@ export async function PATCH({ request }) {
     WHERE id = ${id} AND professional_id = ${pid} AND deleted_at IS NULL`;
   if (!attuale) return json({ error: "Prestazione non trovata" }, 404);
 
+  // SPEGNERE una prestazione deve riuscire sempre, senza passare dal listino: se nel
+  // frattempo la voce è stata ritirata o il minimo è salito sopra il prezzo del
+  // professionista, il controllo qui sotto rifiuterebbe anche la semplice disattivazione
+  // ("non è più nel listino" / "il prezzo minimo è…") e la prestazione resterebbe accesa.
+  const soloSpegne = body.active === false
+    && body.price_cents === undefined && body.duration_min === undefined && body.price_notte_cents === undefined;
+  if (soloSpegne) {
+    await sql`UPDATE services SET active = FALSE WHERE id = ${id} AND professional_id = ${pid}`;
+    await tracciaAdmin(session, body.pid, pid);
+    return json({ ok: true });
+  }
+
   const v = await valida({
     duration_min: body.duration_min ?? attuale.duration_min,
     price_cents: body.price_cents ?? attuale.price_cents,
@@ -140,15 +152,19 @@ export async function DELETE({ request, url }) {
   const id = Number(url.searchParams.get("id"));
   if (!id) return json({ error: "Id mancante" }, 400);
 
-  const [mia] = await sql`SELECT id FROM services WHERE id = ${id} AND professional_id = ${pid} AND deleted_at IS NULL`;
+  const [mia] = await sql`SELECT id, name, deleted_at FROM services WHERE id = ${id} AND professional_id = ${pid}`;
   if (!mia) return json({ error: "Prestazione non trovata" }, 404);
+  // Già tolta (doppio clic, due schede aperte): non è un errore, è già fatto.
+  if (mia.deleted_at) return json({ ok: true, archiviata: true, gia_tolta: true, prenotazioni: 0, name: mia.name });
 
-  const usato = await sql`SELECT id FROM bookings WHERE service_id = ${id} LIMIT 1`;
-  if (usato.length) {
+  // Quante prenotazioni la citano: se ce ne sono, la riga resta (archiviata) perché lo
+  // storico deve restare leggibile; il numero torna al pannello per spiegarlo a chi cancella.
+  const [{ n: prenotazioni }] = await sql`SELECT COUNT(*)::int AS n FROM bookings WHERE service_id = ${id}`;
+  if (prenotazioni > 0) {
     await sql`UPDATE services SET active = FALSE, deleted_at = now() WHERE id = ${id} AND professional_id = ${pid}`;
   } else {
     await sql`DELETE FROM services WHERE id = ${id} AND professional_id = ${pid}`;
   }
   await tracciaAdmin(session, url.searchParams.get("pid"), pid);
-  return json({ ok: true, archiviata: usato.length > 0 });
+  return json({ ok: true, archiviata: prenotazioni > 0, prenotazioni, name: mia.name });
 }
