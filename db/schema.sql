@@ -41,6 +41,11 @@ CREATE TABLE IF NOT EXISTS articles (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   featured boolean NOT NULL DEFAULT false,
   cover_data text NOT NULL DEFAULT ''::text,
+  -- Editor con formattazione (7/10/26): 'raw' = testo con «## Titolo» (body_raw),
+  -- 'html' = HTML sanificato lato server con lista bianca (body_html). Le sezioni
+  -- (jsonb) si calcolano in entrambi i casi al salvataggio.
+  body_html text NOT NULL DEFAULT ''::text,
+  body_format text NOT NULL DEFAULT 'raw'::text,
   CONSTRAINT articles_pkey PRIMARY KEY (id),
   CONSTRAINT articles_slug_key UNIQUE (slug)
 );
@@ -74,6 +79,17 @@ CREATE TABLE IF NOT EXISTS bookings (
   consent_privacy_at timestamp with time zone, -- prova del consenso privacy (art. 7.1 GDPR)
   consent_health_at timestamp with time zone,  -- consenso esplicito art. 9 (solo domicilio)
   consent_text text NOT NULL DEFAULT ''::text, -- testo esatto della spunta accettata
+  -- 7/10/26: chi ha annullato ('paziente' | 'professionista' | 'admin' | 'sistema'; '' = non noto, righe vecchie)
+  cancelled_by text NOT NULL DEFAULT ''::text,
+  cancelled_at timestamp with time zone,
+  -- 7/10/26 "Accetta": quando il professionista ha confermato che ci sarà (NULL = non ancora).
+  -- La prenotazione resta valida anche senza: serve a capire chi non risponde.
+  accepted_at timestamp with time zone,
+  -- 7/10/26 cambio infermiere: quando è partita l'email "scegli un altro infermiere";
+  -- replaces = id della prenotazione che questa sostituisce; replaced_by = id della nuova.
+  cambio_inviato_at timestamp with time zone,
+  replaces integer,
+  replaced_by integer,
   CONSTRAINT bookings_pkey PRIMARY KEY (id)
 );
 CREATE INDEX ix_bookings_prof_start ON bookings USING btree (professional_id, start_dt);
@@ -159,6 +175,11 @@ CREATE TABLE IF NOT EXISTS professionals (
   -- Tipo di attività scelto dal professionista (17/8/26): '' = non ancora scelto
   -- (si comporta come domicilio), 'domicilio' | 'consulenza' | 'entrambi'
   tipo text NOT NULL DEFAULT ''::text,
+  -- 7/10/26: presentazione per i colleghi (pagine /consulenza); vuota = si usa bio
+  bio_consulenza text NOT NULL DEFAULT ''::text,
+  -- 7/10/26: "lapide anonima". status='deleted' + dati personali svuotati; la riga resta
+  -- perché le prenotazioni passate (e i conteggi) non spariscano con la cascata.
+  deleted_at timestamp with time zone,
   CONSTRAINT professionals_pkey PRIMARY KEY (id),
   CONSTRAINT professionals_slug_key UNIQUE (slug)
 );
@@ -328,6 +349,42 @@ CREATE TABLE IF NOT EXISTS catalog_services (
 CREATE UNIQUE INDEX ux_catalog_key_globale ON catalog_services (key) WHERE professional_id IS NULL;
 CREATE UNIQUE INDEX ux_catalog_key_prof ON catalog_services (professional_id, key) WHERE professional_id IS NOT NULL;
 
+-- SPECIALIZZAZIONI (7/10/26): lista gestita dagli amministratori (stesso stampo del
+-- listino: professional_id NULL = per tutti, valorizzato = su misura per uno solo);
+-- il professionista ne spunta fino a 5. Sono DICHIARATE da lui (badge "verificata": fase 2).
+CREATE TABLE IF NOT EXISTS catalog_specializations (
+  id SERIAL,
+  key text NOT NULL,
+  nome text NOT NULL,
+  sort smallint NOT NULL DEFAULT 0,
+  active boolean NOT NULL DEFAULT true,
+  professional_id integer,
+  created_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT catalog_specializations_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX ux_spec_key_globale ON catalog_specializations (key) WHERE professional_id IS NULL;
+CREATE UNIQUE INDEX ux_spec_key_prof ON catalog_specializations (professional_id, key) WHERE professional_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS professional_specializations (
+  professional_id integer NOT NULL,
+  key text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT professional_specializations_pkey PRIMARY KEY (professional_id, key)
+);
+
+-- REGISTRO AZIONI ADMIN (7/10/26): chi ha fatto cosa (es. cancellazione di un
+-- professionista), SENZA dati personali: solo id, conteggi e date.
+CREATE TABLE IF NOT EXISTS admin_audit (
+  id SERIAL,
+  at timestamp with time zone NOT NULL DEFAULT now(),
+  admin text NOT NULL DEFAULT ''::text,
+  azione text NOT NULL,
+  soggetto_id integer,
+  dettagli jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT admin_audit_pkey PRIMARY KEY (id)
+);
+
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
@@ -343,3 +400,5 @@ ALTER TABLE reviews ADD CONSTRAINT reviews_professional_id_fkey FOREIGN KEY (pro
 ALTER TABLE services ADD CONSTRAINT services_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE patient_records ADD CONSTRAINT patient_records_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE catalog_services ADD CONSTRAINT catalog_services_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE catalog_specializations ADD CONSTRAINT catalog_specializations_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
+ALTER TABLE professional_specializations ADD CONSTRAINT professional_specializations_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
