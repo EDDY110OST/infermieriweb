@@ -30,3 +30,6 @@ node_modules.nosync
 # Cache locale di Astro (non condividere tra i Mac)
 .astro/
 scripts/tmp/
+
+# Copia locale dei dati di produzione per le prove (scripts/prova-locale/hook.mjs): mai nel repo
+scripts/prova-locale/seed.json
