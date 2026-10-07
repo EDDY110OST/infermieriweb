@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { randomBytes } from "node:crypto";
 import { sql } from "../../../lib/db.js";
+import { nomePubblico as nomePubblico_ } from "../../../lib/appellativo.js";
 import { sessionFromRequest, hashPassword } from "../../../lib/auth.js";
 import { geocodePerMappa, jitterPerId } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
@@ -84,13 +85,9 @@ export async function POST({ request }) {
   const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: provincia })).filter((z) => z.city);
   const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: provincia, zone: zoneCand });
   // password scelta dal candidato in registrazione; ripiego a temporanea solo per i vecchi record senza hash
-  // Nome pubblico: "Dott./Dott.ssa Nome I." — il nome completo resta riservato
-  // (va solo nell'email di conferma al paziente prenotato)
-  const parti = String(cand.name).trim().split(/\s+/);
-  const cognome = parti.length > 1 ? parti[parti.length - 1] : "";
-  const nomi = parti.length > 1 ? parti.slice(0, -1).join(" ") : parti[0];
-  const titolo = cand.gender === "f" ? "Dott.ssa" : "Dott.";
-  const nomePubblico = `${titolo} ${nomi}${cognome ? " " + cognome[0].toUpperCase() + "." : ""}`;
+  // Nome pubblico «Inf. Nome I.» (titolo unico, vedi lib/appellativo.js): il nome
+  // completo resta riservato (va solo nell'email di conferma al paziente prenotato)
+  const nomePubblico = nomePubblico_(cand.name);
 
   const passwordScelta = cand.pass_hash && cand.pass_hash.startsWith("scrypt$");
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;

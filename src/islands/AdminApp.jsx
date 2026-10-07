@@ -381,11 +381,11 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Dati e identità</h3>
         <div style={griglia2}>
-          <div><label>Nome pubblico (es. Dott. Mario R.)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} /></div>
+          <div><label>Nome pubblico (es. Inf. Mario R.)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} /></div>
           <div><label>Nome completo (riservato)</label><input value={prof.full_name || ""} onChange={(e) => setProf({ ...prof, full_name: e.target.value })} /></div>
           <div><label>Sesso (appellativo)</label>
             <select value={prof.gender || ""} onChange={(e) => setProf({ ...prof, gender: e.target.value })}>
-              <option value="">—</option><option value="m">Dott. (uomo)</option><option value="f">Dott.ssa (donna)</option>
+              <option value="">—</option><option value="m">Uomo</option><option value="f">Donna</option>
             </select>
           </div>
           <div><label>Professione</label>

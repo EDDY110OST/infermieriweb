@@ -79,9 +79,9 @@ export async function GET({ url }) {
       WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
     ) sv ON TRUE
     WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')
-    -- in ordine di NOME, non di titolo: ordinando per "Dott. …" tutti i "Dott."
-    -- finivano sopra tutte le "Dott.ssa", cioè gli uomini sempre prima delle donne
-    ORDER BY regexp_replace(p.name, '^Dott\\.(ssa)?\\s+', '', 'i'), p.id`;
+    -- in ordine di NOME, non di titolo (oggi «Inf.» per tutti; la regex copre anche
+    -- i vecchi «Dott./Dott.ssa», che mettevano gli uomini sempre prima delle donne)
+    ORDER BY regexp_replace(p.name, '^(Dott\\.(ssa)?|Inf\\.)\\s+', '', 'i'), p.id`;
 
   segnapostiPerZona(rows);
 

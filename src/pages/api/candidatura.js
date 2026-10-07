@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../lib/db.js";
+import { APPELLATIVO } from "../../lib/appellativo.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { sendEmail } from "../../lib/mailer.js";
 import { hashPassword } from "../../lib/auth.js";
@@ -57,7 +58,7 @@ export async function POST({ request }) {
     return json({ error: "La partita IVA, se indicata, deve avere 11 cifre" }, 400);
   }
   if (password.length < 8) return json({ error: "Scegli una password di almeno 8 caratteri" }, 400);
-  if (!["m", "f"].includes(gender)) return json({ error: "Indica il sesso: serve per l'appellativo (Dott./Dott.ssa) sulla scheda" }, 400);
+  if (!["m", "f"].includes(gender)) return json({ error: "Indica se sei infermiere o infermiera" }, 400);
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
 
   if (!(await consenti(`candidatura:${ipDa(request)}`, 3, 60))) {
@@ -81,7 +82,7 @@ export async function POST({ request }) {
       html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
         <h2 style="color: #0b3954;">Nuova candidatura da verificare 🩺</h2>
         <table style="width: 100%; font-size: 15px;">
-          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${gender === "f" ? "Dott.ssa" : "Dott."} ${esc(name)}</td></tr>
+          <tr><td style="padding: 4px 0; color: #7b909b;">Nome</td><td style="font-weight: bold;">${APPELLATIVO} ${esc(name)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Professione</td><td>${esc(profession)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Attività</td><td>${esc(nomeTipo)}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Zona</td><td>${esc(city)}${province ? " (" + province + ")" : ""}</td></tr>

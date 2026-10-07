@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../lib/db.js";
 import { readSession, createSession } from "../../lib/auth.js";
+import { conTitolo } from "../../lib/appellativo.js";
 import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista } from "../../lib/mailer.js";
 import { pushToProfessional } from "../../lib/push.js";
 
@@ -50,9 +51,8 @@ export async function POST({ request }) {
     address: b.address, city: b.city, start: new Date(b.start_dt).toISOString(),
   };
   // Nella conferma il paziente ha diritto al nome COMPLETO di chi verrà a casa
-  const titoloProf = b.professional_gender === "f" ? "Dott.ssa" : "Dott.";
   const professional = {
-    name: b.professional_full_name ? `${titoloProf} ${b.professional_full_name}` : b.professional_name,
+    name: b.professional_full_name ? conTitolo(b.professional_full_name) : b.professional_name,
     email: b.professional_email,
     slug: b.professional_slug, cancel_hours: b.cancel_hours,
   };

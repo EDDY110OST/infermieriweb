@@ -73,11 +73,11 @@ export default function CandidaturaForm() {
         <label htmlFor="cf-nome">Nome e cognome *</label>
         <input id="cf-nome" required minLength={2} value={dati.name} onChange={(e) => setDati({ ...dati, name: e.target.value })} autoComplete="name" />
 
-        <label htmlFor="cf-sesso">Sesso * <span style={{ fontWeight: 400 }}>(per l'appellativo sulla scheda: Dott. / Dott.ssa)</span></label>
+        <label htmlFor="cf-sesso">Sesso * <span style={{ fontWeight: 400 }}>(sulla scheda compari come «Inf. Nome C.», infermiere o infermiera)</span></label>
         <select id="cf-sesso" required value={dati.gender} onChange={(e) => setDati({ ...dati, gender: e.target.value })}>
           <option value="" disabled>Scegli…</option>
-          <option value="m">Uomo → Dott.</option>
-          <option value="f">Donna → Dott.ssa</option>
+          <option value="m">Uomo</option>
+          <option value="f">Donna</option>
         </select>
 
         <label htmlFor="cf-prof">Professione *</label>
