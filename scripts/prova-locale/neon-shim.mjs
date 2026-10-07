@@ -4,8 +4,9 @@
 // Vedi hook.mjs per l'uso. Niente tocca Neon.
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import http from "node:http";
 
 const qui = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA = process.env.IW_SCHEMA_SQL || path.resolve(qui, "../../db/schema.sql");
@@ -15,6 +16,9 @@ const ORDINE = ["professionals", "professional_users", "catalog_services", "serv
   "opening_hours", "day_overrides", "blocks", "bookings", "reviews"];
 
 let pronto = null;
+// Migrazione di prova: con IW_SHIM_MIGRAZIONE=<script .mjs> lo script gira sullo STESSO
+// Postgres in memoria subito dopo il seed (tutte le neon() condividono il DB).
+let statoMigrazione = process.env.IW_SHIM_MIGRAZIONE ? "da-fare" : "no";
 
 const serializza = (v) => {
   if (v === undefined) return null;
@@ -44,6 +48,12 @@ async function prepara() {
 async function esegui(testo, params) {
   if (!pronto) pronto = prepara();
   const db = await pronto;
+  if (statoMigrazione === "da-fare") {
+    statoMigrazione = "in-corso"; // le query della migrazione stessa passano di qui senza aspettare
+    await import(pathToFileURL(path.resolve(process.env.IW_SHIM_MIGRAZIONE)).href);
+    statoMigrazione = "fatta";
+    if (process.env.IW_SHIM_LOG) console.log("[neon-shim] migrazione di prova eseguita:", process.env.IW_SHIM_MIGRAZIONE);
+  }
   if (process.env.IW_SHIM_LOG === "2") console.log("[sql]", testo.replace(/\s+/g, " ").slice(0, 160), params || "");
   return (await db.query(testo, (params || []).map(serializza))).rows;
 }
@@ -62,3 +72,24 @@ export function neon() {
 
 export const neonConfig = {};
 export default { neon, neonConfig };
+
+// Canale SQL per i COLLAUDI (solo ambiente di prova): con IW_SHIM_SQLPORT=4398 i test
+// possono leggere/scrivere il DB in memoria del server (es. retrodatare una prenotazione
+// per far scattare il giro delle 24 ore). Risponde solo su 127.0.0.1.
+if (process.env.IW_SHIM_SQLPORT) {
+  http.createServer(async (req, res) => {
+    let corpo = "";
+    req.on("data", (c) => { corpo += c; });
+    req.on("end", async () => {
+      try {
+        const { query, params } = JSON.parse(corpo || "{}");
+        const rows = await esegui(String(query), params || []);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ rows }));
+      } catch (e) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+  }).listen(Number(process.env.IW_SHIM_SQLPORT), "127.0.0.1");
+}
