@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { filtraProfessionisti, localitaCercate, comuneFraCercati } from "../lib/ricerca.js";
+import { indiceSuggerimenti } from "../lib/suggerimenti.js";
+import CampoRicerca from "./CampoRicerca.jsx";
 
 const capitalizza = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const prezzo = (cents) => (cents > 0 ? `da ${(cents / 100).toFixed(2).replace(".", ",")} €` : "");
@@ -91,6 +93,7 @@ export default function SearchApp() {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const markersRef = useRef([]);
+  const campoRef = useRef(null);
 
   useEffect(() => {
     fetch("/api/professionisti")
@@ -108,6 +111,18 @@ export default function SearchApp() {
 
   // Le località scritte dal paziente: la mappa mostra i segnaposti solo di quelle.
   const localita = useMemo(() => localitaCercate(tutti, q, opzioni), [q, tutti, opzioni]);
+
+  // Suggerimenti: riusano la lista già caricata. Si propone solo ciò che, scelto,
+  // dà almeno un risultato insieme al resto di quello che si è scritto.
+  const indice = useMemo(() => (tutti.length ? indiceSuggerimenti(tutti) : null), [tutti]);
+  const verifica = useCallback((testo) => filtraProfessionisti(tutti, testo, opzioni).length > 0, [tutti, opzioni]);
+
+  // la ricerca resta nell'indirizzo: tornando indietro da una scheda la si ritrova
+  useEffect(() => {
+    const t = q.trim();
+    const url = t ? `/cerca?q=${encodeURIComponent(t)}` : "/cerca";
+    if (window.location.pathname + window.location.search !== url) window.history.replaceState(null, "", url);
+  }, [q]);
 
   const risultatiOrdinati = useMemo(() => {
     const arr = [...risultati];
@@ -166,13 +181,20 @@ export default function SearchApp() {
   return (
     <div className="pf-search-layout">
       <div>
-        <form className="pf-searchbar" onSubmit={(e) => e.preventDefault()} role="search">
-          <input
-            type="search"
+        <form
+          className="pf-searchbar"
+          role="search"
+          onSubmit={(e) => { e.preventDefault(); campoRef.current?.blur(); }}
+        >
+          <CampoRicerca
+            valore={q}
+            onCambia={setQ}
+            onScegli={() => campoRef.current?.blur() /* la ricerca è già partita: via la tastiera, si vedono i risultati */}
+            indice={indice}
+            verifica={verifica}
+            inputRef={campoRef}
             placeholder="Città o prestazione (es. Lucca, ECG)"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            aria-label="Cerca un professionista per città o prestazione"
+            etichetta="Cerca un professionista per città o prestazione"
           />
         </form>
 

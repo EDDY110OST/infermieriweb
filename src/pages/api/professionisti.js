@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../lib/db.js";
-import { coordinateComune, normalizza, comuniFuoriReteMemo } from "../../data/comuni.js";
+import { coordinateComune, normalizza, comuniFuoriReteMemo, siglaComune } from "../../data/comuni.js";
 import { jitterPerId } from "../../lib/geocode.js";
 import { filtraProfessionisti } from "../../lib/ricerca.js";
 
@@ -39,6 +39,9 @@ export function segnapostiPerZona(righe) {
       pins.push({ city: p.city, lat: Number(p.lat), lng: Number(p.lng) });
     }
     p.pins = pins;
+    // la sigla della provincia di ogni zona, per i suggerimenti di /cerca
+    // («Francavilla al Mare (CH)»)
+    p.sigle = Object.fromEntries((p.zone || []).map((z) => [z.city, siglaComune(z.city, z.province)]));
     delete p.zone;
   }
   return righe;

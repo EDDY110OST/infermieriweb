@@ -9,12 +9,18 @@ import { getArticleImage } from "../utils/articleImageFallback.js";
 import { organizationSchema, faqSchema } from "../data/schema.js";
 import { sql } from "../lib/db.js";
 import { mapArticolo } from "../lib/blog.js";
+import { datiSuggerimenti } from "../lib/suggerimenti-server.js";
 
 const righeArticoli = await sql`
   SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
   FROM articles WHERE status = 'published'
   ORDER BY published_at DESC, id DESC LIMIT 3`;
 const ultimiArticoli = righeArticoli.map(mapArticolo);
+
+// Suggerimenti del campo di ricerca (comuni coperti e prestazioni offerte): pochi KB
+// direttamente nella pagina, così la tendina è pronta al primo tasto.
+let indiceSuggerimenti = null;
+try { indiceSuggerimenti = await datiSuggerimenti(); } catch { /* il campo li chiederà da solo */ }
 
 const categorie = [
   { icona: "croce", nome: "Medicazioni", href: "/servizio/medicazioni" },
@@ -51,7 +57,7 @@ const faqItems = [
         Prezzi chiari, recensioni verificate e solo orari davvero liberi. Prenoti in un minuto,
         senza registrazione e senza carta: <strong>paghi all'infermiere dopo la prestazione.</strong>
       </p>
-      <HomeSearch client:load />
+      <HomeSearch client:load indice={indiceSuggerimenti} />
       <div class="pf-trust">
         <span class="pf-trust-item"><span class="i"><Icona nome="laurea" size={18} /></span> Iscritti all'OPI</span>
         <span class="pf-trust-item"><span class="i"><Icona nome="scudo" size={18} /></span> Assicurati (RC professionale)</span>

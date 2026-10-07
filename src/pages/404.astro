@@ -1,5 +1,6 @@
 ---
 import Platform from "../layouts/Platform.astro";
+import HomeSearch from "../islands/HomeSearch.jsx";
 ---
 
 <Platform
@@ -15,10 +16,7 @@ import Platform from "../layouts/Platform.astro";
       <p style="color: var(--iw-slate); margin-bottom: 28px;">
         Forse è stata spostata o l'indirizzo è sbagliato. Cerca direttamente l'infermiere che ti serve:
       </p>
-      <form class="pf-searchbar" action="/cerca" method="get" role="search" style="margin: 0 auto 24px;">
-        <input type="search" name="q" placeholder="Città o prestazione" aria-label="Cerca per città o prestazione" />
-        <button class="pf-btn" type="submit">Cerca</button>
-      </form>
+      <HomeSearch client:load variante="barra" />
       <p>
         <a class="pf-btn secondario" href="/">Torna alla home</a>
       </p>

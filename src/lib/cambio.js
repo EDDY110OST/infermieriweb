@@ -64,7 +64,7 @@ export async function alternativePer(b) {
         ORDER BY p.name`)
         // stesso confronto della ricerca: "Citta Sant'Angelo" = "Città Sant'Angelo"
         .filter((p) => (p.zone || []).some((z) => stessoComune(z, b.city)))
-        .map(({ zone, ...p }) => p);
+        .map((p) => { delete p.zone; return p; });
   return Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 }
 
