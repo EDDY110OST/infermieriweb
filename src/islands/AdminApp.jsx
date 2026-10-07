@@ -945,7 +945,7 @@ function Servizi() {
       <p className="pf-note">
         Qui vedi cosa ha scelto ciascun professionista dal listino, col suo prezzo. Il <strong>listino</strong> —
         cioè quali prestazioni possono scegliere — lo decidiamo noi dalla sezione «Listino (lo decidiamo noi)».
-        <br /><strong>Togli</strong> la leva dalla sua scheda (prezzi, attiva/disattiva e nuove prestazioni: da Infermieri → Modifica scheda).
+        <br /><strong>Togli</strong> fa sparire la prestazione dalla scheda dell'infermiere (prezzi, attiva/disattiva e nuove prestazioni: da Infermieri → Modifica scheda).
       </p>
       {msg && <div ref={msgRef} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{msg.testo}</div>}
       {Object.entries(perProfessionista).map(([nome, rows]) => (

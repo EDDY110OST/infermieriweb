@@ -142,7 +142,7 @@ export function emailNotificaProfessionista({ booking, service, accettaLink }) {
         <p style="margin: 0 0 6px; font-weight: bold; color: #0b3954; font-size: 16px;">Ci sarai? Dillo al paziente con un tocco.</p>
         <p style="margin: 0 0 12px; font-size: 14px; color: #46626e;">Premi il tasto: il paziente sa che hai visto la prenotazione.
         Se non lo premi entro 24 ore, gli proponiamo di scegliere un altro infermiere.
-        La prenotazione resta tua finché lui non cambia.</p>
+        La prenotazione resta tua finché il paziente non sceglie un altro infermiere.</p>
         <p style="text-align: center; margin: 0;">
           <a href="${accettaLink}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">✓ Confermo che ci sarò</a>
         </p>
@@ -336,14 +336,14 @@ export function emailCambiaInfermiere({ booking, professional, service, link, mo
       ? `Il tuo appuntamento è stato annullato: scegli un altro infermiere — ${service.name}`
       : `${professional.name} non ha ancora confermato: vuoi scegliere un altro infermiere?`,
     html: layout(`
-      <h2 style="color: #0b3954; margin-top: 0;">${annullata ? "Scegli un altro infermiere" : "Il tuo infermiere non ha ancora confermato"}</h2>
+      <h2 style="color: #0b3954; margin-top: 0;">${annullata ? "Scegli un altro infermiere" : `${professional.name} non ha ancora confermato`}</h2>
       <p>Ciao ${booking.name},</p>
       ${annullata
         ? `<p>ci dispiace: <strong>${professional.name}</strong> ha dovuto annullare l'appuntamento di
            <strong style="text-transform: capitalize;">${dataEstesa(booking.start)}</strong> (${service.name}).</p>`
         : `<p><strong>${professional.name}</strong> non ha ancora confermato di venire da te per
            <strong>${service.name}</strong> il <strong style="text-transform: capitalize;">${dataEstesa(booking.start)}</strong>.</p>
-           <p><strong>La tua prenotazione è ancora valida.</strong> Se preferisci andare sul sicuro,
+           <p><strong>La tua prenotazione è ancora valida.</strong> Se preferisci,
            puoi scegliere un altro infermiere${dove} che fa la stessa prestazione.</p>`}
       ${quante > 0
         ? `<p>${quante === 1 ? "C'è un altro infermiere" : `Ci sono ${quante} altri infermieri`}${dove} che ${quante === 1 ? "fa" : "fanno"} <strong>${service.name}</strong>.
