@@ -232,8 +232,20 @@ function ModificaScheda({ pid, nome, onIndietro }) {
 
   // L'editor sostituisce l'elenco, ma la pagina resta scorsa dov'era la card cliccata:
   // si riparte dall'intestazione, così la scheda si vede dall'inizio (anche da telefono).
+  // BUG (collaudo in produzione 7/10): l'effetto scattava su [pid] mentre il componente
+  // rendeva ancora «Caricamento…» (topRef null) e non ripartiva all'arrivo dei dati →
+  // dalla 10ª scheda in poi l'editor restava migliaia di px sopra lo schermo. Ora dipende
+  // dall'arrivo del profilo e ricontrolla a 0,3 e 0,9 s (stesso rimedio dell'editor blog).
   const topRef = useRef(null);
-  useEffect(() => { topRef.current?.scrollIntoView({ block: "start" }); }, [pid]);
+  const profiloCaricato = !!prof;
+  useEffect(() => {
+    if (!profiloCaricato) return;
+    const vai = () => topRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    vai();
+    const fuori = () => { const r = topRef.current?.getBoundingClientRect(); return r && (r.top < 0 || r.top > 160); };
+    const timer = [300, 900].map((ms) => setTimeout(() => { if (fuori()) vai(); }, ms));
+    return () => timer.forEach(clearTimeout);
+  }, [pid, profiloCaricato]);
   // Esito delle azioni (Togli, prezzo…): va portato in vista, altrimenti chi ha scorso
   // in fondo all'elenco delle prestazioni non lo vede e crede che non sia successo nulla.
   const msgRef = useRef(null);
@@ -1724,7 +1736,7 @@ function BlogAdmin() {
   const editorAperto = editor ? String(editor.id || "nuovo") : null; // chiave stabile (l'oggetto cambia a ogni tasto)
   useEffect(() => {
     if (!editorAperto) return;
-    const vai = () => editorRef.current?.scrollIntoView({ block: "start" });
+    const vai = () => editorRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
     // Il primo scorrimento è immediato; poi si ricontrolla un paio di volte perché su
     // telefono il browser "riallinea" lo scroll da solo quando la pagina si accorcia
     // (l'elenco sparisce) e quando arriva l'anteprima della copertina: se l'editor è
