@@ -247,7 +247,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pid, name: prof.name, full_name: prof.full_name, gender: prof.gender, profession: prof.profession,
-          email: prof.email, phone: prof.phone, bio: prof.bio, address: prof.address,
+          email: prof.email, phone: prof.phone, bio: prof.bio, bio_consulenza: prof.bio_consulenza, address: prof.address,
           city: prof.city, sigla: prof._sigla, albo_name: prof.albo_name, albo_number: prof.albo_number,
           albo_date: prof.albo_date, vat_number: prof.vat_number,
         }),
@@ -409,6 +409,8 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         <input value={prof.vat_number || ""} onChange={(e) => setProf({ ...prof, vat_number: e.target.value })} />
         <label>Presentazione (bio)</label>
         <textarea rows={4} value={prof.bio || ""} onChange={(e) => setProf({ ...prof, bio: e.target.value })} />
+        <label>Presentazione per i colleghi (pagine delle consulenze) <span style={{ fontWeight: 400 }}>— vuota = si usa la bio</span></label>
+        <textarea rows={3} value={prof.bio_consulenza || ""} onChange={(e) => setProf({ ...prof, bio_consulenza: e.target.value })} />
         <button className="pf-btn" disabled={salvo} onClick={salvaProfilo}>{salvo ? "Salvo…" : "Salva dati"}</button>
       </div>
 

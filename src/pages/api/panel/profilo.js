@@ -18,7 +18,7 @@ export async function GET({ request }) {
 
   const [profilo] = await sql`
     SELECT slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, vat_number,
-           bio, phone, email, address, city, province, region, photo_url, lat, lng, status,
+           bio, bio_consulenza, phone, email, address, city, province, region, photo_url, lat, lng, status,
            edited_by, edited_at, tipo
     FROM professionals WHERE id = ${pid}`;
   if (!profilo) return json({ error: "Profilo non trovato" }, 404);
@@ -42,12 +42,14 @@ export async function PATCH({ request }) {
   const admin = session?.role === "admin";
 
   const [attuale] = await sql`
-    SELECT name, full_name, gender, profession, email, bio, phone, address, city, province, region,
+    SELECT name, full_name, gender, profession, email, bio, bio_consulenza, phone, address, city, province, region,
            albo_name, albo_number, albo_date, vat_number, status, slug, tipo
     FROM professionals WHERE id = ${pid}`;
   if (!attuale) return json({ error: "Profilo non trovato" }, 404);
 
   const bio = body.bio !== undefined ? String(body.bio).trim().slice(0, 1200) : attuale.bio;
+  // Presentazione per i colleghi (pagine /consulenza): vuota = si usa la bio normale
+  const bio_consulenza = body.bio_consulenza !== undefined ? String(body.bio_consulenza).trim().slice(0, 1200) : attuale.bio_consulenza;
   const phone = body.phone !== undefined ? String(body.phone).trim().slice(0, 40) : attuale.phone;
   const address = body.address !== undefined ? String(body.address).trim().slice(0, 200) : attuale.address;
   // Dati professionali: il professionista li completa/corregge quando vuole
@@ -119,7 +121,7 @@ export async function PATCH({ request }) {
     await sql`
       UPDATE professionals
       SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
-          bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
+          bio = ${bio}, bio_consulenza = ${bio_consulenza}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
           region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
           albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo},
           lat = ${geocoded.lat}, lng = ${geocoded.lng}
@@ -128,7 +130,7 @@ export async function PATCH({ request }) {
     await sql`
       UPDATE professionals
       SET name = ${name}, full_name = ${full_name}, gender = ${gender}, profession = ${profession}, email = ${email},
-          bio = ${bio}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
+          bio = ${bio}, bio_consulenza = ${bio_consulenza}, phone = ${phone}, address = ${address}, city = ${city}, province = ${province},
           region = ${region}, albo_name = ${albo_name}, albo_number = ${albo_number},
           albo_date = ${albo_date}, vat_number = ${vat_number}, tipo = ${tipo}
       WHERE id = ${pid}`;

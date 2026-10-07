@@ -986,7 +986,7 @@ function TabProfilo({ tipo, setTipo }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          bio: profilo.bio, phone: profilo.phone, address: profilo.address,
+          bio: profilo.bio, bio_consulenza: profilo.bio_consulenza, phone: profilo.phone, address: profilo.address,
           city: profilo.city, province: profilo.province, sigla: profilo.sigla,
           albo_name: profilo.albo_name, albo_number: profilo.albo_number,
           albo_date: profilo.albo_date, vat_number: profilo.vat_number,
@@ -1115,6 +1115,13 @@ function TabProfilo({ tipo, setTipo }) {
         <input id="pr-tel" type="tel" value={profilo.phone || ""} onChange={(e) => setProfilo({ ...profilo, phone: e.target.value })} />
         <label htmlFor="pr-bio">Presentazione (compare sulla tua scheda pubblica)</label>
         <textarea id="pr-bio" rows={4} maxLength={1200} value={profilo.bio || ""} onChange={(e) => setProfilo({ ...profilo, bio: e.target.value })} />
+        {offreConsulenza(profilo.tipo || tipo) && (
+          <>
+            <label htmlFor="pr-bio-cons">Presentazione per i colleghi <span style={{ fontWeight: 400 }}>(compare nelle pagine delle consulenze)</span></label>
+            <textarea id="pr-bio-cons" rows={4} maxLength={1200} value={profilo.bio_consulenza || ""} onChange={(e) => setProfilo({ ...profilo, bio_consulenza: e.target.value })} placeholder="Racconta ai colleghi la tua esperienza nella libera professione: da quanto la fai, in cosa puoi aiutarli." />
+            <p className="pf-note" style={{ marginTop: -6 }}>Se la lasci vuota, nelle pagine delle consulenze compare la presentazione normale.</p>
+          </>
+        )}
 
         <h2 style={{ marginTop: 22 }}>🎓 I tuoi dati professionali</h2>
         <p className="pf-note" style={{ marginTop: 0 }}>

@@ -11,6 +11,7 @@ import { nextAvailability } from "../../lib/slots.js";
 // Chi offre consulenze: profili attivi con almeno una consulenza attiva
 const righe = await sql`
   SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, p.bio,
+         COALESCE(NULLIF(p.bio_consulenza, ''), p.bio) AS presentazione,
          MIN(s.price_cents) AS min_price, COUNT(*) AS n_consulenze,
          array_agg(s.name ORDER BY s.sort) AS consulenze
   FROM professionals p
@@ -20,6 +21,7 @@ const righe = await sql`
 const consulenti = await Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 
 const euro = (c) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
+const clip = (t, max = 220) => (String(t).length <= max ? String(t) : `${String(t).slice(0, max - 1).trimEnd()}…`);
 const path = "/consulenza";
 const titolo = "Consulenze per infermieri liberi professionisti: avvio, tariffario, organizzazione | InfermieriWeb";
 const descrizione = "Consulenze a ora, online o per telefono, con infermieri che la libera professione la fanno davvero: avvio, competenze e posizionamento, servizi e tariffario, organizzazione, consulenza personalizzata. Prenotazione online, prezzo del consulente.";
@@ -83,6 +85,7 @@ const schemas = [
               <a class="nome" href={`/p/${p.slug}#consulenze`}>{p.name}</a>
               <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province}) · consulenze online</div>
               <div class="prof">{p.consulenze.join(" · ")}</div>
+              {p.presentazione && <p class="bio">{clip(p.presentazione)}</p>}
               {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
               <div class="prezzo">da {euro(p.min_price)}/ora</div>
             </div>

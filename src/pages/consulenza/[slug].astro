@@ -14,7 +14,8 @@ if (!c) return new Response(null, { status: 404 });
 
 // Chi offre QUESTA consulenza (una card per consulente, col suo prezzo/ora)
 const righe = await sql`
-  SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents
+  SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents,
+         COALESCE(NULLIF(p.bio_consulenza, ''), p.bio) AS presentazione
   FROM professionals p
   JOIN services s ON s.professional_id = p.id AND s.active AND s.catalog_key = ${c.key}
   WHERE p.status = 'active'
@@ -22,6 +23,7 @@ const righe = await sql`
 const consulenti = await Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 const altre = CONSULENZE.filter((x) => x.key !== c.key);
 
+const clip = (t, max = 220) => (String(t).length <= max ? String(t) : `${String(t).slice(0, max - 1).trimEnd()}…`);
 const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 const path = `/consulenza/${c.slug}`;
 const titolo = `${c.titolo}: consulenza a ora per infermieri liberi professionisti | InfermieriWeb`;
@@ -57,6 +59,7 @@ const schemas = [
             <div class="info">
               <a class="nome" href={`/p/${p.slug}#consulenze`}>{p.name}</a>
               <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province}) · online o telefono</div>
+              {p.presentazione && <p class="bio">{clip(p.presentazione)}</p>}
               {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
               <div class="prezzo">{euro(p.price_cents)}/ora</div>
             </div>

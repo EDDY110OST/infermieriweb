@@ -304,6 +304,8 @@
 .pf-pro-card .nome:hover { color: var(--iw-primary-deep); }
 .pf-pro-card .prof { color: var(--iw-primary-deep); font-weight: 600; font-size: 17px; margin: 1px 0 4px; }
 .pf-pro-card .zona { color: var(--iw-slate); font-size: 16px; }
+.pf-pro-card .bio { color: var(--iw-slate); font-size: 15.5px; margin: 4px 0 2px; line-height: 1.45; }
+
 .pf-pro-card .prezzo { color: var(--iw-muted); font-size: 16px; margin-top: 4px; }
 
 .pf-stars { color: var(--iw-star); font-size: 17px; letter-spacing: 1px; }
