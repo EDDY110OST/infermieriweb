@@ -32,7 +32,7 @@ export async function prenotazionePerCambio(bid) {
     SELECT b.id, b.status, b.start_dt, b.city, b.customer_name, b.customer_email, b.professional_id,
            b.service_id, b.accepted_at, b.cambio_inviato_at, b.replaced_by, b.cancelled_by,
            s.name AS service_name, s.catalog_key,
-           p.name AS professional_name, p.slug AS professional_slug, p.email AS professional_email
+           p.name AS professional_name, p.slug AS professional_slug, p.email AS professional_email, p.status AS professional_status
     FROM bookings b
     JOIN services s ON s.id = b.service_id
     JOIN professionals p ON p.id = b.professional_id

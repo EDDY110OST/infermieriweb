@@ -558,8 +558,68 @@ function ModificaScheda({ pid, nome, onIndietro }) {
 
 /* ============================ INFERMIERI ============================ */
 
+// Eliminazione definitiva di un professionista (solo se SOSPESO): doppia conferma,
+// la seconda scrivendo lo slug. Mostra prima cosa succederà (numeri dall'anteprima).
+function EliminaProfessionista({ p, onFatto }) {
+  const [aperto, setAperto] = useState(false);
+  const [anteprima, setAnteprima] = useState(null);
+  const [slug, setSlug] = useState("");
+  const [inCorso, setInCorso] = useState(false);
+  const [errore, setErrore] = useState("");
+
+  const apri = async () => {
+    setAperto(true); setErrore("");
+    const r = await fetch(`/api/admin/professionisti?anteprima=${p.id}`);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return setErrore(d.error || "Errore");
+    setAnteprima(d.anteprima);
+  };
+  const elimina = async () => {
+    setInCorso(true); setErrore("");
+    try {
+      const r = await fetch("/api/admin/professionisti", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, conferma: slug.trim() }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito a eliminare il profilo");
+      onFatto(d);
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInCorso(false);
+    }
+  };
+
+  if (!aperto) return <button className="pf-btn pericolo compatto" onClick={apri}>Elimina definitivamente…</button>;
+  return (
+    <div style={{ width: "100%", marginTop: 10, padding: "14px 16px", border: "2px solid #fca5a5", borderRadius: 12, background: "#fff5f5" }}>
+      <strong style={{ color: "#b91c1c" }}>Eliminazione definitiva di {p.name}</strong>
+      {!anteprima && !errore && <p className="pf-note">Controllo cosa succederà…</p>}
+      {anteprima && (
+        <ul style={{ margin: "8px 0 10px", paddingLeft: 20, color: "var(--iw-slate)", fontSize: 16 }}>
+          <li><strong>{anteprima.future}</strong> prenotazioni future verranno annullate{anteprima.future_con_email ? ` (${anteprima.future_con_email} pazienti avvisati via email, con il link per scegliere un altro infermiere)` : ""}</li>
+          <li><strong>{anteprima.passate}</strong> prenotazioni passate restano, senza i suoi dati: comparirà «Professionista rimosso»</li>
+          <li><strong>{anteprima.recensioni}</strong> recensioni cancellate · <strong>{anteprima.servizi}</strong> prestazioni e <strong>{anteprima.zone}</strong> zone tolte · {anteprima.candidature ? `la candidatura cancellata · ` : ""}accesso, 2FA, foto e contatti cancellati</li>
+          <li>La scheda pubblica sparisce (404). Resta solo una riga di registro senza dati personali.</li>
+        </ul>
+      )}
+      {anteprima && (
+        <div className="pf-book" style={{ maxWidth: 420 }}>
+          <label>Per confermare scrivi lo slug del profilo: <code>{anteprima.slug}</code></label>
+          <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={anteprima.slug} autoComplete="off" />
+        </div>
+      )}
+      {errore && <div className="pf-errore" style={{ marginBottom: 10 }}>{errore}</div>}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button className="pf-btn pericolo compatto" disabled={!anteprima || inCorso || slug.trim() !== anteprima.slug} onClick={elimina}>{inCorso ? "Elimino…" : "Elimina per sempre"}</button>
+        <button className="pf-btn secondario compatto" disabled={inCorso} onClick={() => { setAperto(false); setSlug(""); }}>Annulla</button>
+      </div>
+    </div>
+  );
+}
+
 function Professionisti({ filtroStato }) {
   const [lista, setLista] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const avvisa = (tipo, testo) => { setMsg({ tipo, testo }); setTimeout(() => setMsg(null), 9000); };
   const [modifica, setModifica] = useState(null); // { id, nome }
   const carica = useCallback(() => {
     fetch("/api/admin/professionisti").then((r) => r.json()).then((d) => setLista(d.professionisti || []));
@@ -587,6 +647,7 @@ function Professionisti({ filtroStato }) {
   return (
     <div>
       <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>👨‍⚕️ {filtroStato ? "Stato approvazione" : "Elenco infermieri"} ({visibili.length})</h2>
+      {msg && <div className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{msg.testo}</div>}
       {visibili.length === 0 && <div className="pf-panel"><p style={{ margin: 0 }}>Nessun professionista{filtroStato ? " in questo stato" : ""}.</p></div>}
       {visibili.map((p) => (
         <div className="pf-panel" key={p.id} style={{ marginBottom: 12 }}>
@@ -615,6 +676,12 @@ function Professionisti({ filtroStato }) {
             {p.status !== "suspended"
               ? <button className="pf-btn pericolo compatto" onClick={() => cambiaStato(p, "suspended")}>Sospendi</button>
               : <button className="pf-btn compatto" onClick={() => cambiaStato(p, "active")}>Riattiva</button>}
+            {p.status === "suspended" && (
+              <EliminaProfessionista p={p} onFatto={(d) => {
+                avvisa("ok", `Profilo eliminato ✅ Prenotazioni future annullate: ${d.future_annullate} (email inviate: ${d.email_inviate}) · passate conservate senza dati: ${d.passate_conservate} · recensioni cancellate: ${d.recensioni_cancellate}.`);
+                carica();
+              }} />
+            )}
           </div>
         </div>
       ))}

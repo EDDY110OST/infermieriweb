@@ -30,9 +30,11 @@ const titolo = !b ? "Questo link non funziona più" : b.replaced_by ? "Hai già 
     <h1>{titolo}</h1>
     {b && !b.replaced_by && !passata && (
       <p class="sottotitolo">
-        {b.status === "cancelled"
-          ? `${b.professional_name} ha annullato l'appuntamento di ${quando}.`
-          : `${b.professional_name} non ha ancora confermato l'appuntamento di ${quando}. La tua prenotazione è ancora valida.`}
+        {b.professional_status === "deleted"
+          ? `L'infermiere che avevi scelto non fa più parte della rete: l'appuntamento di ${quando} è annullato.`
+          : b.status === "cancelled"
+            ? `${b.professional_name} ha annullato l'appuntamento di ${quando}.`
+            : `${b.professional_name} non ha ancora confermato l'appuntamento di ${quando}. La tua prenotazione è ancora valida.`}
       </p>
     )}
   </section>
@@ -102,7 +104,7 @@ const titolo = !b ? "Questo link non funziona più" : b.replaced_by ? "Hai già 
                   : `La tua prenotazione con ${b.professional_name} resta valida. Puoi riaprire questo link più tardi: se qualcuno si aggiunge, lo trovi qui.`}
               </p>
               <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a class="pf-btn secondario" href={`/p/${b.professional_slug}`}>Scheda di {b.professional_name}</a>
+                {b.professional_status === "active" && <a class="pf-btn secondario" href={`/p/${b.professional_slug}`}>Scheda di {b.professional_name}</a>}
                 <a class="pf-btn" href="/cerca">Cerca nella tua zona</a>
               </div>
             </div>

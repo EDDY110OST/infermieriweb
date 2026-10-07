@@ -17,7 +17,7 @@ if (email) {
   const righe = await sql`
     SELECT b.id, b.start_dt, b.status, b.cancel_token,
            s.name AS service_name, s.id AS service_id,
-           p.name AS professional_name, p.slug AS professional_slug, p.photo_url
+           p.name AS professional_name, p.slug AS professional_slug, p.photo_url, p.status AS professional_status
     FROM bookings b
     JOIN services s ON s.id = b.service_id
     JOIN professionals p ON p.id = b.professional_id
@@ -94,7 +94,9 @@ const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expi
                     {r.status === "done" && (
                       <a class="pf-btn" href={`/recensione?token=${tokenRecensione(r.id)}`}>★ Lascia una recensione</a>
                     )}
-                    <a class={r.status === "done" ? "pf-btn secondario" : "pf-btn"} href={`/p/${r.professional_slug}?servizio=${r.service_id}`}>Riprenota</a>
+                    {r.professional_status === "active"
+                    ? <a class={r.status === "done" ? "pf-btn secondario" : "pf-btn"} href={`/p/${r.professional_slug}?servizio=${r.service_id}`}>Riprenota</a>
+                    : <a class="pf-btn secondario" href="/cerca">Cerca un infermiere</a>}
                   </div>
                 </div>
               ))}
