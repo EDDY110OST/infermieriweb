@@ -1491,8 +1491,32 @@ function BlogAdmin() {
 
   const avvisa = (tipo, testo) => {
     setMessaggio({ tipo, testo });
-    setTimeout(() => setMessaggio(null), 5000);
+    setTimeout(() => setMessaggio(null), 6000);
   };
+
+  // BUG (7/10/26): l'editor si apre SOPRA l'elenco; cliccando «Modifica» su un articolo in
+  // basso il browser tiene fermo l'elenco (scroll anchoring) e l'editor resta fuori dallo
+  // schermo, 1.300-2.000 px più in alto → sembra che il tasto non faccia nulla. Dal 5° articolo
+  // in poi su computer, dal 3° su telefono. Rimedio: si scorre all'editor appena si apre e,
+  // mentre si modifica, l'elenco sparisce (torna con Annulla o dopo il salvataggio).
+  const editorRef = useRef(null);
+  const msgRef = useRef(null);
+  const editorAperto = editor ? String(editor.id || "nuovo") : null; // chiave stabile (l'oggetto cambia a ogni tasto)
+  useEffect(() => {
+    if (!editorAperto) return;
+    const vai = () => editorRef.current?.scrollIntoView({ block: "start" });
+    // Il primo scorrimento è immediato; poi si ricontrolla un paio di volte perché su
+    // telefono il browser "riallinea" lo scroll da solo quando la pagina si accorcia
+    // (l'elenco sparisce) e quando arriva l'anteprima della copertina: se l'editor è
+    // finito fuori dalla parte alta dello schermo, lo si riporta in cima.
+    vai();
+    const fuori = () => { const r = editorRef.current?.getBoundingClientRect(); return r && (r.top < 0 || r.top > 160); };
+    const timer = [300, 900].map((ms) => setTimeout(() => { if (fuori()) vai(); }, ms));
+    return () => timer.forEach(clearTimeout);
+  }, [editorAperto]);
+  useEffect(() => {
+    if (messaggio) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [messaggio]);
 
   const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "", cover_data: "" });
 
@@ -1521,14 +1545,21 @@ function BlogAdmin() {
   const salva = async (publish) => {
     setSalvo(true);
     const metodo = editor.id ? "PATCH" : "POST";
-    const r = await fetch("/api/admin/blog", {
-      method: metodo,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...editor, publish }),
-    });
-    const d = await r.json();
+    let r, d;
+    try {
+      r = await fetch("/api/admin/blog", {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editor, publish }),
+      });
+      d = await r.json().catch(() => ({}));
+    } catch {
+      // senza questo, un errore di rete lasciava il tasto su "Salvo…" per sempre
+      setSalvo(false);
+      return avvisa("err", "Errore di rete: l'articolo non è stato salvato, riprova tra poco");
+    }
     setSalvo(false);
-    if (!r.ok) return avvisa("err", d.error);
+    if (!r.ok) return avvisa("err", d.error || `Salvataggio non riuscito (errore ${r.status}): riprova`);
     setEditor(null);
     avvisa("ok", publish ? "Articolo pubblicato ✅ È già online." : "Bozza salvata ✅");
     carica();
@@ -1559,11 +1590,12 @@ function BlogAdmin() {
         {!editor && <button className="pf-btn" onClick={nuovo}>+ Nuovo articolo</button>}
       </div>
 
-      {messaggio && <div className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{messaggio.testo}</div>}
+      {messaggio && <div ref={msgRef} className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{messaggio.testo}</div>}
 
       {editor && (
-        <div className="pf-panel pf-book" style={{ marginBottom: 18 }}>
+        <div ref={editorRef} className="pf-panel pf-book adm-editor-top" style={{ marginBottom: 18 }}>
           <h2>{editor.id ? "Modifica articolo" : "Nuovo articolo"}</h2>
+          {editor.id && <p className="pf-note" style={{ marginTop: -6 }}>Stai modificando «{editor.title}». L'elenco degli articoli torna con <strong>Annulla</strong> o dopo il salvataggio.</p>}
           <label>Titolo *</label>
           <input value={editor.title} onChange={(e) => setEditor({ ...editor, title: e.target.value })} placeholder="es. Come prepararsi a un prelievo a domicilio" />
           <label>Categoria</label>
@@ -1602,7 +1634,7 @@ function BlogAdmin() {
       )}
 
       {!articoli && <Caricamento />}
-      {articoli && articoli.map((art) => (
+      {articoli && !editor && articoli.map((art) => (
         <div className="pf-panel" key={art.id} style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <strong style={{ color: "var(--iw-navy)" }}>{art.title}</strong>
