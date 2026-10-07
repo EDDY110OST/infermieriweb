@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import { sql } from "../../lib/db.js";
-import { coordinateComune, normalizza } from "../../data/comuni.js";
+import { coordinateComune, normalizza, comuniFuoriReteMemo } from "../../data/comuni.js";
 import { jitterPerId } from "../../lib/geocode.js";
 import { filtraProfessionisti } from "../../lib/ricerca.js";
 
@@ -44,7 +44,8 @@ export function segnapostiPerZona(righe) {
   return righe;
 }
 
-// GET /api/professionisti?q=lucca — elenco professionisti attivi per ricerca/mappa.
+// GET /api/professionisti?q=lucca — elenco professionisti attivi per ricerca/mappa,
+// più i comuni fuori rete che servono alla ricerca nel browser.
 // Conta SOLO chi offre prestazioni a domicilio: chi fa solo consulenze per
 // colleghi (chiavi "consulenza-*") non è un infermiere da prenotare a casa,
 // e si trova da /consulenza.
@@ -85,5 +86,9 @@ export async function GET({ url }) {
 
   segnapostiPerZona(rows);
 
-  return json({ professionisti: filtraProfessionisti(rows, q) });
+  // i comuni veri NON coperti che si potrebbero confondere con la rete: la
+  // ricerca nel browser li usa per non pescare San Giovanni Teatino quando si
+  // scrive "San Giovanni Rotondo" (vedi lib/ricerca.js)
+  const fuori = comuniFuoriReteMemo(rows);
+  return json({ professionisti: filtraProfessionisti(rows, q, { comuniFuoriRete: fuori }), comuniFuoriRete: fuori });
 }

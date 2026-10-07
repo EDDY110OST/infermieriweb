@@ -8,6 +8,7 @@ import { sql } from "./db.js";
 import { createSession, readSession } from "./auth.js";
 import { nextAvailability } from "./slots.js";
 import { sendEmail, emailCambiaInfermiere } from "./mailer.js";
+import { stessoComune } from "./ricerca.js";
 
 export const SITE = "https://infermieriweb.it";
 
@@ -42,7 +43,8 @@ export async function prenotazionePerCambio(bid) {
 
 // Chi può prendere il posto: attivo, con la STESSA prestazione attiva e, per le
 // prestazioni a domicilio, il comune della prenotazione fra le zone coperte (confronto
-// sul nome intero). Le consulenze sono online: basta la stessa consulenza.
+// sul nome intero, con stessoComune di lib/ricerca.js: accenti, apostrofi e parole
+// di collegamento non contano). Le consulenze sono online: basta la stessa consulenza.
 export async function alternativePer(b) {
   const consulenza = String(b.catalog_key || "").startsWith("consulenza-");
   const righe = consulenza
@@ -52,14 +54,17 @@ export async function alternativePer(b) {
         JOIN services s ON s.professional_id = p.id AND s.active AND s.deleted_at IS NULL AND s.catalog_key = ${b.catalog_key}
         WHERE p.status = 'active' AND p.id <> ${b.professional_id}
         ORDER BY p.name`
-    : await sql`
-        SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents, s.duration_min
+    : (await sql`
+        SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents, s.duration_min,
+               ARRAY(SELECT c.city FROM coverage_areas c WHERE c.professional_id = p.id) AS zone
         FROM professionals p
         JOIN services s ON s.professional_id = p.id AND s.active AND s.deleted_at IS NULL AND s.catalog_key = ${b.catalog_key}
         WHERE p.status = 'active' AND p.id <> ${b.professional_id}
           AND ${b.city || ""} <> ''
-          AND EXISTS (SELECT 1 FROM coverage_areas c WHERE c.professional_id = p.id AND lower(c.city) = lower(${b.city || ""}))
-        ORDER BY p.name`;
+        ORDER BY p.name`)
+        // stesso confronto della ricerca: "Citta Sant'Angelo" = "Città Sant'Angelo"
+        .filter((p) => (p.zone || []).some((z) => stessoComune(z, b.city)))
+        .map(({ zone, ...p }) => p);
   return Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 }
 

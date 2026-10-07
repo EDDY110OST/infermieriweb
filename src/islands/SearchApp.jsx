@@ -85,6 +85,7 @@ export default function SearchApp() {
     typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("q") || "" : ""
   );
   const [tutti, setTutti] = useState([]);
+  const [opzioni, setOpzioni] = useState({});
   const [ordina, setOrdina] = useState("consigliati");
   const [caricamento, setCaricamento] = useState(true);
   const mapRef = useRef(null);
@@ -94,16 +95,19 @@ export default function SearchApp() {
   useEffect(() => {
     fetch("/api/professionisti")
       .then((r) => r.json())
-      .then((d) => setTutti(d.professionisti || []))
+      .then((d) => {
+        setTutti(d.professionisti || []);
+        setOpzioni({ comuniFuoriRete: d.comuniFuoriRete || [] });
+      })
       .finally(() => setCaricamento(false));
   }, []);
 
   // La regola sta tutta in lib/ricerca.js: chi scrive una località vede solo
   // chi quella località la copre davvero.
-  const risultati = useMemo(() => filtraProfessionisti(tutti, q), [q, tutti]);
+  const risultati = useMemo(() => filtraProfessionisti(tutti, q, opzioni), [q, tutti, opzioni]);
 
   // Le località scritte dal paziente: la mappa mostra i segnaposti solo di quelle.
-  const localita = useMemo(() => localitaCercate(tutti, q), [q, tutti]);
+  const localita = useMemo(() => localitaCercate(tutti, q, opzioni), [q, tutti, opzioni]);
 
   const risultatiOrdinati = useMemo(() => {
     const arr = [...risultati];

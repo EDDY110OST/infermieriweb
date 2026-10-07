@@ -1,0 +1,1249 @@
+{
+ "letti_il": "2026-10-07T19:41:32.295Z",
+ "professionisti": [
+  {
+   "id": 1,
+   "slug": "eduard",
+   "name": "Inf. Eduard G.D.",
+   "profession": "Infermiere",
+   "city": "Lucca",
+   "province": "Lucca",
+   "region": "Toscana",
+   "zone": [
+    {
+     "city": "Altopascio",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Borgo a Mozzano",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Capannori",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Lucca",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Montecarlo",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Pescia",
+     "province": "Pistoia",
+     "region": "Toscana"
+    },
+    {
+     "city": "Porcari",
+     "province": "Lucca",
+     "region": "Toscana"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Sondino naso-gastrico",
+     "catalog_key": "sondino-ng"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Educazione terapeutica",
+     "catalog_key": "educazione-terapeutica"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    },
+    {
+     "name": "Assistenza personalizzata all'ora",
+     "catalog_key": "assistenza-oraria"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "slug": "andrea-belluomini",
+   "name": "Inf. Andrea B.",
+   "profession": "Infermiere",
+   "city": "Capannori",
+   "province": "Lucca",
+   "region": "Toscana",
+   "zone": [
+    {
+     "city": "Capannori",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Porcari",
+     "province": "Lucca",
+     "region": "Toscana"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "slug": "federica-bocci",
+   "name": "Inf. Federica B.",
+   "profession": "Infermiera",
+   "city": "Capannori",
+   "province": "Lucca",
+   "region": "Toscana",
+   "zone": [
+    {
+     "city": "Altopascio",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Capannori",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Montecarlo",
+     "province": "Lucca",
+     "region": "Toscana"
+    },
+    {
+     "city": "Pescia",
+     "province": "Pistoia",
+     "region": "Toscana"
+    },
+    {
+     "city": "Porcari",
+     "province": "Lucca",
+     "region": "Toscana"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Pianificazione sanitaria",
+     "catalog_key": "pianificazione-sanitaria"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "slug": "emilio-spinelli",
+   "name": "Inf. Emilio S.",
+   "profession": "Infermiere",
+   "city": "Cremona",
+   "province": "Cremona",
+   "region": "Lombardia",
+   "zone": [
+    {
+     "city": "Brescia",
+     "province": "Brescia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Casalmaggiore",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Cremona",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Mazzano",
+     "province": "Brescia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Piacenza",
+     "province": "Piacenza",
+     "region": "Emilia-Romagna"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "slug": "salvatore-gurrieri",
+   "name": "Inf. Salvatore G.",
+   "profession": "Infermiere",
+   "city": "Cremona",
+   "province": "Cremona",
+   "region": "Lombardia",
+   "zone": [
+    {
+     "city": "Bonemerse",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Brescia",
+     "province": "Brescia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Cremona",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Gadesco-Pieve Delmona",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Monticelli d'Ongina",
+     "province": "Piacenza",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Olmeneta",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Piacenza",
+     "province": "Piacenza",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Pozzaglio ed Uniti",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Sospiro",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Stagno Lombardo",
+     "province": "Cremona",
+     "region": "Lombardia"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    },
+    {
+     "name": "Sondino naso-gastrico",
+     "catalog_key": "sondino-ng"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "slug": "aziza-oualli",
+   "name": "Inf. Aziza O.",
+   "profession": "Infermiera",
+   "city": "Cremona",
+   "province": "Cremona",
+   "region": "Lombardia",
+   "zone": [
+    {
+     "city": "Brescia",
+     "province": "Brescia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Crema",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Cremona",
+     "province": "Cremona",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Lodi",
+     "province": "Lodi",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Milano",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Piacenza",
+     "province": "Piacenza",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Soresina",
+     "province": "Cremona",
+     "region": "Lombardia"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Sondino naso-gastrico",
+     "catalog_key": "sondino-ng"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Sostituzione catetere",
+     "catalog_key": "sostituzione-catetere"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    },
+    {
+     "name": "Assistenza personalizzata all'ora",
+     "catalog_key": "assistenza-oraria"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "slug": "luca-tosi",
+   "name": "Inf. Luca T.",
+   "profession": "Infermiere",
+   "city": "Verucchio",
+   "province": "Rimini",
+   "region": "Emilia-Romagna",
+   "zone": [
+    {
+     "city": "Gambettola",
+     "province": "Forlì-Cesena",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Novafeltria",
+     "province": "Rimini",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Poggio Torriana",
+     "province": "Rimini",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Riccione",
+     "province": "Rimini",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Rimini",
+     "province": "Rimini",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Santarcangelo di Romagna",
+     "province": "Rimini",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Savignano sul Rubicone",
+     "province": "Forlì-Cesena",
+     "region": "Emilia-Romagna"
+    },
+    {
+     "city": "Verucchio",
+     "province": "Rimini",
+     "region": "Emilia-Romagna"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Assistenza personalizzata all'ora",
+     "catalog_key": "assistenza-oraria"
+    },
+    {
+     "name": "Pianificazione sanitaria",
+     "catalog_key": "pianificazione-sanitaria"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    },
+    {
+     "name": "ECG",
+     "catalog_key": "ecg"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Educazione terapeutica",
+     "catalog_key": "educazione-terapeutica"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    },
+    {
+     "name": "Holter cardiaco",
+     "catalog_key": "holter-cardiaco"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Sostituzione catetere",
+     "catalog_key": "sostituzione-catetere"
+    },
+    {
+     "name": "Holter pressorio",
+     "catalog_key": "holter-pressorio"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Sondino naso-gastrico",
+     "catalog_key": "sondino-ng"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "slug": "laura-gilli",
+   "name": "Inf. Laura G.",
+   "profession": "Infermiera",
+   "city": "Milano",
+   "province": "Milano",
+   "region": "Lombardia",
+   "zone": [
+    {
+     "city": "Milano",
+     "province": "Milano",
+     "region": "Lombardia"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    },
+    {
+     "name": "Educazione terapeutica",
+     "catalog_key": "educazione-terapeutica"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Assistenza personalizzata all'ora",
+     "catalog_key": "assistenza-oraria"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "slug": "yvan-timothy-neroni",
+   "name": "Inf. Yvan Timothy N.",
+   "profession": "Infermiere",
+   "city": "Roma",
+   "province": "Roma",
+   "region": "Lazio",
+   "zone": [
+    {
+     "city": "Roma",
+     "province": "Roma",
+     "region": "Lazio"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Sostituzione catetere",
+     "catalog_key": "sostituzione-catetere"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "ECG",
+     "catalog_key": "ecg"
+    },
+    {
+     "name": "Holter pressorio",
+     "catalog_key": "holter-pressorio"
+    },
+    {
+     "name": "Holter cardiaco",
+     "catalog_key": "holter-cardiaco"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Educazione terapeutica",
+     "catalog_key": "educazione-terapeutica"
+    },
+    {
+     "name": "Pianificazione sanitaria",
+     "catalog_key": "pianificazione-sanitaria"
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "slug": "ersil-uldedaj",
+   "name": "Inf. Ersil U.",
+   "profession": "Infermiere",
+   "city": "Milano",
+   "province": "Milano",
+   "region": "Lombardia",
+   "zone": [
+    {
+     "city": "Assago",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Bereguardo",
+     "province": "Pavia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Binasco",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Bubbiano",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Buccinasco",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Casorate Primo",
+     "province": "Pavia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Lacchiarella",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Locate di Triulzi",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Milano",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Motta Visconti",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Opera",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Pieve Emanuele",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Rosate",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Trezzano sul Naviglio",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Trivolzio",
+     "province": "Pavia",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Vermezzo con Zelo",
+     "province": "Milano",
+     "region": "Lombardia"
+    },
+    {
+     "city": "Zibido San Giacomo",
+     "province": "Milano",
+     "region": "Lombardia"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Sondino naso-gastrico",
+     "catalog_key": "sondino-ng"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Assistenza personalizzata all'ora",
+     "catalog_key": "assistenza-oraria"
+    },
+    {
+     "name": "Sostituzione catetere",
+     "catalog_key": "sostituzione-catetere"
+    },
+    {
+     "name": "Educazione terapeutica",
+     "catalog_key": "educazione-terapeutica"
+    },
+    {
+     "name": "Pianificazione sanitaria",
+     "catalog_key": "pianificazione-sanitaria"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "slug": "irene-iommarini-2",
+   "name": "Inf. Irene I.",
+   "profession": "Infermiera",
+   "city": "Città Sant'Angelo",
+   "province": "Pescara",
+   "region": "Abruzzo",
+   "zone": [
+    {
+     "city": "Città Sant'Angelo",
+     "province": "Pescara",
+     "region": "Abruzzo"
+    },
+    {
+     "city": "Francavilla al Mare",
+     "province": "Chieti",
+     "region": "Abruzzo"
+    },
+    {
+     "city": "Montesilvano",
+     "province": "Pescara",
+     "region": "Abruzzo"
+    },
+    {
+     "city": "Pescara",
+     "province": "Pescara",
+     "region": "Abruzzo"
+    },
+    {
+     "city": "San Giovanni Teatino",
+     "province": "Chieti",
+     "region": "Abruzzo"
+    },
+    {
+     "city": "Silvi",
+     "province": "Teramo",
+     "region": "Abruzzo"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Assistenza personalizzata all'ora",
+     "catalog_key": "assistenza-oraria"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Pianificazione sanitaria",
+     "catalog_key": "pianificazione-sanitaria"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    },
+    {
+     "name": "Educazione terapeutica",
+     "catalog_key": "educazione-terapeutica"
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "slug": "marouane-ayari",
+   "name": "Inf. Marouane A.",
+   "profession": "Infermiere",
+   "city": "Modena",
+   "province": "Modena",
+   "region": "Emilia-Romagna",
+   "zone": [
+    {
+     "city": "Modena",
+     "province": "Modena",
+     "region": "Emilia-Romagna"
+    }
+   ],
+   "servizi": [
+    {
+     "name": "Iniezione IM",
+     "catalog_key": "iniezione-im"
+    },
+    {
+     "name": "Iniezione SC",
+     "catalog_key": "iniezione-sc"
+    },
+    {
+     "name": "Prelievo",
+     "catalog_key": "prelievo"
+    },
+    {
+     "name": "Flebo",
+     "catalog_key": "flebo"
+    },
+    {
+     "name": "Somministrazione terapia orale",
+     "catalog_key": "terapia-orale"
+    },
+    {
+     "name": "Medicazione semplice",
+     "catalog_key": "medicazione-semplice"
+    },
+    {
+     "name": "Medicazione complessa",
+     "catalog_key": "medicazione-complessa"
+    },
+    {
+     "name": "Sondino naso-gastrico",
+     "catalog_key": "sondino-ng"
+    },
+    {
+     "name": "Sostituzione catetere",
+     "catalog_key": "sostituzione-catetere"
+    },
+    {
+     "name": "Posizionamento catetere",
+     "catalog_key": "posizionamento-catetere"
+    },
+    {
+     "name": "Rimozione punti",
+     "catalog_key": "rimozione-punti"
+    },
+    {
+     "name": "Clistere",
+     "catalog_key": "clistere"
+    },
+    {
+     "name": "Gestione stomia",
+     "catalog_key": "gestione-stomia"
+    },
+    {
+     "name": "Parametri vitali",
+     "catalog_key": "parametri-vitali"
+    },
+    {
+     "name": "Medicazione CVC",
+     "catalog_key": "medicazione-cvc"
+    },
+    {
+     "name": "Lavaggio auricolare",
+     "catalog_key": "lavaggio-auricolare"
+    },
+    {
+     "name": "Gestione PEG",
+     "catalog_key": "gestione-peg"
+    }
+   ]
+  }
+ ],
+ "listino": [
+  {
+   "key": "iniezione-im",
+   "nome": "Iniezione IM"
+  },
+  {
+   "key": "iniezione-sc",
+   "nome": "Iniezione SC"
+  },
+  {
+   "key": "flebo",
+   "nome": "Flebo"
+  },
+  {
+   "key": "prelievo",
+   "nome": "Prelievo"
+  },
+  {
+   "key": "terapia-orale",
+   "nome": "Somministrazione terapia orale"
+  },
+  {
+   "key": "medicazione-semplice",
+   "nome": "Medicazione semplice"
+  },
+  {
+   "key": "medicazione-complessa",
+   "nome": "Medicazione complessa"
+  },
+  {
+   "key": "sondino-ng",
+   "nome": "Sondino naso-gastrico"
+  },
+  {
+   "key": "rimozione-punti",
+   "nome": "Rimozione punti"
+  },
+  {
+   "key": "posizionamento-catetere",
+   "nome": "Posizionamento catetere"
+  },
+  {
+   "key": "sostituzione-catetere",
+   "nome": "Sostituzione catetere"
+  },
+  {
+   "key": "gestione-stomia",
+   "nome": "Gestione stomia"
+  },
+  {
+   "key": "clistere",
+   "nome": "Clistere"
+  },
+  {
+   "key": "ecg",
+   "nome": "ECG"
+  },
+  {
+   "key": "holter-pressorio",
+   "nome": "Holter pressorio"
+  },
+  {
+   "key": "holter-cardiaco",
+   "nome": "Holter cardiaco"
+  },
+  {
+   "key": "parametri-vitali",
+   "nome": "Parametri vitali"
+  },
+  {
+   "key": "gestione-peg",
+   "nome": "Gestione PEG"
+  },
+  {
+   "key": "educazione-terapeutica",
+   "nome": "Educazione terapeutica"
+  },
+  {
+   "key": "medicazione-cvc",
+   "nome": "Medicazione CVC"
+  },
+  {
+   "key": "pianificazione-sanitaria",
+   "nome": "Pianificazione sanitaria"
+  },
+  {
+   "key": "assistenza-oraria",
+   "nome": "Assistenza personalizzata all'ora"
+  },
+  {
+   "key": "lavaggio-auricolare",
+   "nome": "Lavaggio auricolare"
+  }
+ ]
+}

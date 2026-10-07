@@ -4,6 +4,7 @@
 // Le coordinate le genera scripts/coordinate-comuni.mjs e servono a mettere sulla
 // mappa un segnaposto per ogni zona coperta da un professionista.
 import GREZZO from "./comuni.json";
+import { formeComune, comuniFuoriRete } from "../lib/ricerca.js";
 
 export const COMUNI = GREZZO.map(([nome, sigla, provincia, regione, popolazione, lat, lng]) => ({
   nome,
@@ -85,4 +86,31 @@ export function cercaComuni(query, limite = 8) {
   }
   const ordina = (a, b) => b.popolazione - a.popolazione;
   return [...iniziano.sort(ordina), ...contengono.sort(ordina)].slice(0, limite);
+}
+
+// Le forme confrontabili di tutti i comuni italiani (vedi formeComune in lib/ricerca.js).
+// Servono alla ricerca per riconoscere i comuni veri NON coperti dalla rete:
+// "san giovanni rotondo" non deve pescare chi copre San Giovanni Teatino.
+export const FORME_COMUNI = [...new Set(COMUNI.flatMap((c) => formeComune(c.nome)))];
+
+// Calcolo un po' pesante (tutti i 7.904 comuni): si rifà solo se la rete cambia.
+let memo = { firma: "", valore: [] };
+export function comuniFuoriReteMemo(lista) {
+  const firma = JSON.stringify(lista.map((p) => [p.id, p.name, p.slug, p.profession, p.province, p.region, p.coverage, p.servizi]));
+  if (memo.firma !== firma) memo = { firma, valore: comuniFuoriRete(lista, FORME_COMUNI) };
+  return memo.valore;
+}
+
+// La sigla della provincia di un comune ("Francavilla al Mare", "Chieti" → "CH").
+// `provincia` accetta il nome o la sigla; senza, vince il comune più popoloso.
+const SIGLE = new Map();
+for (const c of [...COMUNI].sort((a, b) => b.popolazione - a.popolazione)) {
+  const k = normalizza(c.nome);
+  for (const kp of [`${k}|${normalizza(c.provincia)}`, `${k}|${normalizza(c.sigla)}`, k]) {
+    if (!SIGLE.has(kp)) SIGLE.set(kp, c.sigla);
+  }
+}
+export function siglaComune(nome, provincia) {
+  const k = normalizza(nome);
+  return (provincia && SIGLE.get(`${k}|${normalizza(provincia)}`)) || SIGLE.get(k) || "";
 }

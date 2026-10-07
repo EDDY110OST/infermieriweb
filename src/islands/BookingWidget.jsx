@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { stessoComune } from "../lib/ricerca.js";
 
 const GIORNI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 const MESI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
@@ -270,7 +271,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
                   {zone.map((z) => <option key={z} value={z} />)}
                 </datalist>
               )}
-              {dati.city.trim().length >= 3 && zone.length > 0 && !zone.some((z) => z.toLowerCase() === dati.city.trim().toLowerCase()) && (
+              {dati.city.trim().length >= 3 && zone.length > 0 && !zone.some((z) => stessoComune(z, dati.city)) && (
                 <p className="pf-note" style={{ marginTop: -6, color: "#b45309" }}>
                   ⚠︎ {dati.city.trim()} non risulta tra le zone coperte da questo professionista:
                   se sei in una frazione vicina va bene, altrimenti <a href="/cerca">cerca chi copre la tua città</a>.
