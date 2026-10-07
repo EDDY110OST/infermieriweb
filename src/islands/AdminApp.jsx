@@ -18,6 +18,7 @@ const MENU = [
   {
     icona: "👨‍⚕️", titolo: "Infermieri", voci: [
       { k: "inf-elenco", label: "Elenco infermieri" },
+      { k: "inf-prenotazioni", label: "Prenotazioni per infermiere" },
       { k: "inf-nuovo", label: "Nuovo infermiere" },
       { k: "inf-verifica", label: "Verifica documenti", badge: "candidature" },
       { k: "inf-stato", label: "Stato approvazione" },
@@ -552,7 +553,7 @@ function Professionisti({ filtroStato }) {
             {!p.lat && !p.zone?.length && <> · ⚠️ senza segnaposto mappa</>}
           </div>
           <div className="pf-note" style={{ margin: "0 0 10px" }}>
-            💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} prenotazioni ({p.prenotazioni_30gg} negli ultimi 30gg)
+            💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} richieste · ✅ {p.completate} completate · ❌ {p.annullate} annullate <span style={{ color: "var(--iw-muted)" }}>({p.prenotazioni_30gg} richieste negli ultimi 30 gg)</span>
             {Number(p.recensioni) > 0 && <> · ⭐ {String(p.rating).replace(".", ",")} ({p.recensioni})</>}
             {p.zone?.length > 0 && <> · 📍 {p.zone.join(", ")}</>}
           </div>
@@ -1657,6 +1658,105 @@ function BlogAdmin() {
   );
 }
 
+/* ============================ PRENOTAZIONI PER INFERMIERE (contatori) ============================ */
+
+const PERIODI = [
+  { k: "30", label: "Ultimi 30 giorni", giorni: 30 },
+  { k: "90", label: "Ultimi 90 giorni", giorni: 90 },
+  { k: "365", label: "Ultimo anno", giorni: 365 },
+  { k: "tutto", label: "Da sempre", giorni: 0 },
+];
+const isoGiorniFa = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+
+function PrenotazioniPerInfermiere() {
+  const [periodo, setPeriodo] = useState("90");
+  const [da, setDa] = useState(isoGiorniFa(90));
+  const [a, setA] = useState(new Date().toISOString().slice(0, 10));
+  const [su, setSu] = useState("created");
+  const [righe, setRighe] = useState(null);
+
+  const scegliPeriodo = (k) => {
+    setPeriodo(k);
+    const p = PERIODI.find((x) => x.k === k);
+    if (p && p.giorni) { setDa(isoGiorniFa(p.giorni)); setA(new Date().toISOString().slice(0, 10)); }
+    if (p && !p.giorni) { setDa(""); setA(""); }
+  };
+
+  useEffect(() => {
+    const q = new URLSearchParams({ su });
+    if (da) q.set("da", da);
+    if (a) q.set("a", a);
+    fetch(`/api/admin/prenotazioni-per-infermiere?${q}`).then((r) => r.json()).then((d) => setRighe(d.righe || []));
+  }, [da, a, su]);
+
+  const COLONNE = [
+    { label: "Infermiere", get: (r) => r.name },
+    { label: "Comune", get: (r) => r.city },
+    { label: "Stato", get: (r) => r.status },
+    { label: "Richieste", get: (r) => r.richieste },
+    { label: "Mai convalidate", get: (r) => r.mai_convalidate },
+    { label: "Confermate (future)", get: (r) => r.confermate },
+    { label: "Accettate dall'infermiere", get: (r) => r.accettate },
+    { label: "Completate", get: (r) => r.completate },
+    { label: "Non presentati", get: (r) => r.no_show },
+    { label: "Annullate dal paziente", get: (r) => r.annullate_paziente },
+    { label: "Annullate dall'infermiere", get: (r) => r.annullate_professionista },
+    { label: "Annullate (altro/non noto)", get: (r) => r.annullate_altro },
+    { label: "Ultima richiesta", get: (r) => (r.ultima_richiesta ? new Date(r.ultima_richiesta).toLocaleDateString("it-IT") : "") },
+  ];
+  const somma = (campo) => (righe || []).reduce((t, r) => t + Number(r[campo] || 0), 0);
+  const nomeFile = `prenotazioni-per-infermiere_${da || "inizio"}_${a || "oggi"}_${su === "start" ? "appuntamento" : "richiesta"}.csv`;
+
+  return (
+    <div>
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>📅 Prenotazioni per infermiere</h2>
+      <p className="pf-note">
+        Quante richieste porta la piattaforma a ciascuno e come finiscono. <strong>Richieste</strong> = tutte le
+        prenotazioni create, anche quelle mai convalidate dal paziente. «Da chi» è annullata lo sappiamo dal 7/10/2026:
+        prima compare in <em>altro/non noto</em>.
+      </p>
+      <div className="pf-panel" style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {PERIODI.map((p) => (
+          <button key={p.k} className={`pf-btn compatto${periodo === p.k ? "" : " secondario"}`} onClick={() => scegliPeriodo(p.k)}>{p.label}</button>
+        ))}
+        <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>dal
+          <input type="date" style={{ marginBottom: 0, width: "auto" }} value={da} onChange={(e) => { setPeriodo("custom"); setDa(e.target.value); }} />
+        </label>
+        <label className="pf-book" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>al
+          <input type="date" style={{ marginBottom: 0, width: "auto" }} value={a} onChange={(e) => { setPeriodo("custom"); setA(e.target.value); }} />
+        </label>
+        <select className="pf-book" style={{ marginBottom: 0, width: "auto" }} value={su} onChange={(e) => setSu(e.target.value)} aria-label="Conta sulla data di">
+          <option value="created">conta sulla data di richiesta</option>
+          <option value="start">conta sulla data dell'appuntamento</option>
+        </select>
+        {righe && righe.length > 0 && <button className="pf-btn secondario compatto" onClick={() => scaricaCsv(righe, COLONNE, nomeFile)}>⬇️ Scarica CSV</button>}
+      </div>
+      {!righe ? <Caricamento /> : (
+        <div className="pf-panel adm-tabella-wrap">
+          <table className="adm-tabella">
+            <thead><tr>{COLONNE.filter((c) => !["Comune", "Stato"].includes(c.label)).map((c) => <th key={c.label}>{c.label}</th>)}</tr></thead>
+            <tbody>
+              {righe.map((r) => (
+                <tr key={r.id} style={{ opacity: r.status === "active" ? 1 : 0.6 }}>
+                  <td><strong>{r.name}</strong><div className="pf-note" style={{ margin: 0, fontSize: 13 }}>{r.city}{r.status !== "active" ? ` · ${r.status}` : ""}</div></td>
+                  <td>{r.richieste}</td><td>{r.mai_convalidate}</td><td>{r.confermate}</td><td>{r.accettate}</td>
+                  <td>{r.completate}</td><td>{r.no_show}</td><td>{r.annullate_paziente}</td><td>{r.annullate_professionista}</td><td>{r.annullate_altro}</td>
+                  <td>{r.ultima_richiesta ? new Date(r.ultima_richiesta).toLocaleDateString("it-IT") : "—"}</td>
+                </tr>
+              ))}
+              <tr className="totale">
+                <td>Totale ({righe.length} infermieri)</td>
+                <td>{somma("richieste")}</td><td>{somma("mai_convalidate")}</td><td>{somma("confermate")}</td><td>{somma("accettate")}</td>
+                <td>{somma("completate")}</td><td>{somma("no_show")}</td><td>{somma("annullate_paziente")}</td><td>{somma("annullate_professionista")}</td><td>{somma("annullate_altro")}</td><td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ============================ APP PRINCIPALE ============================ */
 
 export default function AdminApp() {
@@ -1738,6 +1838,7 @@ export default function AdminApp() {
   const VISTE = {
     dashboard: <Dashboard vai={vai} />,
     "inf-elenco": <Professionisti />,
+    "inf-prenotazioni": <PrenotazioniPerInfermiere />,
     "inf-nuovo": (
       <div className="pf-panel">
         <h2 style={{ marginTop: 0 }}>➕ Nuovo infermiere</h2>

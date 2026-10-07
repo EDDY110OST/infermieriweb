@@ -21,16 +21,23 @@ export async function GET({ request }) {
            p.photo_url, p.lat, p.lng, p.created_at,
            COALESCE(s.n, 0) AS servizi,
            COALESCE(b.n, 0) AS prenotazioni_totali,
+           COALESCE(b.completate, 0) AS completate,
+           COALESCE(b.annullate, 0) AS annullate,
            COALESCE(b30.n, 0) AS prenotazioni_30gg,
            COALESCE(r.media, 0) AS rating,
            COALESCE(r.n, 0) AS recensioni,
            COALESCE(z.zone, ARRAY[]::text[]) AS zone
     FROM professionals p
     LEFT JOIN LATERAL (SELECT COUNT(*) AS n FROM services WHERE professional_id = p.id AND active) s ON TRUE
-    LEFT JOIN LATERAL (SELECT COUNT(*) AS n FROM bookings WHERE professional_id = p.id) b ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*) AS n,
+             COUNT(*) FILTER (WHERE status = 'done') AS completate,
+             COUNT(*) FILTER (WHERE status = 'cancelled') AS annullate
+      FROM bookings WHERE professional_id = p.id) b ON TRUE
     LEFT JOIN LATERAL (SELECT COUNT(*) AS n FROM bookings WHERE professional_id = p.id AND created_at > now() - interval '30 days') b30 ON TRUE
     LEFT JOIN LATERAL (SELECT ROUND(AVG(rating)::numeric,1) AS media, COUNT(*) AS n FROM reviews WHERE professional_id = p.id AND status = 'published') r ON TRUE
     LEFT JOIN LATERAL (SELECT array_agg(city ORDER BY city) AS zone FROM coverage_areas WHERE professional_id = p.id) z ON TRUE
+    WHERE p.status <> 'deleted'
     ORDER BY p.created_at DESC`;
 
   return json({ professionisti });

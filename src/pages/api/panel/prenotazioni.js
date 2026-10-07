@@ -78,7 +78,10 @@ export async function PATCH({ request }) {
   }
 
   const updated = await sql`
-    UPDATE bookings b SET status = ${status}
+    UPDATE bookings b
+    SET status = ${status},
+        cancelled_by = CASE WHEN ${status} = 'cancelled' THEN 'professionista' WHEN ${status} = 'active' THEN '' ELSE b.cancelled_by END,
+        cancelled_at = CASE WHEN ${status} = 'cancelled' THEN now() WHEN ${status} = 'active' THEN NULL ELSE b.cancelled_at END
     FROM professionals p, services s
     WHERE b.professional_id = p.id AND s.id = b.service_id
       AND b.id = ${id} AND b.professional_id = ${session.pid}

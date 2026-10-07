@@ -800,6 +800,13 @@
 .adm-kpi .l { font-size: 14px; color: var(--iw-slate); margin-top: 2px; }
 
 .adm-riga { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; padding: 12px 16px; }
+/* Tabella dell'admin (contatori per infermiere) */
+.adm-tabella { width: 100%; border-collapse: collapse; font-size: 15px; }
+.adm-tabella th, .adm-tabella td { padding: 8px 10px; border-bottom: 1px solid var(--iw-line); text-align: right; white-space: nowrap; }
+.adm-tabella th:first-child, .adm-tabella td:first-child { text-align: left; white-space: normal; }
+.adm-tabella th { color: var(--iw-slate); font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.02em; }
+.adm-tabella tr.totale td { font-weight: 800; color: var(--iw-navy); border-top: 2px solid var(--iw-navy); }
+.adm-tabella-wrap { overflow-x: auto; }
 
 .adm-menu-mobile { display: none; margin-bottom: 12px; }
 

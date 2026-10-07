@@ -47,7 +47,7 @@ export async function POST({ request }) {
 
   const updated = await sql`
     UPDATE bookings b
-    SET status = 'cancelled'
+    SET status = 'cancelled', cancelled_by = 'paziente', cancelled_at = now()
     FROM professionals p, services s
     WHERE b.professional_id = p.id AND s.id = b.service_id
       AND b.cancel_token = ${token}
