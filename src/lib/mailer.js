@@ -7,7 +7,7 @@ const FROM_NAME = process.env.EMAIL_FROM_NAME || "InfermieriWeb";
 const SITE = "https://infermieriweb.it";
 // Casella di assistenza: le email partono da un mittente automatico che NON riceve,
 // quindi ogni email dice a chi scrivere davvero.
-const ASSISTENZA_EMAIL = process.env.EMAIL_ASSISTENZA || "info@infermieriweb.it";
+export const ASSISTENZA_EMAIL = process.env.EMAIL_ASSISTENZA || "info@infermieriweb.it";
 
 // Piè di pagina delle risposte. Il mittente (prenotazioni@) NON è una casella:
 // se l'email ha un replyTo le risposte arrivano a una persona vera, altrimenti

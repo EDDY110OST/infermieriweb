@@ -23,12 +23,18 @@ register("./loader.mjs", import.meta.url);
 // Email: con IW_MAIL_DUMP=<file> e BREVO_API_KEY qualsiasi, le chiamate a Brevo NON partono:
 // ogni email finisce come riga JSON nel file (destinatario, oggetto, html) e si può leggere
 // nelle prove (link di convalida, accetta, cambio infermiere…). Nessuna email a persone vere.
+// Con IW_MAIL_FALLISCI=<testo> Brevo «rifiuta» (400) i destinatari che lo contengono: serve
+// a provare l'elenco delle email non partite (es. «Scrivi agli infermieri»).
 if (process.env.IW_MAIL_DUMP) {
   const fetchVero = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
     if (String(url).startsWith("https://api.brevo.com/")) {
       let body = {};
       try { body = JSON.parse(opts?.body || "{}"); } catch { /* vuoto */ }
+      const a = body.to?.[0]?.email || "";
+      if (process.env.IW_MAIL_FALLISCI && a.includes(process.env.IW_MAIL_FALLISCI)) {
+        return new Response(JSON.stringify({ code: "invalid_parameter", message: "prova locale: indirizzo rifiutato" }), { status: 400, headers: { "Content-Type": "application/json" } });
+      }
       appendFileSync(process.env.IW_MAIL_DUMP, JSON.stringify({ at: new Date().toISOString(), to: body.to, replyTo: body.replyTo, subject: body.subject, html: body.htmlContent }) + "\n");
       return new Response(JSON.stringify({ messageId: "prova-locale" }), { status: 201, headers: { "Content-Type": "application/json" } });
     }

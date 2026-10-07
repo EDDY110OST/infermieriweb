@@ -21,6 +21,7 @@ const MENU = [
   {
     icona: "👨‍⚕️", titolo: "Infermieri", voci: [
       { k: "inf-elenco", label: "Elenco infermieri" },
+      { k: "inf-scrivi", label: "✉️ Scrivi agli infermieri" },
       { k: "inf-prenotazioni", label: "Prenotazioni per infermiere" },
       { k: "inf-nuovo", label: "Nuovo infermiere" },
       { k: "inf-verifica", label: "Verifica documenti", badge: "candidature" },
@@ -2098,6 +2099,395 @@ function BlogAdmin() {
   );
 }
 
+/* ============================ SCRIVI AGLI INFERMIERI ============================ */
+
+// «✉️ Scrivi agli infermieri» (7/10/26): una comunicazione a tutti gli infermieri scelti,
+// una email per persona (Brevo, ~400 ms fra l'una e l'altra). Non è la «Newsletter».
+// La bozza resta nel browser mentre si scrive: un testo lungo non si perde ricaricando.
+// La chiave anti-doppio-invio fa parte della bozza: un doppio clic o una pagina
+// ricaricata non rimandano niente; cambiando il testo nasce una comunicazione nuova.
+const BOZZA_SCRIVI = "iw_admin_scrivi_bozza_v1";
+const nuovaChiave = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+const leggiBozzaScrivi = () => { try { return JSON.parse(localStorage.getItem(BOZZA_SCRIVI) || "null") || {}; } catch { return {}; } };
+const scriviBozzaScrivi = (b) => {
+  try {
+    if (b) localStorage.setItem(BOZZA_SCRIVI, JSON.stringify(b));
+    else localStorage.removeItem(BOZZA_SCRIVI);
+  } catch { /* browser senza memoria (privata, piena): la pagina funziona lo stesso */ }
+};
+const numeroIt = (n) => Number(n || 0).toLocaleString("it-IT");
+const escTesto = (r) => r.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// passaggi fra «Testo semplice» ed editor (la regola vera, per la mail, la applica il server)
+const testoInHtml = (t) => String(t || "").replace(/\r\n?/g, "\n").split(/\n[ \t]*\n/).filter((b) => b.trim())
+  .map((b) => `<p>${b.replace(/^\n+|\n+$/g, "").split("\n").map(escTesto).join("<br>")}</p>`).join("");
+const htmlInTesto = (h) => {
+  const conAcapo = String(h || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|h2|h3|li|blockquote)>/gi, "\n\n");
+  const doc = new DOMParser().parseFromString(conAcapo, "text/html"); // non esegue nulla
+  return (doc.body.textContent || "").replace(/\n{3,}/g, "\n\n").trim();
+};
+const STATO_DEST = { active: ["done", "Attivo"], network: ["active", "Rete"], suspended: ["cancelled", "Sospeso"] };
+const ETICHETTE_STATI = [["active", "Attivi"], ["network", "Rete (senza P.IVA)"], ["suspended", "Sospesi"]];
+
+// La mail come la riceve una persona, in una cornice chiusa (niente script)
+function AnteprimaEmail({ html, titolo }) {
+  const ref = useRef(null);
+  const adatta = () => {
+    try { const doc = ref.current?.contentDocument; if (doc) ref.current.style.height = `${doc.documentElement.scrollHeight + 4}px`; } catch { /* niente */ }
+  };
+  return (
+    <iframe ref={ref} title={titolo} className="iw-scrivi-anteprima" sandbox="allow-same-origin" onLoad={adatta}
+      srcDoc={`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:12px 8px;background:#f6f9f9">${html}</body></html>`} />
+  );
+}
+
+function EsitoInvio({ c }) {
+  const fatte = Number(c.riuscite || 0) + Number(c.non_riuscite || 0);
+  const ko = Array.isArray(c.elenco_non_riuscite) ? c.elenco_non_riuscite : [];
+  return (
+    <div>
+      {c.stato === "in_corso" && (
+        <div className="pf-successo" style={{ background: "#eff6ff", borderColor: "#bfdbfe", color: "#1e3a8a" }}>
+          ⏳ Invio in corso: <strong>{fatte} di {c.destinatari}</strong>. Puoi restare su questa pagina.
+          <div style={{ height: 8, background: "#dbeafe", borderRadius: 99, marginTop: 8, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${Math.round((fatte / Math.max(1, c.destinatari)) * 100)}%`, background: "#2563eb" }} />
+          </div>
+        </div>
+      )}
+      {c.stato === "finita" && (
+        <div className={Number(c.non_riuscite) ? "pf-errore" : "pf-successo"}>
+          {Number(c.non_riuscite) ? "⚠️" : "✅"} Inviate: <strong>{c.riuscite}</strong> · Non riuscite: <strong>{c.non_riuscite}</strong>
+        </div>
+      )}
+      {c.stato === "interrotta" && (
+        <div className="pf-errore">⚠️ Invio interrotto: ne sono partite <strong>{c.riuscite} di {c.destinatari}</strong>. Le altre non sono partite.</div>
+      )}
+      {ko.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <strong>Non riuscite:</strong>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
+            {ko.map((k) => <li key={k.id} style={{ overflowWrap: "anywhere" }}>{k.nome} — {k.email} <span className="pf-note" style={{ margin: 0 }}>({k.errore})</span></li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScriviInfermieri() {
+  const [bozza0] = useState(leggiBozzaScrivi);
+  const [dati, setDati] = useState(null);
+  const [errCarica, setErrCarica] = useState("");
+  const [stati, setStati] = useState(bozza0.stati || { active: true, network: true, suspended: false });
+  const [tolti, setTolti] = useState(Array.isArray(bozza0.tolti) ? bozza0.tolti : null); // null = di base (amministratori tolti)
+  const [mostraElenco, setMostraElenco] = useState(true);
+  const [oggetto, setOggetto] = useState(bozza0.oggetto || "");
+  const [formato, setFormato] = useState(bozza0.formato === "testo" ? "testo" : "visuale");
+  const [html, setHtml] = useState(bozza0.html || "");
+  const [testo, setTesto] = useState(bozza0.testo || "");
+  const [caratteriEditor, setCaratteriEditor] = useState(0);
+  const [chiave, setChiave] = useState(bozza0.chiave || nuovaChiave);
+  const [inviata, setInviata] = useState(!!bozza0.inviata);
+  const [editorKey, setEditorKey] = useState(0);
+  const [anteprima, setAnteprima] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [occupato, setOccupato] = useState("");
+  const [conferma, setConferma] = useState(false);
+  const [invio, setInvio] = useState(null);
+  const [dettaglio, setDettaglio] = useState(null);
+  const inviando = useRef(false);
+  const msgRef = useRef(null);
+  const invioRef = useRef(null);
+  const anteprimaRef = useRef(null);
+  const testoRef = useRef(null);
+
+  const nMsg = useRef(0); // ogni messaggio è «nuovo» (si riporta in vista anche se il testo è uguale)
+  const avvisa = (tipo, t) => { nMsg.current += 1; setMsg({ tipo, testo: t, n: nMsg.current }); };
+  useEffect(() => { if (msg) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [msg]);
+  useEffect(() => { if (anteprima) anteprimaRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [anteprima]);
+  const statoInvio = invio ? `${invio.id}-${invio.stato}` : "";
+  useEffect(() => { if (statoInvio) invioRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [statoInvio]);
+
+  const carica = useCallback(async () => {
+    try {
+      const r = await fetch("/api/admin/comunicazioni");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Errore");
+      setDati(d);
+      return d;
+    } catch (e) {
+      setErrCarica(e.message || "Errore di rete");
+      return null;
+    }
+  }, []);
+  // primo caricamento (scritto per esteso: carica() serve dopo, per aggiornare)
+  useEffect(() => {
+    fetch("/api/admin/comunicazioni")
+      .then(async (r) => { const d = await r.json(); if (!r.ok) throw new Error(d.error || "Errore"); return d; })
+      .then((d) => {
+        setDati(d);
+        // di base gli amministratori (soci) sono tolti: si rimettono con un clic
+        setTolti((t) => t ?? d.destinatari.filter((x) => x.admin).map((x) => x.id));
+        // la bozza era già partita (pagina ricaricata dopo l'invio)? allora si mostra com'è andata
+        const gia = d.storico.find((c) => c.chiave === chiave);
+        if (gia) { setInviata(true); setInvio(gia); return; }
+        const corso = d.storico.find((c) => c.stato === "in_corso");
+        if (corso) setInvio(corso);
+      })
+      .catch((e) => setErrCarica(e.message || "Errore di rete"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // progressi dell'invio, ogni secondo, finché non finisce
+  const idInvio = invio?.id;
+  const inCorsoInvio = invio?.stato === "in_corso";
+  useEffect(() => {
+    if (!idInvio || !inCorsoInvio) return;
+    const t = setInterval(async () => {
+      try {
+        const r = await fetch(`/api/admin/comunicazioni?id=${idInvio}&progressi=1`);
+        const d = await r.json();
+        if (d.comunicazione) {
+          setInvio(d.comunicazione);
+          if (d.comunicazione.stato !== "in_corso") carica();
+        }
+      } catch { /* si riprova al giro dopo */ }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [idInvio, inCorsoInvio, carica]);
+
+  // bozza salvata nel browser a ogni modifica
+  useEffect(() => {
+    if (!oggetto && !html && !testo) return scriviBozzaScrivi(null);
+    scriviBozzaScrivi({ oggetto, formato, html, testo, chiave, inviata, stati, tolti });
+  }, [oggetto, formato, html, testo, chiave, inviata, stati, tolti]);
+
+  // il campo di testo semplice si allunga col testo
+  useEffect(() => {
+    const el = testoRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight + 2}px`;
+  }, [testo, formato]);
+
+  // Qualsiasi modifica dopo un invio = una comunicazione nuova (chiave nuova)
+  const modificato = () => {
+    setAnteprima(null);
+    setConferma(false);
+    if (inviata) { setChiave(nuovaChiave()); setInviata(false); setInvio(null); }
+  };
+
+  if (errCarica) return <div className="pf-errore">{errCarica}</div>;
+  if (!dati || tolti === null) return <Caricamento />;
+
+  const tutti = dati.destinatari;
+  const perStato = (k) => tutti.filter((d) => d.status === k).length;
+  const nelloStato = tutti.filter((d) => stati[d.status]);
+  const scelti = nelloStato.filter((d) => !tolti.includes(d.id));
+  const toltiVisibili = nelloStato.filter((d) => tolti.includes(d.id));
+  const caratteri = formato === "testo" ? testo.length : caratteriEditor;
+  const vuoto = formato === "testo" ? !testo.trim() : caratteriEditor === 0;
+  const corpo = () => ({ oggetto, formato, ...(formato === "testo" ? { testo } : { html }) });
+
+  const chiama = async (dati_) => {
+    const r = await fetch("/api/admin/comunicazioni", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dati_) });
+    return { r, d: await r.json().catch(() => ({})) };
+  };
+  const vediAnteprima = async () => {
+    setOccupato("anteprima"); setMsg(null);
+    try {
+      const { r, d } = await chiama({ azione: "anteprima", ...corpo(), esempio_id: scelti[0]?.id });
+      if (!r.ok) return avvisa("err", d.error || "Anteprima non riuscita");
+      setAnteprima(d);
+    } catch { avvisa("err", "Errore di rete: riprova tra poco"); } finally { setOccupato(""); }
+  };
+  const mandaProva = async () => {
+    setOccupato("prova"); setMsg(null);
+    try {
+      const { r, d } = await chiama({ azione: "prova", ...corpo() });
+      if (!r.ok) return avvisa("err", d.error || "La prova non è partita");
+      avvisa("ok", `✅ Prova mandata solo a te: ${d.a}. Guarda nella casella (anche nello spam).`);
+    } catch { avvisa("err", "Errore di rete: riprova tra poco"); } finally { setOccupato(""); }
+  };
+  const invia = async () => {
+    if (inviando.current) return; // doppio clic: il secondo non fa nulla
+    inviando.current = true;
+    setOccupato("invio"); setConferma(false); setMsg(null);
+    try {
+      const { r, d } = await chiama({ azione: "invia", chiave, ids: scelti.map((x) => x.id), ...corpo() });
+      if (!r.ok) return avvisa("err", d.error || "L'invio non è partito");
+      setInviata(true);
+      setInvio(d.comunicazione);
+      if (d.gia) avvisa("ok", "Questa comunicazione è già partita: non la rimando. Qui sotto vedi com'è andata.");
+      carica();
+    } catch {
+      avvisa("err", "Errore di rete. Puoi premere di nuovo «Invia»: se era già partita, non parte una seconda volta.");
+    } finally {
+      inviando.current = false;
+      setOccupato("");
+    }
+  };
+  const svuota = () => {
+    setOggetto(""); setHtml(""); setTesto(""); setCaratteriEditor(0);
+    setChiave(nuovaChiave()); setInviata(false); setInvio(null); setAnteprima(null); setConferma(false); setMsg(null);
+    setEditorKey((k) => k + 1);
+    scriviBozzaScrivi(null);
+  };
+  const cambiaFormato = (nuovo) => {
+    if (nuovo === formato) return;
+    if (nuovo === "testo") setTesto(htmlInTesto(html));
+    else { setHtml(testoInHtml(testo)); setEditorKey((k) => k + 1); }
+    setFormato(nuovo);
+    modificato();
+  };
+  const conFormattazione = /<(strong|em|u|s|span|h2|h3|a)\b/.test(html);
+
+  return (
+    <div className="iw-scrivi">
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>✉️ Scrivi agli infermieri</h2>
+      <p className="pf-note" style={{ marginTop: -4 }}>Parte una email per ogni persona, dal mittente del sito. Chi risponde scrive a info@infermieriweb.it.</p>
+
+      {/* 1. A CHI */}
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>1. A chi</h3>
+        <div style={{ display: "flex", gap: "8px 18px", flexWrap: "wrap", marginBottom: 10 }}>
+          {ETICHETTE_STATI.map(([k, nome]) => (
+            <label key={k} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontWeight: 600 }}>
+              <input type="checkbox" checked={!!stati[k]} onChange={(e) => { setStati({ ...stati, [k]: e.target.checked }); modificato(); }} /> {nome} ({perStato(k)})
+            </label>
+          ))}
+        </div>
+        <p style={{ fontSize: 20, margin: "4px 0 8px" }}>Destinatari: <strong data-n-destinatari={scelti.length}>{scelti.length}</strong></p>
+        <p className="pf-note" style={{ marginTop: 0 }}>Mai gli eliminati e mai chi non ha un'email valida{dati.senza_email ? ` (${dati.senza_email} senza email valida)` : ""}. Gli amministratori partono tolti: se vuoi, rimettili.</p>
+        {scelti.length > dati.soglia && (
+          <div style={BOX_AVVISO}>⚠️ Sono più di {dati.soglia}. Brevo gratuito manda circa 300 email al giorno in tutto, comprese prenotazioni e promemoria: alcune potrebbero non partire oggi.</div>
+        )}
+        <button type="button" className="pf-btn secondario compatto" onClick={() => setMostraElenco(!mostraElenco)}>{mostraElenco ? "Nascondi l'elenco" : `Mostra l'elenco (${scelti.length})`}</button>
+        {mostraElenco && (
+          <div style={{ marginTop: 8 }}>
+            {scelti.map((d) => (
+              <div key={d.id} className="iw-scrivi-riga" data-destinatario={d.id}>
+                <span style={{ flex: "1 1 150px", minWidth: 0 }}>
+                  <strong>{d.name}</strong> <span className={`stato ${STATO_DEST[d.status]?.[0] || "noshow"}`} style={{ fontSize: 13 }}>{STATO_DEST[d.status]?.[1] || d.status}</span>
+                  <br /><span className="pf-note" style={{ margin: 0, overflowWrap: "anywhere" }}>{d.email} · {"{nome}"} = {d.nome}</span>
+                </span>
+                <button type="button" className="pf-btn secondario compatto" onClick={() => { setTolti([...tolti, d.id]); modificato(); }} aria-label={`Togli ${d.name}`}>Togli</button>
+              </div>
+            ))}
+            {scelti.length === 0 && <p className="pf-note">Nessun destinatario: spunta almeno un gruppo.</p>}
+            {toltiVisibili.length > 0 && (
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px dashed var(--iw-line)" }}>
+                <strong>Tolti ({toltiVisibili.length})</strong>
+                {toltiVisibili.map((d) => (
+                  <div key={d.id} className="iw-scrivi-riga" data-tolto={d.id} style={{ opacity: 0.75 }}>
+                    <span style={{ flex: "1 1 150px", minWidth: 0 }}>{d.name}{d.admin ? <span className="pf-note" style={{ margin: 0 }}> · amministratore</span> : null}<br /><span className="pf-note" style={{ margin: 0, overflowWrap: "anywhere" }}>{d.email}</span></span>
+                    <button type="button" className="pf-btn secondario compatto" onClick={() => { setTolti(tolti.filter((x) => x !== d.id)); modificato(); }} aria-label={`Rimetti ${d.name}`}>Rimetti</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 2. COSA SCRIVI */}
+      <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>2. Cosa scrivi</h3>
+        <label htmlFor="sc-oggetto">Oggetto *</label>
+        <input id="sc-oggetto" value={oggetto} maxLength={150} onChange={(e) => { setOggetto(e.target.value); modificato(); }} placeholder="es. Novità su InfermieriWeb" />
+        <div role="group" aria-label="Come vuoi scrivere" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "4px 0 10px" }}>
+          <button type="button" className={`pf-btn compatto${formato === "visuale" ? "" : " secondario"}`} aria-pressed={formato === "visuale"} onClick={() => cambiaFormato("visuale")}>✏️ Con grassetto e colori</button>
+          <button type="button" className={`pf-btn compatto${formato === "testo" ? "" : " secondario"}`} aria-pressed={formato === "testo"} onClick={() => cambiaFormato("testo")}>📝 Testo semplice</button>
+        </div>
+        <p className="pf-note" style={{ marginTop: 0 }}>
+          Scrivi <strong>{"{nome}"}</strong> dove vuoi il nome: «Ciao {"{nome}"},» diventa «Ciao Maria,».{" "}
+          {formato === "testo"
+            ? "Riga vuota = nuovo paragrafo. Puoi incollare da WhatsApp, Note o Word."
+            : "Puoi incollare da WhatsApp, Note o Word: i paragrafi restano, gli stili strani no."}
+        </p>
+        {formato === "visuale" ? (
+          <React.Suspense fallback={<p className="pf-note">Carico l'editor…</p>}>
+            <EditorArticolo key={editorKey} html={html} onChange={(h) => { setHtml(h); modificato(); }} onTesto={(t) => setCaratteriEditor(t.trim() ? t.length : 0)} />
+          </React.Suspense>
+        ) : (
+          <>
+            {conFormattazione && <p className="pf-note" style={{ marginTop: 0 }}>Nel testo semplice grassetto, colori e link non ci sono: gli indirizzi web diventano link da soli.</p>}
+            <textarea ref={testoRef} id="sc-testo" className="iw-scrivi-testo" value={testo} onChange={(e) => { setTesto(e.target.value); modificato(); }} placeholder={"Ciao {nome},\n\nscrivi qui il messaggio.\n\nBuon lavoro,\nBruno ed Eduard"} />
+          </>
+        )}
+        <p className="pf-note" style={{ margin: "4px 0 12px" }} aria-live="polite"><span data-caratteri={caratteri}>{numeroIt(caratteri)} caratteri</span> · la bozza resta salvata in questo browser</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" className="pf-btn secondario" disabled={!!occupato || vuoto || !oggetto.trim()} onClick={vediAnteprima}>{occupato === "anteprima" ? "Preparo…" : "👁️ Anteprima"}</button>
+          <button type="button" className="pf-btn secondario" disabled={!!occupato || vuoto || !oggetto.trim()} onClick={mandaProva}>{occupato === "prova" ? "Mando…" : "🧪 Mandami una prova"}</button>
+          <ConfermaInline etichetta="Svuota" domanda="Cancello oggetto e testo?" conferma="Sì, svuota" disabled={occupato === "invio" || inCorsoInvio} onConferma={svuota} />
+        </div>
+        {dati.admin_email && <p className="pf-note" style={{ marginBottom: 0 }}>La prova arriva solo a te: {dati.admin_email}</p>}
+      </div>
+
+      {msg && <div ref={msgRef} key={msg.n} className={msg.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 14, scrollMarginTop: 96, overflowWrap: "anywhere" }}>{msg.testo}</div>}
+
+      {anteprima && (
+        <div ref={anteprimaRef} className="pf-panel" style={{ marginBottom: 14, scrollMarginTop: 96 }}>
+          <h3 style={{ marginTop: 0 }}>Anteprima <span className="pf-note" style={{ margin: 0, fontWeight: 400 }}>(come la riceve {anteprima.nome})</span></h3>
+          <p style={{ margin: "0 0 8px", overflowWrap: "anywhere" }}><span className="pf-note" style={{ margin: 0 }}>Oggetto:</span> <strong>{anteprima.oggetto}</strong></p>
+          <AnteprimaEmail html={anteprima.html} titolo="Anteprima della mail" />
+        </div>
+      )}
+
+      {/* 3. INVIA */}
+      <div ref={invioRef} className="pf-panel" style={{ marginBottom: 14, scrollMarginTop: 96 }}>
+        <h3 style={{ marginTop: 0 }}>3. Invia</h3>
+        {invio && <EsitoInvio c={invio} />}
+        {!inviata && !conferma && (
+          <button type="button" className="pf-btn" disabled={!!occupato || vuoto || !oggetto.trim() || scelti.length === 0 || inCorsoInvio} onClick={() => setConferma(true)}>
+            {occupato === "invio" ? "Invio…" : `✉️ Invia a ${scelti.length} infermier${scelti.length === 1 ? "e" : "i"}`}
+          </button>
+        )}
+        {!inviata && conferma && (
+          <div style={{ ...BOX_AVVISO, background: "#f0fdfa", borderColor: "#99f6e4", color: "var(--iw-navy)" }}>
+            <strong>Invio a {scelti.length} infermier{scelti.length === 1 ? "e" : "i"}?</strong> Parte una email per ognuno. Non si può annullare.
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+              <button type="button" className="pf-btn compatto" disabled={!!occupato} onClick={invia}>{occupato === "invio" ? "Invio…" : "Sì, invia"}</button>
+              <button type="button" className="pf-btn secondario compatto" disabled={!!occupato} onClick={() => setConferma(false)}>No</button>
+            </div>
+          </div>
+        )}
+        {inviata && (
+          <p className="pf-note" style={{ marginBottom: 0 }}>Questa comunicazione è partita. Se cambi il testo o i destinatari, diventa una comunicazione nuova. Per ripartire da zero usa «Svuota».</p>
+        )}
+      </div>
+
+      {/* STORICO */}
+      <div className="pf-panel">
+        <h3 style={{ marginTop: 0 }}>Comunicazioni mandate ({dati.storico.length})</h3>
+        {dati.storico.length === 0 && <p className="pf-note" style={{ margin: 0 }}>Ancora nessuna.</p>}
+        {dati.storico.map((c) => (
+          <div key={c.id} className="iw-scrivi-riga" data-storico={c.id} style={{ alignItems: "flex-start" }}>
+            <span style={{ flex: "1 1 240px", minWidth: 0 }}>
+              <strong style={{ overflowWrap: "anywhere" }}>{c.oggetto}</strong><br />
+              <span className="pf-note" style={{ margin: 0 }}>
+                {dataOra(c.created_at)} · da {c.mandata_da || "—"} · {c.destinatari} destinatari · ✅ {c.riuscite} · ❌ {c.non_riuscite}
+                {c.stato === "in_corso" ? " · in corso…" : c.stato === "interrotta" ? " · interrotta" : ""}
+              </span>
+            </span>
+            <button type="button" className="pf-btn secondario compatto" onClick={async () => {
+              if (dettaglio?.id === c.id) return setDettaglio(null);
+              const r = await fetch(`/api/admin/comunicazioni?id=${c.id}`);
+              const d = await r.json().catch(() => ({}));
+              if (d.comunicazione) setDettaglio(d.comunicazione);
+            }}>{dettaglio?.id === c.id ? "Chiudi" : "Vedi"}</button>
+            {dettaglio?.id === c.id && (
+              <div style={{ width: "100%" }}>
+                <EsitoInvio c={dettaglio} />
+                <AnteprimaEmail html={dettaglio.anteprima} titolo={`Testo di «${c.oggetto}»`} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ============================ PRENOTAZIONI PER INFERMIERE (contatori) ============================ */
 
 const PERIODI = [
@@ -2279,6 +2669,7 @@ export default function AdminApp() {
     dashboard: <Dashboard vai={vai} />,
     "inf-elenco": <Professionisti />,
     "inf-prenotazioni": <PrenotazioniPerInfermiere />,
+    "inf-scrivi": <ScriviInfermieri />,
     "inf-nuovo": (
       <div className="pf-panel">
         <h2 style={{ marginTop: 0 }}>➕ Nuovo infermiere</h2>

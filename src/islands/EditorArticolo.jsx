@@ -44,9 +44,13 @@ function BottoneBarra({ attivo, onClick, title, children }) {
   );
 }
 
-export default function EditorArticolo({ html, onChange }) {
+// onTesto (facoltativo): il testo nudo a ogni modifica, per contare i caratteri
+// («Scrivi agli infermieri»). Il blog non lo usa.
+export default function EditorArticolo({ html, onChange, onTesto }) {
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+  const onTestoRef = useRef(onTesto);
+  useEffect(() => { onTestoRef.current = onTesto; }, [onTesto]);
   const [linkAperto, setLinkAperto] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
 
@@ -60,7 +64,8 @@ export default function EditorArticolo({ html, onChange }) {
       Colore,
     ],
     content: html || "",
-    onUpdate: ({ editor: ed }) => onChangeRef.current?.(ed.getHTML()),
+    onCreate: ({ editor: ed }) => onTestoRef.current?.(ed.getText()),
+    onUpdate: ({ editor: ed }) => { onChangeRef.current?.(ed.getHTML()); onTestoRef.current?.(ed.getText()); },
   });
 
   if (!editor) return <p className="pf-note">Carico l'editor…</p>;

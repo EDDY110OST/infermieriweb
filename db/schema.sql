@@ -385,6 +385,31 @@ CREATE TABLE IF NOT EXISTS admin_audit (
   CONSTRAINT admin_audit_pkey PRIMARY KEY (id)
 );
 
+-- COMUNICAZIONI AGLI INFERMIERI (7/10/26, «✉️ Scrivi agli infermieri»): una riga per
+-- invio. html = testo sanificato con il segnaposto {nome}. chiave = anti-doppio-invio
+-- (generata dal browser). Progressi scritti durante l'invio (riuscite, inviati_ids…);
+-- stato: in_corso | finita | interrotta. Migrazione: scripts/migrate-2026-10-07b.mjs.
+CREATE TABLE IF NOT EXISTS admin_broadcasts (
+  id SERIAL,
+  chiave text NOT NULL,
+  oggetto text NOT NULL,
+  html text NOT NULL,
+  destinatari integer NOT NULL DEFAULT 0,
+  riuscite integer NOT NULL DEFAULT 0,
+  non_riuscite integer NOT NULL DEFAULT 0,
+  elenco_non_riuscite jsonb NOT NULL DEFAULT '[]'::jsonb,
+  destinatari_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+  inviati_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+  stato text NOT NULL DEFAULT 'in_corso'::text,
+  mandata_da text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  aggiornata_at timestamp with time zone NOT NULL DEFAULT now(),
+  finita_at timestamp with time zone,
+  CONSTRAINT admin_broadcasts_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX ux_admin_broadcasts_chiave ON admin_broadcasts USING btree (chiave);
+CREATE INDEX ix_admin_broadcasts_created ON admin_broadcasts USING btree (created_at DESC);
+
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);

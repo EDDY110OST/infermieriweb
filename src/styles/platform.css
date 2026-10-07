@@ -1019,6 +1019,15 @@ label.pf-tipo, .pf-book label.pf-tipo {
 .tt-editor .ProseMirror .col-navy { color: #0b3954; } .tt-editor .ProseMirror .col-verde { color: #00897b; }
 .tt-editor .ProseMirror .col-rosso { color: #b91c1c; } .tt-editor .ProseMirror .col-ambra { color: #b45309; } .tt-editor .ProseMirror .col-grigio { color: #5c7280; }
 @media (max-width: 480px) { .tt-barra { top: 70px; } .tt-btn { padding: 6px 8px; font-size: 14px; } }
+/* «Scrivi agli infermieri»: area di scrittura grande, si allunga col testo */
+.iw-scrivi .tt-editor .ProseMirror { min-height: 320px; }
+.iw-scrivi-testo { width: 100%; min-height: 320px; resize: vertical; font-family: inherit; font-size: 17px; line-height: 1.55; overflow: hidden; }
+.iw-scrivi-riga { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--iw-line); }
+.iw-scrivi-riga:last-child { border-bottom: none; }
+.iw-scrivi-anteprima { width: 100%; border: 1px solid var(--iw-line); border-radius: 12px; background: #fff; min-height: 300px; }
+@media (max-width: 600px) {
+  .iw-scrivi .tt-editor .ProseMirror, .iw-scrivi-testo { min-height: 260px; }
+}
 
 /* Slot notturno nel widget di prenotazione */
 .pf-slot { position: relative; }
