@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import CampoPassword from "./CampoPassword.jsx";
 import CercaComune from "./CercaComune.jsx";
 import ConfermaInline from "./ConfermaInline.jsx";
+import CampoFonti from "./CampoFonti.jsx";
+import ArticoliDaApprovare from "./AdminArticoliRevisione.jsx";
 
 // L'editor visuale degli articoli (TipTap) si carica solo quando serve: pesa ~120 KB
 const EditorArticolo = React.lazy(() => import("./EditorArticolo.jsx"));
@@ -79,6 +81,7 @@ const MENU = [
   {
     icona: "📝", titolo: "Blog", voci: [
       { k: "blog-articoli", label: "Articoli" },
+      { k: "blog-revisione", label: "Da approvare", badge: "articoli" },
       { k: "blog-categorie", label: "Categorie", todo: true },
       { k: "blog-tag", label: "Tag", todo: true },
       { k: "blog-seo", label: "SEO", todo: true },
@@ -899,6 +902,9 @@ function EliminaProfessionista({ p, onFatto }) {
           <li><strong>{anteprima.future}</strong> prenotazioni future verranno annullate{anteprima.future_con_email ? ` (${anteprima.future_con_email} pazienti avvisati via email, con il link per scegliere un altro infermiere)` : ""}</li>
           <li><strong>{anteprima.passate}</strong> prenotazioni passate restano, senza i suoi dati: comparirà «Professionista rimosso»</li>
           <li><strong>{anteprima.recensioni}</strong> recensioni cancellate · <strong>{anteprima.servizi}</strong> prestazioni e <strong>{anteprima.zone}</strong> zone tolte · {anteprima.candidature ? `la candidatura cancellata · ` : ""}accesso, 2FA, foto e contatti cancellati</li>
+          {(anteprima.articoli_pubblicati > 0 || anteprima.articoli_non_pubblicati > 0) && (
+            <li>Articoli: <strong>{anteprima.articoli_pubblicati}</strong> pubblicati tornano in bozza (via dal sito, senza la sua firma: poi decidete voi in Blog → Articoli) · <strong>{anteprima.articoli_non_pubblicati}</strong> bozze o invii cancellati</li>
+          )}
           <li>La scheda pubblica sparisce (404). Resta solo una riga di registro senza dati personali.</li>
         </ul>
       )}
@@ -2148,7 +2154,7 @@ function Sicurezza() {
 
 /* ============================ BLOG (esistente) ============================ */
 
-function BlogAdmin() {
+function BlogAdmin({ vai, daApprovare = 0 }) {
   const [articoli, setArticoli] = useState(null);
   const [editor, setEditor] = useState(null);
   const [salvo, setSalvo] = useState(false);
@@ -2191,7 +2197,7 @@ function BlogAdmin() {
     if (messaggio) msgRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [messaggio]);
 
-  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "", body_html: "", body_format: "html", cover_data: "" });
+  const nuovo = () => setEditor({ title: "", category: "Salute", excerpt: "", image: "", body_raw: "", body_html: "", body_format: "html", cover_data: "", sources: [] });
 
   // Un articolo «raw» (testo con ## Titolo) si apre com'è; con questo tasto lo si porta
   // nell'editor visuale (conversione fatta dal server). Diventa definitivo solo salvando.
@@ -2261,9 +2267,22 @@ function BlogAdmin() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: art.id, [publish ? "publish" : "unpublish"]: true }),
     });
-    if (r.ok) { avvisa("ok", publish ? "Pubblicato ✅" : "Riportato in bozza."); carica(); }
-    else { const d = await r.json().catch(() => ({})); avvisa("err", d.error || "Errore nell'operazione"); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return avvisa("err", d.error || "Errore nell'operazione");
+    avvisa("ok", publish ? "Pubblicato ✅"
+      : d.status === "changes" ? "Tolto dal sito. Torna all'infermiere come «da correggere», con una nota." : "Riportato in bozza.");
+    carica();
   };
+
+  // Articolo di un infermiere eliminato: diventa della redazione (resta in bozza)
+  const allaRedazione = async (art) => {
+    const r = await fetch("/api/admin/blog", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: art.id, redazione: true }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return avvisa("err", d.error || "Operazione non riuscita");
+    avvisa("ok", `«${art.title}» ora è della redazione, in bozza. Rileggilo e pubblicalo quando vuoi.`);
+    carica();
+  };
+  const orfani = (articoli || []).filter((a) => a.author_professional_id && a.autore_stato === "deleted");
 
   // Elimina: la domanda è in pagina (ConfermaInline). Con window.confirm, dopo qualche
   // finestra il browser la sopprimeva e il tasto sembrava morto (stesso bug delle prestazioni).
@@ -2288,6 +2307,19 @@ function BlogAdmin() {
       </div>
 
       {messaggio && <div ref={msgRef} className={messaggio.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12, scrollMarginTop: 96 }}>{messaggio.testo}</div>}
+
+      {!editor && daApprovare > 0 && (
+        <div className="pf-panel" style={{ marginBottom: 12, borderLeft: "5px solid var(--iw-primary)", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ flex: 1, minWidth: 200 }}>📰 <strong>{daApprovare}</strong> {daApprovare === 1 ? "articolo scritto da un infermiere aspetta" : "articoli scritti dagli infermieri aspettano"} la vostra approvazione.</span>
+          <button type="button" className="pf-btn compatto" onClick={() => vai?.("blog-revisione")}>Apri «Da approvare»</button>
+        </div>
+      )}
+      {!editor && orfani.length > 0 && (
+        <div style={{ ...BOX_AVVISO, marginBottom: 12 }}>
+          ⚠️ <strong>{orfani.length}</strong> {orfani.length === 1 ? "articolo è tornato" : "articoli sono tornati"} in bozza perché l'autore è stato eliminato.
+          Non sono più sul sito. Rileggili: puoi renderli della redazione (poi li pubblichi tu) oppure eliminarli.
+        </div>
+      )}
 
       {editor && (
         <div ref={editorRef} className="pf-panel pf-book adm-editor-top" style={{ marginBottom: 18 }}>
@@ -2339,6 +2371,7 @@ function BlogAdmin() {
               )}
             </>
           )}
+          <CampoFonti fonti={editor.sources} onChange={(sources) => setEditor((ed) => ({ ...ed, sources }))} idBase="blog-fonte" obbligatorie={!!editor.author_professional_id} />
           <div className="pf-azioni" style={{ gap: 10 }}>
             <button className="pf-btn" disabled={salvo} onClick={() => salva(true)}>{salvo ? "Salvo…" : "Pubblica"}</button>
             <button className="pf-btn secondario" disabled={salvo} onClick={() => salva(false)}>Salva bozza</button>
@@ -2348,23 +2381,34 @@ function BlogAdmin() {
       )}
 
       {!articoli && <Caricamento />}
-      {articoli && !editor && articoli.map((art) => (
-        <div className="pf-panel" key={art.id} style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <strong style={{ color: "var(--iw-navy)" }}>{art.title}</strong>
-            <div className="pf-note" style={{ margin: 0 }}>
-              {art.category} · {art.status === "published" ? `pubblicato il ${new Date(art.published_at).toLocaleDateString("it-IT")}` : "BOZZA"}
-              {art.status === "published" && <> · <a href={`/articoli/${art.slug}`} target="_blank" rel="noreferrer">vedi</a></>}
+      {articoli && !editor && articoli.map((art) => {
+        const orfano = art.author_professional_id && art.autore_stato === "deleted";
+        const diInfermiere = art.author_professional_id && !orfano;
+        return (
+          <div className="pf-panel" key={art.id} style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <strong style={{ color: "var(--iw-navy)" }}>{art.title}</strong>
+              <div className="pf-note" style={{ margin: 0 }}>
+                {art.category} · {art.status === "published" ? `pubblicato il ${new Date(art.published_at).toLocaleDateString("it-IT")}` : "BOZZA"}
+                {art.status === "published" && <> · <a href={`/articoli/${art.slug}`} target="_blank" rel="noreferrer">vedi</a></>}
+                {diInfermiere && <> · ✍️ di <a href={`/p/${art.autore_slug}`} target="_blank" rel="noreferrer">{art.autore_nome}</a></>}
+                {orfano && <> · <strong style={{ color: "#9a3412" }}>autore eliminato</strong></>}
+              </div>
             </div>
+            <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
+            <span className="pf-azioni">
+              <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw, body_html: art.body_html || "", body_format: art.body_format === "html" ? "html" : "raw", sources: art.sources || [], author_professional_id: diInfermiere ? art.author_professional_id : null })}>Modifica</button>
+              {orfano ? (
+                <ConfermaInline etichetta="Rendi della redazione" className="pf-btn secondario compatto" classeConferma="pf-btn compatto"
+                  domanda="Lo rendo un articolo della redazione (resta in bozza)?" conferma="Sì" onConferma={() => allaRedazione(art)} />
+              ) : (art.status === "published" || !diInfermiere) && (
+                <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
+              )}
+              <ConfermaInline etichetta="Elimina" domanda={`Elimino «${art.title}» per sempre?`} conferma="Sì, elimina" onConferma={() => elimina(art)} />
+            </span>
           </div>
-          <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
-          <span className="pf-azioni">
-            <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw, body_html: art.body_html || "", body_format: art.body_format === "html" ? "html" : "raw" })}>Modifica</button>
-            <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
-            <ConfermaInline etichetta="Elimina" domanda={`Elimino «${art.title}» per sempre?`} conferma="Sì, elimina" onConferma={() => elimina(art)} />
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -2865,8 +2909,12 @@ export default function AdminApp() {
   const [serveTotp, setServeTotp] = useState(false);
   const [autorizzato, setAutorizzato] = useState(null);
   const [errore, setErrore] = useState("");
-  const [sezione, setSezione] = useState("dashboard");
-  const [badges, setBadges] = useState({ candidature: 0, recensioni: 0 });
+  // Un link con #sezione (es. l'email «Nuovo articolo da approvare» → #blog-revisione) apre quella voce
+  const [sezione, setSezione] = useState(() => {
+    const h = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    return MENU.some((g) => g.voci.some((v) => v.k === h)) ? h : "dashboard";
+  });
+  const [badges, setBadges] = useState({ candidature: 0, recensioni: 0, articoli: 0 });
   const [menuAperto, setMenuAperto] = useState(false);
   const [utente, setUtente] = useState(null);
 
@@ -2878,11 +2926,22 @@ export default function AdminApp() {
     setBadges({
       candidature: Number(d.kpi?.candidature_in_attesa || 0),
       recensioni: Number(d.kpi?.recensioni_da_moderare || 0),
+      articoli: Number(d.kpi?.articoli_da_approvare || 0),
     });
     setAutorizzato(true);
   }, []);
 
   useEffect(() => { verificaAccesso(); }, [verificaAccesso]);
+
+  // Link con #sezione aperto quando l'admin è già in pagina: cambia solo l'hash, non si ricarica
+  useEffect(() => {
+    const suHash = () => {
+      const h = window.location.hash.slice(1);
+      if (MENU.some((g) => g.voci.some((v) => v.k === h))) { setSezione(h); setMenuAperto(false); }
+    };
+    window.addEventListener("hashchange", suHash);
+    return () => window.removeEventListener("hashchange", suHash);
+  }, []);
 
   const aggiornaBadge = useCallback((chiave, n) => {
     setBadges((b) => (b[chiave] === n ? b : { ...b, [chiave]: n }));
@@ -2976,7 +3035,8 @@ export default function AdminApp() {
     "rec-interne": <RecensioniPubblicate />,
     "rec-google": <RecensioniGoogle />,
     "rec-richieste": <RecensioniRichieste />,
-    "blog-articoli": <BlogAdmin />,
+    "blog-articoli": <BlogAdmin vai={vai} daApprovare={badges.articoli} />,
+    "blog-revisione": <ArticoliDaApprovare aggiornaBadge={aggiornaBadge} />,
     "con-richieste": <Contatti />,
     "ana-traffico": <Analytics />,
     "imp-email": <ImpostazioniEmail />,

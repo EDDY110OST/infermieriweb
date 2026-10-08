@@ -6,6 +6,7 @@ import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
 import { linkCambio } from "../../../lib/cambio.js";
 import { avvisoEmail, normalizzaEmail } from "../../../lib/email.js";
 import { prenotabilitaTutti, GIORNI_FINESTRA } from "../../../lib/prenotabilita.js";
+import { NOTA_AUTORE_RIMOSSO } from "../../../lib/articoli-infermieri.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -30,8 +31,13 @@ async function anteprimaEliminazione(id) {
   const [z] = await sql`SELECT COUNT(*)::int AS n FROM coverage_areas WHERE professional_id = ${id}`;
   const [u] = await sql`SELECT role FROM professional_users WHERE professional_id = ${id} LIMIT 1`;
   const [c] = await sql`SELECT COUNT(*)::int AS n FROM applications WHERE lower(email) = lower(${p.email || ""}) AND ${p.email || ""} <> ''`;
+  const [art] = await sql`
+    SELECT COUNT(*) FILTER (WHERE status = 'published')::int AS pubblicati,
+           COUNT(*) FILTER (WHERE status <> 'published')::int AS altri
+    FROM articles WHERE author_professional_id = ${id}`;
   return { id: p.id, slug: p.slug, name: p.name, status: p.status, admin: u?.role === "admin",
-    future: n.future, future_con_email: n.future_con_email, passate: n.passate, recensioni: r.n, servizi: s.n, zone: z.n, candidature: c.n };
+    future: n.future, future_con_email: n.future_con_email, passate: n.passate, recensioni: r.n, servizi: s.n, zone: z.n, candidature: c.n,
+    articoli_pubblicati: art.pubblicati, articoli_non_pubblicati: art.altri };
 }
 
 // GET /api/admin/professionisti — elenco completo con dati operativi
@@ -119,7 +125,10 @@ export async function PATCH({ request }) {
 //     prenotazioni (le altre archiviate), recensioni, candidatura con la stessa email;
 //  4. la riga viene svuotata di ogni dato personale (nome, foto, contatti, albo, P.IVA,
 //     posizione), slug = rimosso-<id>, status = deleted;
-//  5. riga in admin_audit senza dati personali.
+//  5. articoli scritti da lui (8/10/26): i pubblicati tornano in BOZZA (via dal sito, niente
+//     firma di una persona che non c'è più) con una nota per gli admin, che decidono se
+//     renderli della redazione o eliminarli; bozze, invii e rifiutati si cancellano;
+//  6. riga in admin_audit senza dati personali.
 // Condizioni: solo admin, profilo già SOSPESO, non sé stessi, non un altro admin,
 // conferma = slug esatto del profilo.
 export async function DELETE({ request }) {
@@ -183,6 +192,12 @@ export async function DELETE({ request }) {
     ? await sql`DELETE FROM applications WHERE lower(email) = lower(${p.email}) RETURNING id`
     : [];
   const [passate] = await sql`SELECT COUNT(*)::int AS n FROM bookings WHERE professional_id = ${id}`;
+  // 5. articoli: mai firmati da una lapide
+  const articoliCancellati = await sql`
+    DELETE FROM articles WHERE author_professional_id = ${id} AND status <> 'published' RETURNING id`;
+  const articoliRitirati = await sql`
+    UPDATE articles SET status = 'draft', review_note = ${NOTA_AUTORE_RIMOSSO}, updated_at = now()
+    WHERE author_professional_id = ${id} AND status = 'published' RETURNING id`;
 
   // 4. lapide anonima: la riga resta, senza nessun dato personale
   await sql`
@@ -197,11 +212,12 @@ export async function DELETE({ request }) {
         edited_by = ${session.name || "admin"}, edited_at = now()
     WHERE id = ${id}`;
 
-  // 5. registro (senza dati personali)
+  // 6. registro (senza dati personali)
   const dettagli = {
     future_annullate: future.length, email_inviate: emailInviate, passate_conservate: passate.n,
     recensioni_cancellate: recensioni.length, servizi_cancellati: cancellati.length,
     servizi_archiviati: archiviati.length, candidature_cancellate: candidature.length,
+    articoli_tornati_in_bozza: articoliRitirati.length, articoli_non_pubblicati_cancellati: articoliCancellati.length,
   };
   await sql`
     INSERT INTO admin_audit (admin, azione, soggetto_id, dettagli)

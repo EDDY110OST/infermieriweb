@@ -26,7 +26,8 @@ export async function GET({ request }) {
       (SELECT COUNT(*) FROM reviews WHERE status = 'published') AS recensioni_pubblicate,
       (SELECT ROUND(AVG(rating)::numeric, 1) FROM reviews WHERE status = 'published') AS media_recensioni,
       (SELECT COUNT(DISTINCT customer_phone) FROM bookings) AS pazienti_unici,
-      (SELECT COUNT(*) FROM articles WHERE status = 'published') AS articoli_online`;
+      (SELECT COUNT(*) FROM articles WHERE status = 'published') AS articoli_online,
+      (SELECT COUNT(*) FROM articles WHERE status = 'review') AS articoli_da_approvare`;
 
   const perStato = await sql`
     SELECT status, COUNT(*) AS n FROM bookings GROUP BY status`;
@@ -42,6 +43,7 @@ export async function GET({ request }) {
   const task = [];
   if (Number(kpi.candidature_in_attesa) > 0) task.push({ testo: `${kpi.candidature_in_attesa} candidatura/e da esaminare`, sezione: "inf-verifica" });
   if (Number(kpi.recensioni_da_moderare) > 0) task.push({ testo: `${kpi.recensioni_da_moderare} recensione/i da moderare`, sezione: "rec-moderazione" });
+  if (Number(kpi.articoli_da_approvare) > 0) task.push({ testo: `${kpi.articoli_da_approvare} articolo/i degli infermieri da approvare`, sezione: "blog-revisione" });
 
   return json({ utente, kpi, perStato, ultime, task });
 }
