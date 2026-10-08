@@ -419,7 +419,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
     <div ref={topRef} className="adm-editor-top">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
         <h2 style={{ margin: 0, color: "var(--iw-navy)" }}>✏️ Modifica scheda — {nome}</h2>
-        <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <span className="pf-azioni">
           {prof.status === "active" && <a className="pf-btn secondario compatto" href={`/p/${prof.slug}`} target="_blank" rel="noreferrer">Vedi scheda</a>}
           <button className="pf-btn secondario compatto" onClick={onIndietro}>← Torna all'elenco</button>
         </span>
@@ -556,11 +556,12 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       {/* ZONE */}
       <div className="pf-panel" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Zone coperte</h3>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        {/* stesse pillole della scheda Zone del pannello infermiere (.pf-zona) */}
+        <div className="pf-zone-lista" style={{ marginBottom: 12 }}>
           {(zone || []).map((z) => (
-            <span key={z.id} className="stato done" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              {z.city} ({z.province})
-              <button onClick={() => rimuoviZona(z)} title="Togli" style={{ background: "none", border: 0, cursor: "pointer", fontWeight: 700 }}>×</button>
+            <span key={z.id} className="pf-zona">
+              📍 {z.city} <small>({z.province})</small>
+              <button type="button" onClick={() => rimuoviZona(z)} title={`Togli ${z.city}`} aria-label={`Togli ${z.city}`}>×</button>
             </span>
           ))}
           {zone && zone.length === 0 && <span className="pf-note" style={{ margin: 0 }}>Nessuna zona.</span>}
@@ -868,7 +869,7 @@ function Professionisti({ filtroStato }) {
             {Number(p.recensioni) > 0 && <> · ⭐ {String(p.rating).replace(".", ",")} ({p.recensioni})</>}
             {p.zone?.length > 0 && <> · 📍 {p.zone.join(", ")}</>}
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="pf-azioni">
             <button className="pf-btn compatto" onClick={() => setModifica({ id: p.id, nome: p.name })}>✏️ Modifica scheda</button>
             {p.status !== "deleted" && p.status !== "suspended" && <CorreggiEmail p={p} onFatto={carica} />}
             {p.status !== "suspended"
@@ -1441,9 +1442,11 @@ function Specializzazioni() {
             {v.professional_name && <span className="pf-note" style={{ margin: 0 }}> · solo per {v.professional_name}</span>}
           </strong>
           <span className="pf-note" style={{ margin: 0 }}>{Number(v.in_uso) > 0 ? `scelta da ${v.in_uso}` : "non ancora scelta"}</span>
-          <button className="pf-btn secondario compatto" onClick={() => setModifica({ id: v.id, nome: v.nome })}>Rinomina</button>
-          <button className="pf-btn secondario compatto" onClick={() => ritira(v)}>{v.active ? "Ritira" : "Rimetti"}</button>
-          <ConfermaInline etichetta="Elimina" domanda={`Elimino «${v.nome}»${Number(v.in_uso) > 0 ? ` anche da ${v.in_uso} scheda/e` : ""}?`} conferma="Sì, elimina" onConferma={() => elimina(v)} />
+          <span className="pf-azioni" style={{ marginLeft: "auto" }}>
+            <button className="pf-btn secondario compatto" onClick={() => setModifica({ id: v.id, nome: v.nome })}>Rinomina</button>
+            <button className="pf-btn secondario compatto" onClick={() => ritira(v)}>{v.active ? "Ritira" : "Rimetti"}</button>
+            <ConfermaInline etichetta="Elimina" domanda={`Elimino «${v.nome}»${Number(v.in_uso) > 0 ? ` anche da ${v.in_uso} scheda/e` : ""}?`} conferma="Sì, elimina" onConferma={() => elimina(v)} />
+          </span>
         </>
       )}
     </div>
@@ -2166,7 +2169,7 @@ function BlogAdmin() {
               )}
             </>
           )}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div className="pf-azioni" style={{ gap: 10 }}>
             <button className="pf-btn" disabled={salvo} onClick={() => salva(true)}>{salvo ? "Salvo…" : "Pubblica"}</button>
             <button className="pf-btn secondario" disabled={salvo} onClick={() => salva(false)}>Salva bozza</button>
             <button className="pf-btn pericolo" type="button" onClick={() => setEditor(null)}>Annulla</button>
@@ -2185,7 +2188,7 @@ function BlogAdmin() {
             </div>
           </div>
           <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
-          <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <span className="pf-azioni">
             <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw, body_html: art.body_html || "", body_format: art.body_format === "html" ? "html" : "raw" })}>Modifica</button>
             <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
             <ConfermaInline etichetta="Elimina" domanda={`Elimino «${art.title}» per sempre?`} conferma="Sì, elimina" onConferma={() => elimina(art)} />
@@ -2513,7 +2516,7 @@ function ScriviInfermieri() {
           </>
         )}
         <p className="pf-note" style={{ margin: "4px 0 12px" }} aria-live="polite"><span data-caratteri={caratteri}>{numeroIt(caratteri)} caratteri</span> · la bozza resta salvata in questo browser</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="pf-azioni">
           <button type="button" className="pf-btn secondario" disabled={!!occupato || vuoto || !oggetto.trim()} onClick={vediAnteprima}>{occupato === "anteprima" ? "Preparo…" : "👁️ Anteprima"}</button>
           <button type="button" className="pf-btn secondario" disabled={!!occupato || vuoto || !oggetto.trim()} onClick={mandaProva}>{occupato === "prova" ? "Mando…" : "🧪 Mandami una prova"}</button>
           <ConfermaInline etichetta="Svuota" domanda="Cancello oggetto e testo?" conferma="Sì, svuota" disabled={occupato === "invio" || inCorsoInvio} onConferma={svuota} />

@@ -1274,3 +1274,40 @@ label.pf-spunta.piena, .pf-book label.pf-spunta.piena { opacity: 0.5; cursor: no
 }
 .pf-spunta > span { min-width: 0; }
 @media (max-width: 560px) { .pf-spunte { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* Chip di stato («Attiva», «Online», «Bozza», «ancora valida»…): stessa pillola
+   ovunque e mai spezzata su due righe (in «Cambia infermiere» andava a capo). */
+.stato { display: inline-block; font-size: 15px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; line-height: 1.4; vertical-align: middle; }
+
+/* Fila di tasti di una card: sul telefono i tasti riempiono la riga, così non
+   restano impilati a larghezze diverse. */
+.pf-azioni { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .pf-azioni > .pf-btn, .pf-azioni > button, .pf-azioni > .pf-conferma-inline { flex: 1 1 auto; justify-content: center; }
+  .pf-agenda-item .pf-azioni { flex: 1 1 100%; }
+}
+
+/* Bersagli di tocco: sul telefono ogni tasto è alto almeno 44 px */
+.pf-tab { min-height: 44px; }
+@media (max-width: 760px) {
+  .pf-btn.compatto { min-height: 44px; }
+  .pf-elimina { width: 44px; height: 44px; }
+  .pf-servizio-edit .riga2 label.attivo { min-height: 44px; }
+  .tt-barra { position: static; }
+  .tt-btn { min-height: 44px; }
+  .tt-colore { width: 30px; height: 30px; }
+}
+/* i pallini dei colori restano piccoli, ma l'area di tocco intorno è 44 px */
+.tt-colore { position: relative; }
+.tt-colore::after { content: ""; position: absolute; inset: -7px; border-radius: 50%; }
+@media (max-width: 900px) { .adm-voce { min-height: 44px; } }
+.pf-servizio-edit .riga2 label.attivo input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--iw-primary-deep); }
+/* il cestino chiude la riga della prestazione, a destra */
+.pf-servizio-edit .riga2 > .pf-elimina, .pf-servizio-edit .riga2 > .pf-conferma-inline { margin-left: auto; }
+/* la «×» delle zone: il cerchio resta piccolo, l'area di tocco è 44 px */
+.pf-zona button { position: relative; width: 30px; height: 30px; margin: -3px -4px -3px 0; }
+.pf-zona button::after { content: ""; position: absolute; inset: -7px; }
+
+/* Tabella dei contatori (admin): la prima colonna resta ferma mentre si scorre di lato */
+.adm-tabella-wrap { -webkit-overflow-scrolling: touch; }
+.adm-tabella th:first-child, .adm-tabella td:first-child { position: sticky; left: 0; z-index: 1; background: var(--iw-card); }

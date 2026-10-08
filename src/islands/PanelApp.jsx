@@ -509,7 +509,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
                 </div>
                 <span className={`stato ${e.dato.status}`}>{STATI[e.dato.status]}</span>
                 {e.dato.status === "active" && (
-                  <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span className="pf-azioni">
                     {e.dato.source === "online" && (e.dato.accepted_at
                       ? <span className="stato done" title="Hai confermato al paziente che ci sarai">✓ Accettata</span>
                       : <button className="pf-btn compatto" onClick={() => accetta(e.dato.id)} title="Dici al paziente che ci sarai">Accetta</button>)}
