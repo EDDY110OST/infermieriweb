@@ -3,7 +3,7 @@ export const prerender = false;
 import { sql } from "../../lib/db.js";
 import { APPELLATIVO } from "../../lib/appellativo.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
-import { sendEmail } from "../../lib/mailer.js";
+import { sendEmail, EMAIL_AVVISI_ADMIN } from "../../lib/mailer.js";
 import { hashPassword } from "../../lib/auth.js";
 import { trovaComune } from "../../data/comuni.js";
 import { TIPI_ATTIVITA } from "../../data/listino.js";
@@ -75,9 +75,9 @@ export async function POST({ request }) {
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
-  try {
+  for (const to of EMAIL_AVVISI_ADMIN) try {
     await sendEmail({
-      to: "infermieri.ef@gmail.com",
+      to,
       subject: `Nuova candidatura: ${esc(name)} (${esc(profession)}, ${esc(city)})`,
       html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
         <h2 style="color: #0b3954;">Nuova candidatura da verificare 🩺</h2>

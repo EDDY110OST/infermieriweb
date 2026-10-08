@@ -9,6 +9,10 @@ const SITE = "https://infermieriweb.it";
 // quindi ogni email dice a chi scrivere davvero.
 export const ASSISTENZA_EMAIL = process.env.EMAIL_ASSISTENZA || "info@infermieriweb.it";
 
+// A chi arrivano gli avvisi per gli amministratori (nuova candidatura, nuovo articolo da
+// approvare): una sola lista per tutti gli avvisi, così non si dimentica nessuno.
+export const EMAIL_AVVISI_ADMIN = ["infermieri.ef@gmail.com"];
+
 // Piè di pagina delle risposte. Il mittente (prenotazioni@) NON è una casella:
 // se l'email ha un replyTo le risposte arrivano a una persona vera, altrimenti
 // si perderebbero — e allora va detto chiaro dove scrivere.

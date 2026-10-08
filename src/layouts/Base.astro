@@ -60,8 +60,9 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={ogImageAlt} />
 
+    {/* «<» diventa \u003c: un titolo scritto da un utente con «</script>» non può uscire dal blocco */}
     {schemas.map((schema) => (
-      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+      <script type="application/ld+json" set:html={JSON.stringify(schema).replace(/</g, "\\u003c")} />
     ))}
 
     <!-- Analytics: Google Analytics 4 caricato SOLO previo consenso (cookie banner).
