@@ -77,7 +77,14 @@ export default function EditorArticolo({ html, onChange, onTesto }) {
   const salvaLink = () => {
     const url = linkUrl.trim();
     if (!url) editor.chain().focus().extendMarkRange("link").unsetLink().run();
-    else editor.chain().focus().extendMarkRange("link").setLink({ href: /^(https?:|mailto:)/i.test(url) ? url : `https://${url}` }).run();
+    else {
+      editor.chain().focus().extendMarkRange("link").setLink({ href: /^(https?:|mailto:)/i.test(url) ? url : `https://${url}` }).run();
+      // 8/10/26: il cursore va subito DOPO il link e si continua a scrivere fuori dal link.
+      // Prima la parola restava selezionata: il primo tasto (o un Invio) cancellava il testo del link.
+      const fine = editor.state.selection.to;
+      editor.chain().setTextSelection(fine).unsetMark("link").run();
+      setTimeout(() => { if (!editor.isDestroyed) editor.commands.focus(); }, 0);
+    }
     setLinkAperto(false);
   };
 
