@@ -3,6 +3,7 @@ import { FASCE, fasciaDi, eConsulenza, TIPI_ATTIVITA, offreDomicilio, offreConsu
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
 import ConfermaInline from "./ConfermaInline.jsx";
+import { descriviBlocco, sottotitoloBlocco, giorniBlocco } from "../lib/blocchi-testo.js";
 
 // Ogni chiamata del pannello: se torna 401 la sessione è scaduta -> avvisa tutto il pannello,
 // così invece di schede vuote o pagine bianche l'infermiere viene riportato al login.
@@ -67,9 +68,237 @@ const DISPO_COLORE = {
   aperto:   { bordo: "#16a34a", nome: "Disponibile (orari fissi)" },
   speciale: { bordo: "#2563eb", nome: "Orari speciali" },
   chiuso:   { bordo: "#cbd5e1", nome: "Chiuso" },
+  bloccato: { bordo: "#dc2626", nome: "🔒 Bloccato (ferie, impegno)" },
 };
 
-function CalendarioMensile({ bookings, dispo, onGiorno, giornoSel, meseData, setMeseData }) {
+// ---------------------------------------------------------------- Blocchi e prenotabilità (8/10/26)
+// Caso vero: un'infermiera aveva tre blocchi lunghi mesi e decine di giorni chiusi uno a
+// uno; nel pannello un blocco si vedeva solo nel giorno d'inizio e con la sola ora di fine,
+// e nessuno le diceva che i pazienti non vedevano più orari liberi.
+
+// Ogni volta che cambia qualcosa che tocca la prenotabilità (orari, blocchi, giorni chiusi)
+// l'avviso in cima al pannello si ricalcola.
+const agendaCambiata = () => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("iw-agenda-cambiata")); };
+
+// Inizio e fine (ms) del giorno «g» (YYYY-MM-DD) nell'ora del telefono, che è quella di Roma
+const limitiGiorno = (g) => {
+  const [y, m, d] = g.split("-").map(Number);
+  return [new Date(y, m - 1, d).getTime(), new Date(y, m - 1, d + 1).getTime()];
+};
+// Il blocco copre (anche in parte) il giorno g?
+function bloccoCopreGiorno(b, g) {
+  const [inizio, fine] = limitiGiorno(g);
+  const bs = new Date(b.start_dt).getTime(), be = new Date(b.end_dt).getTime();
+  return bs < fine && be > inizio;
+}
+// "" | "parziale" | "intero": quanto del giorno g è coperto dai blocchi
+function coperturaBlocchi(blocchi, g) {
+  const [inizio, fine] = limitiGiorno(g);
+  let esito = "";
+  for (const b of blocchi || []) {
+    const bs = new Date(b.start_dt).getTime(), be = new Date(b.end_dt).getTime();
+    if (!(bs < fine && be > inizio)) continue;
+    if (bs <= inizio && be >= fine - 60000) return "intero"; // fino alle 00:00 o alle 23:59
+    esito = "parziale";
+  }
+  return esito;
+}
+
+const STILE_AVVISO = { background: "#fff7ed", border: "1px solid #fed7aa", borderLeft: "5px solid #f97316", color: "#9a3412", borderRadius: 12, padding: "12px 14px", fontSize: 17, lineHeight: 1.45 };
+
+// Modulo «Blocca uno spazio» (Agenda e Orari). Sopra i 14 giorni chiede conferma in
+// pagina con le date scritte per esteso: un blocco di mesi non deve mai partire per sbaglio.
+function FormBlocco({ onSalvato, onChiudi }) {
+  const [blocco, setBlocco] = useState({ data: "", dataFine: "", dalle: "", alle: "", reason: "", tuttoIlGiorno: false });
+  const [errore, setErrore] = useState("");
+  const [inviando, setInviando] = useState(false);
+  const [daConfermare, setDaConfermare] = useState(null); // { start, end, giorni }
+  const confermaRef = useRef(null);
+  useEffect(() => { if (daConfermare) confermaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [daConfermare]);
+
+  const orari = () => blocco.tuttoIlGiorno ? { dalle: "00:00", alle: "23:59" } : { dalle: blocco.dalle, alle: blocco.alle };
+  const salva = async () => {
+    setInviando(true); setErrore("");
+    const { dalle, alle } = orari();
+    try {
+      const r = await panelFetch("/api/panel/blocchi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // ora locale nuda: l'offset di Roma (legale/solare) lo calcola il server
+          start_local: `${blocco.data}T${dalle}`,
+          end_local: `${blocco.dataFine || blocco.data}T${alle}`,
+          reason: blocco.reason,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito a salvare il blocco: riprova");
+      onSalvato?.(d);
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInviando(false); setDaConfermare(null);
+    }
+  };
+  const invia = (e) => {
+    e.preventDefault();
+    const { dalle, alle } = orari();
+    if (!blocco.data || !dalle || !alle || inviando) return;
+    const start = new Date(`${blocco.data}T${dalle}`);
+    const end = new Date(`${blocco.dataFine || blocco.data}T${alle}`);
+    if (!(end > start)) return setErrore("La fine deve venire dopo l'inizio");
+    setErrore("");
+    const giorni = giorniBlocco(start, end);
+    if (giorni > 14) return setDaConfermare({ start, end, giorni });
+    salva();
+  };
+
+  return (
+    <form className="pf-panel pf-book" onSubmit={invia} style={{ marginBottom: 18 }}>
+      <h2>🔒 Blocca uno spazio (ferie, pausa, impegno)</h2>
+      <p className="pf-note" style={{ marginTop: -6 }}>Nei giorni e nelle ore bloccate nessuno può prenotarti. Per le ferie metti il primo e l'ultimo giorno e spunta «tutto il giorno».</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div>
+          <label>Dal giorno *</label>
+          <input type="date" required value={blocco.data} onChange={(e) => setBlocco({ ...blocco, data: e.target.value })} />
+        </div>
+        <div>
+          <label>Al giorno <span style={{ fontWeight: 400 }}>(per le ferie)</span></label>
+          <input type="date" min={blocco.data} value={blocco.dataFine} onChange={(e) => setBlocco({ ...blocco, dataFine: e.target.value })} />
+        </div>
+      </div>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+        <input type="checkbox" style={{ width: "auto", margin: 0 }} checked={blocco.tuttoIlGiorno} onChange={(e) => setBlocco({ ...blocco, tuttoIlGiorno: e.target.checked })} />
+        Tutto il giorno (dalle 00:00 alle 23:59)
+      </label>
+      {!blocco.tuttoIlGiorno && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <label>Dalle *</label>
+            <input type="time" required value={blocco.dalle} onChange={(e) => setBlocco({ ...blocco, dalle: e.target.value })} />
+          </div>
+          <div>
+            <label>Alle *</label>
+            <input type="time" required value={blocco.alle} onChange={(e) => setBlocco({ ...blocco, alle: e.target.value })} />
+          </div>
+        </div>
+      )}
+      <label>Motivo (facoltativo)</label>
+      <input value={blocco.reason} onChange={(e) => setBlocco({ ...blocco, reason: e.target.value })} placeholder="es. ferie" />
+      {errore && <div className="pf-errore">{errore}</div>}
+      {daConfermare ? (
+        <div ref={confermaRef} role="alert" style={{ ...STILE_AVVISO, marginBottom: 12, scrollMarginTop: 96 }}>
+          <strong>Stai bloccando {daConfermare.giorni} giorni.</strong><br />
+          {descriviBlocco(daConfermare.start, daConfermare.end)}.<br />
+          In questo periodo nessun paziente potrà prenotarti. Confermi?
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+            <button type="button" className="pf-btn compatto" disabled={inviando} onClick={salva}>{inviando ? "Salvo…" : "Sì, blocca"}</button>
+            <button type="button" className="pf-btn secondario compatto" disabled={inviando} onClick={() => setDaConfermare(null)}>No, correggo</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="pf-btn" disabled={inviando}>{inviando ? "Salvo…" : "Salva blocco"}</button>
+          {onChiudi && <button type="button" className="pf-btn secondario" onClick={onChiudi}>Annulla</button>}
+        </div>
+      )}
+    </form>
+  );
+}
+
+// «I tuoi blocchi» (scheda Orari): TUTTI i blocchi di oggi e del futuro, con le date complete
+// e la durata, ognuno con il tasto Rimuovi (conferma in pagina).
+function SezioneBlocchi({ ancora }) {
+  const [blocchi, setBlocchi] = useState(null);
+  const [caricatoAlle, setCaricatoAlle] = useState(0); // per dire «in corso adesso» senza leggere l'ora durante il render
+  const [mostraForm, setMostraForm] = useState(false);
+  const [esito, setEsito] = useState(null);
+  const ref = useRef(null);
+  const carica = useCallback(() => {
+    panelFetch("/api/panel/blocchi").then((r) => (r.ok ? r.json() : { blocchi: [] })).then((d) => { setBlocchi(d.blocchi || []); setCaricatoAlle(Date.now()); }).catch(() => setBlocchi([]));
+  }, []);
+  useEffect(carica, [carica]);
+  // arrivo dal tasto «Vedi i blocchi» dell'avviso: la sezione si porta in vista
+  const caricati = blocchi !== null;
+  useEffect(() => { if (String(ancora || "").startsWith("blocchi") && caricati) ref.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [ancora, caricati]);
+
+  const rimuovi = async (b) => {
+    try {
+      const r = await panelFetch(`/api/panel/blocchi?id=${b.id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
+      if (!r.ok) return setEsito({ tipo: "err", testo: "Non sono riuscito a togliere il blocco: riprova" });
+      setEsito({ tipo: "ok", testo: `Blocco tolto ✅ (${descriviBlocco(b.start_dt, b.end_dt)}). I pazienti possono di nuovo prenotarti in quei giorni.` });
+      carica(); agendaCambiata();
+    } catch {
+      setEsito({ tipo: "err", testo: "Errore di rete: riprova tra poco" });
+    }
+  };
+  return (
+    <section ref={ref} id="blocchi" style={{ marginTop: 28, scrollMarginTop: 96 }}>
+      <h2 style={{ color: "var(--iw-navy)", fontSize: 24, margin: "0 0 6px" }}>🔒 I tuoi blocchi</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>Ferie, turni, impegni: nei giorni bloccati nessuno può prenotarti. Qui vedi tutti i blocchi di oggi e dei prossimi mesi.</p>
+      {esito && <div className={esito.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 12 }}>{esito.testo}</div>}
+      {blocchi === null && <p className="pf-note">Caricamento…</p>}
+      {blocchi && blocchi.length === 0 && <div className="pf-panel" style={{ marginBottom: 12 }}><p style={{ margin: 0 }}>Nessun blocco: tutti i tuoi orari sono prenotabili.</p></div>}
+      {blocchi && blocchi.map((b) => (
+        <div className="pf-agenda-item pf-agenda-blocco" key={b.id}>
+          <div className="chi">
+            <strong>🔒 {descriviBlocco(b.start_dt, b.end_dt)}</strong>
+            <div className="servizio">{[sottotitoloBlocco(b.start_dt, b.end_dt, b.reason), new Date(b.start_dt).getTime() <= caricatoAlle ? "in corso adesso" : ""].filter(Boolean).join(" · ")}</div>
+          </div>
+          <ConfermaInline etichetta="Rimuovi" conferma="Sì, togli" title={`Rimuovi il blocco ${descriviBlocco(b.start_dt, b.end_dt)}`}
+            domanda="Tolgo questo blocco? I pazienti potranno di nuovo prenotarti in questi giorni." onConferma={() => rimuovi(b)} />
+        </div>
+      ))}
+      {mostraForm
+        ? <FormBlocco onChiudi={() => setMostraForm(false)} onSalvato={(d) => { setMostraForm(false); setEsito({ tipo: "ok", testo: `Blocco salvato ✅${d.blocco ? ` ${descriviBlocco(d.blocco.start_dt, d.blocco.end_dt)}` : ""}` }); carica(); agendaCambiata(); }} />
+        : <button type="button" className="pf-btn secondario" onClick={() => { setEsito(null); setMostraForm(true); }}>+ Blocca un periodo</button>}
+    </section>
+  );
+}
+
+// Avviso in cima al pannello: «nei prossimi 30 giorni nessuno può prenotarti», con il PERCHÉ
+// (stesso calcolo del sito pubblico) e un tasto per andare dove si corregge.
+const AZIONE_PER_DOVE = {
+  profilo: ["Apri il profilo", "profilo"],
+  servizi: ["Aggiungi una prestazione", "servizi"],
+  orari: ["Imposta gli orari", "orari"],
+  blocchi: ["Vedi i blocchi", "orari", "blocchi"],
+  agenda: ["Apri l'agenda", "agenda"],
+};
+function AvvisoPrenotabilita({ tab, vai }) {
+  const [dati, setDati] = useState(null);
+  const carica = useCallback(() => {
+    panelFetch("/api/panel/prenotabilita").then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setDati(d); }).catch(() => {});
+  }, []);
+  // si ricalcola a ogni cambio di scheda e a ogni modifica di orari, blocchi o giorni
+  useEffect(() => { carica(); }, [carica, tab]);
+  useEffect(() => {
+    window.addEventListener("iw-agenda-cambiata", carica);
+    return () => window.removeEventListener("iw-agenda-cambiata", carica);
+  }, [carica]);
+
+  if (!dati || dati.prenotabile) return null;
+  if (dati.motivi.some((m) => m.tipo === "non_attivo")) return null; // lo spiega già la scheda Profilo
+  return (
+    <div role="alert" className="pf-avviso-prenotabilita" style={{ ...STILE_AVVISO, marginBottom: 18 }}>
+      <strong style={{ fontSize: 19 }}>⚠️ Nessuno può prenotarti nei prossimi {dati.giorni} giorni.</strong>
+      <div style={{ marginTop: 4 }}>I pazienti non vedono orari liberi. Ecco perché:</div>
+      <ul style={{ margin: "8px 0 0", paddingLeft: 22 }}>
+        {dati.motivi.map((m, i) => {
+          const az = AZIONE_PER_DOVE[m.dove] || AZIONE_PER_DOVE.orari;
+          return (
+            <li key={i} style={{ margin: "6px 0" }}>
+              {m.testo}{" "}
+              <button type="button" className="pf-btn compatto" style={{ marginLeft: 4 }} onClick={() => vai(az[1], az[2] ? `${az[2]}-${Date.now()}` : "")}>{az[0]} →</button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function CalendarioMensile({ bookings, dispo, onGiorno, giornoSel, meseData, setMeseData, blocchi = [] }) {
   const anno = meseData.getFullYear();
   const mese = meseData.getMonth();
   const primo = new Date(anno, mese, 1);
@@ -106,18 +335,23 @@ function CalendarioMensile({ bookings, dispo, onGiorno, giornoSel, meseData, set
           <div className="pf-cal-intestazione" key={g}>{g}</div>
         ))}
         {celle.map((c) => {
-          const stato = dispo?.[c.chiave]?.stato || "aperto";
+          // un giorno coperto per intero da un blocco si vede come bloccato (🔒 rosso);
+          // coperto in parte: resta il suo colore, con il lucchetto accanto al numero
+          const copertura = coperturaBlocchi(blocchi, c.chiave);
+          const stato = copertura === "intero" ? "bloccato" : (dispo?.[c.chiave]?.stato || "aperto");
           const col = DISPO_COLORE[stato] || DISPO_COLORE.aperto;
+          const titolo = copertura === "parziale" ? `${col.nome} · orario bloccato in parte` : col.nome;
           return (
             <button
               type="button"
               key={c.chiave}
-              className={`pf-cal-cella${c.fuoriMese ? " fuori" : ""}${c.chiave === oggi ? " oggi" : ""}${c.chiave === giornoSel ? " scelto" : ""}${stato === "chiuso" ? " chiuso" : ""}`}
-              style={{ borderBottom: `3px solid ${col.bordo}` }}
+              className={`pf-cal-cella${c.fuoriMese ? " fuori" : ""}${c.chiave === oggi ? " oggi" : ""}${c.chiave === giornoSel ? " scelto" : ""}${stato === "chiuso" ? " chiuso" : ""}${stato === "bloccato" ? " bloccato" : ""}`}
+              style={{ borderBottom: `3px solid ${col.bordo}`, ...(stato === "bloccato" && c.chiave !== giornoSel ? { background: "#fef2f2" } : {}) }}
               onClick={() => onGiorno(c.chiave)}
-              title={col.nome}
+              title={titolo}
+              aria-label={`${c.data.getDate()} ${nomeMese}: ${titolo}`}
             >
-              <span className="numero">{c.data.getDate()}</span>
+              <span className="numero">{c.data.getDate()}{copertura && <span aria-hidden="true" style={{ fontSize: 9, marginLeft: 1, verticalAlign: "top" }}>🔒</span>}</span>
               <span className="pallini">
                 {c.appuntamenti.slice(0, 4).map((b) => (
                   <span key={b.id} className="pallino" style={{ background: (SEMAFORO[b.status] || SEMAFORO.active).colore }}
@@ -147,7 +381,6 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
   const [agenda, setAgenda] = useState(null);
   const [errore, setErrore] = useState("");
   const [mostraBlocco, setMostraBlocco] = useState(false);
-  const [blocco, setBlocco] = useState({ data: "", dataFine: "", dalle: "", alle: "", reason: "" });
   const [mostraManuale, setMostraManuale] = useState(false);
   const [servizi, setServizi] = useState(null);
   const [manuale, setManuale] = useState({ service_id: "", date: "", time: "", customer_name: "", customer_phone: "", address: "", city: "" });
@@ -192,6 +425,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       setAvvisoDispo({ tipo: "warn", testo: `Attenzione: hai ancora ${d.scoperte.length} prenotazione/i in questo giorno fuori dalla nuova disponibilità:\n${righe}\nRestano valide: se non puoi più, spostale o annullale qui sotto avvisando il paziente.` });
     }
     carica();
+    agendaCambiata();
   };
 
   // Toglie l'eccezione: il giorno torna a seguire l'orario fisso settimanale
@@ -204,6 +438,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     });
     setEditDispo(null);
     carica();
+    agendaCambiata();
   };
 
   const apriManuale = async () => {
@@ -274,37 +509,15 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     }
   };
 
-  const creaBlocco = async (e) => {
-    e.preventDefault();
-    if (!blocco.data || !blocco.dalle || !blocco.alle || inviando) return;
-    setInviando(true);
-    const r = await panelFetch("/api/panel/blocchi", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        // ora locale nuda: l'offset di Roma (legale/solare) lo calcola il server
-        start_local: `${blocco.data}T${blocco.dalle}`,
-        end_local: `${blocco.dataFine || blocco.data}T${blocco.alle}`,
-        reason: blocco.reason,
-      }),
-    });
-    if (r.ok) {
-      setMostraBlocco(false);
-      setBlocco({ data: "", dataFine: "", dalle: "", alle: "", reason: "" });
-      carica();
-    }
-    setInviando(false);
-  };
-
   const rimuoviBlocco = async (id) => {
     await panelFetch(`/api/panel/blocchi?id=${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
     carica();
+    agendaCambiata();
   };
 
   const eventi = [];
   if (agenda) {
     for (const b of agenda.bookings) eventi.push({ tipo: "booking", quando: b.start_dt, dato: b });
-    for (const b of agenda.blocks) eventi.push({ tipo: "block", quando: b.start_dt, dato: b });
     eventi.sort((a, b) => new Date(a.quando) - new Date(b.quando));
   }
   const perGiorno = eventi.reduce((acc, e) => {
@@ -312,6 +525,9 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
     (acc[g] = acc[g] || []).push(e);
     return acc;
   }, {});
+  // I blocchi si mostrano in OGNI giorno che coprono (prima solo nel giorno d'inizio, con la
+  // sola ora di fine: un blocco di mesi sembrava una pausa di poche ore) e con le date complete.
+  const blocchiSel = (agenda?.blocks || []).filter((b) => bloccoCopreGiorno(b, giornoSel));
 
   return (
     <div>
@@ -376,32 +592,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       )}
 
       {mostraBlocco && (
-        <form className="pf-panel pf-book" onSubmit={creaBlocco} style={{ marginBottom: 18 }}>
-          <h2>🔒 Blocca uno spazio (ferie, pausa, impegno)</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <label>Dal giorno *</label>
-              <input type="date" required value={blocco.data} onChange={(e) => setBlocco({ ...blocco, data: e.target.value })} />
-            </div>
-            <div>
-              <label>Al giorno <span style={{ fontWeight: 400 }}>(per le ferie)</span></label>
-              <input type="date" min={blocco.data} value={blocco.dataFine} onChange={(e) => setBlocco({ ...blocco, dataFine: e.target.value })} />
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <label>Dalle</label>
-              <input type="time" required value={blocco.dalle} onChange={(e) => setBlocco({ ...blocco, dalle: e.target.value })} />
-            </div>
-            <div>
-              <label>Alle</label>
-              <input type="time" required value={blocco.alle} onChange={(e) => setBlocco({ ...blocco, alle: e.target.value })} />
-            </div>
-          </div>
-          <label>Motivo (facoltativo)</label>
-          <input value={blocco.reason} onChange={(e) => setBlocco({ ...blocco, reason: e.target.value })} placeholder="es. ferie" />
-          <button className="pf-btn" disabled={inviando}>{inviando ? "Salvo…" : "Salva blocco"}</button>
-        </form>
+        <FormBlocco onChiudi={() => setMostraBlocco(false)} onSalvato={() => { setMostraBlocco(false); carica(); agendaCambiata(); }} />
       )}
 
       {errore && <div className="pf-errore">{errore}</div>}
@@ -409,6 +600,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
       {agenda && (
         <CalendarioMensile
           bookings={agenda.bookings}
+          blocchi={agenda.blocks}
           dispo={dispo}
           meseData={meseData}
           setMeseData={setMeseData}
@@ -433,6 +625,26 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
               {testoStato}
               {fonte === "eccezione" && <> · <button type="button" className="pf-link" onClick={tornaAlFisso}>torna agli orari fissi</button></>}
             </p>
+
+            {blocchiSel.length > 0 && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
+                <strong style={{ color: "#991b1b" }}>
+                  {coperturaBlocchi(blocchiSel, giornoSel) === "intero"
+                    ? "🔒 Giorno bloccato: oggi nessuno può prenotarti."
+                    : "🔒 Orario bloccato in parte: nelle ore bloccate nessuno può prenotarti."}
+                </strong>
+                {blocchiSel.map((b) => (
+                  <div className="pf-agenda-item pf-agenda-blocco" key={`k${b.id}`} style={{ margin: "8px 0 0", background: "#fff" }}>
+                    <div className="chi">
+                      <strong>Blocco {descriviBlocco(b.start_dt, b.end_dt)}</strong>
+                      {sottotitoloBlocco(b.start_dt, b.end_dt, b.reason) && <div className="servizio">{sottotitoloBlocco(b.start_dt, b.end_dt, b.reason)}</div>}
+                    </div>
+                    <ConfermaInline etichetta="Rimuovi" conferma="Sì, togli" title={`Rimuovi il blocco ${descriviBlocco(b.start_dt, b.end_dt)}`}
+                      domanda="Tolgo questo blocco? I pazienti potranno di nuovo prenotarti in questi giorni." onConferma={() => rimuoviBlocco(b.id)} />
+                  </div>
+                ))}
+              </div>
+            )}
 
             {avvisoDispo && (
               <div className={avvisoDispo.tipo === "err" ? "pf-errore" : "pf-successo"}
@@ -520,16 +732,7 @@ function TabAgenda({ statoPush, attivaNotifiche }) {
                   </span>
                 )}
               </div>
-            ) : (
-              <div className="pf-agenda-item pf-agenda-blocco" key={`k${e.dato.id}`}>
-                <span className="ora">{oraRoma(e.dato.start_dt)}</span>
-                <div className="chi">
-                  <strong>🔒 Orario bloccato</strong> fino alle {oraRoma(e.dato.end_dt)}
-                  {e.dato.reason && <div className="servizio">{e.dato.reason}</div>}
-                </div>
-                <button className="pf-btn pericolo compatto" onClick={() => rimuoviBlocco(e.dato.id)}>Rimuovi</button>
-              </div>
-            )
+            ) : null
                 )}
               </div>
             );
@@ -777,7 +980,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
 
 // ---------------------------------------------------------------- Orari
 
-function TabOrari() {
+function TabOrari({ ancora }) {
   const [giorni, setGiorni] = useState(null);
   const [messaggio, setMessaggio] = useState(null);
   const [salvo, setSalvo] = useState(false);
@@ -813,6 +1016,7 @@ function TabOrari() {
     setMessaggio(r.ok
       ? { tipo: "ok", testo: "✅ Orari salvati: il calendario pubblico è già aggiornato." }
       : { tipo: "err", testo: d.error });
+    if (r.ok) agendaCambiata();
   };
 
   const aggiungiFascia = (weekday) =>
@@ -894,6 +1098,8 @@ function TabOrari() {
       <button className="pf-btn" onClick={salva} disabled={salvo} style={{ marginTop: 14 }}>
         {salvo ? "Salvo…" : "Salva orari"}
       </button>
+
+      <SezioneBlocchi ancora={ancora} />
     </div>
   );
 }
@@ -1511,6 +1717,9 @@ export default function PanelApp() {
   const [utente, setUtente] = useState(null);
   const [errore, setErrore] = useState("");
   const [tab, setTab] = useState("agenda");
+  // «ancora»: punto della scheda da portare in vista (es. «blocchi» dall'avviso in cima)
+  const [ancora, setAncora] = useState("");
+  const vai = (t, a = "") => { setAncora(a); setTab(t); };
   const [statoPush, setStatoPush] = useState("idle");
   // Tipo di attività (domicilio / consulenza / entrambi): null = non ancora caricato,
   // "" = il professionista non ha ancora scelto → glielo chiediamo al primo accesso.
@@ -1699,9 +1908,11 @@ export default function PanelApp() {
 
       {tipo === "" && <SceltaTipo onScelto={(t) => { setTipo(t); if (t !== "domicilio") setTab("servizi"); }} />}
 
+      <AvvisoPrenotabilita tab={tab} vai={vai} />
+
       {tab === "agenda" && <TabAgenda statoPush={statoPush} attivaNotifiche={attivaNotifiche} />}
       {tab === "servizi" && <TabServizi tipo={tipo || ""} onCambiaTipo={() => setTab("profilo")} />}
-      {tab === "orari" && <TabOrari />}
+      {tab === "orari" && <TabOrari ancora={ancora} />}
       {tab === "zone" && <TabZone />}
       {tab === "stats" && <TabStatistiche />}
       {tab === "profilo" && <TabProfilo tipo={tipo || ""} setTipo={setTipo} />}
