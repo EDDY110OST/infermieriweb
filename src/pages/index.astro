@@ -11,10 +11,14 @@ import { sql } from "../lib/db.js";
 import { mapArticolo } from "../lib/blog.js";
 import { datiSuggerimenti } from "../lib/suggerimenti-server.js";
 
+// Ultimi 6 articoli pubblicati, con l'autore se l'ha scritto un infermiere (8/10/26)
 const righeArticoli = await sql`
-  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
-  FROM articles WHERE status = 'published'
-  ORDER BY published_at DESC, id DESC LIMIT 3`;
+  SELECT a.slug, a.title, a.category, a.excerpt, a.image, a.reading_time, a.published_at, a.sections,
+         a.author_professional_id, p.name AS autore_nome, p.slug AS autore_slug, p.photo_url AS autore_foto,
+         p.albo_name AS autore_albo, p.albo_number AS autore_numero, p.status AS autore_stato
+  FROM articles a LEFT JOIN professionals p ON p.id = a.author_professional_id
+  WHERE a.status = 'published' AND (a.author_professional_id IS NULL OR p.status <> 'deleted')
+  ORDER BY a.published_at DESC, a.id DESC LIMIT 6`;
 const ultimiArticoli = righeArticoli.map(mapArticolo);
 
 // Suggerimenti del campo di ricerca (comuni coperti e prestazioni offerte): pochi KB
@@ -115,7 +119,73 @@ const faqItems = [
     </div>
   </section>
 
-  <section class="pf-section pf-center">
+  <!-- 4. Guide e consigli (8/10/26: spostata qui, prima della mappa). Fila che si scorre
+       col dito sul telefono, 3 per volta con le frecce sul computer. Tutto nell'HTML del
+       server; lo script sotto accende solo le frecce. -->
+  <section class="pf-section pf-center" id="guide" aria-labelledby="titolo-guide">
+    <span class="pf-kicker">Blog salute</span>
+    <h2 id="titolo-guide">Guide e consigli dei nostri infermieri</h2>
+    <p class="pf-sub">Articoli chiari per pazienti e famiglie, scritti con gli infermieri della rete.</p>
+    <div class="pf-guide" data-guide>
+      <button type="button" class="pf-guide-freccia prec" aria-label="Articoli precedenti" disabled>
+        <span aria-hidden="true">‹</span>
+      </button>
+      <ul class="pf-guide-fila" tabindex="0" aria-label="Ultimi articoli: scorri per vederne altri">
+        {ultimiArticoli.map((articolo) => (
+          <li class="pf-guide-voce">
+            <a class="pf-guide-card" href={`/articoli/${articolo.slug}`}>
+              <img class="pf-guide-copertina" src={getArticleImage(articolo)} alt={`Immagine dell'articolo: ${articolo.title}`} width="900" height="540" loading="lazy" decoding="async" />
+              <span class="corpo">
+                <span class="cat">{articolo.category}</span>
+                <h3>{articolo.title}</h3>
+                {articolo.autore ? (
+                  <span class="pf-guide-autore">
+                    <img src={articolo.autore.foto} alt="" width="36" height="36" loading="lazy" decoding="async" />
+                    <span>{articolo.autore.nome}</span>
+                  </span>
+                ) : (
+                  <span class="pf-guide-autore">
+                    <img src="/logo-512.png" alt="" width="36" height="36" loading="lazy" decoding="async" />
+                    <span>Redazione InfermieriWeb</span>
+                  </span>
+                )}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <button type="button" class="pf-guide-freccia succ" aria-label="Articoli successivi">
+        <span aria-hidden="true">›</span>
+      </button>
+    </div>
+    <p style="margin-top: 22px;">
+      <a class="pf-btn secondario" href="/articoli">Tutti gli articoli →</a>
+    </p>
+  </section>
+  <script is:inline>
+    (function () {
+      document.querySelectorAll("[data-guide]").forEach(function (box) {
+        var fila = box.querySelector(".pf-guide-fila");
+        var prec = box.querySelector(".prec");
+        var succ = box.querySelector(".succ");
+        if (!fila || !prec || !succ) return;
+        var aggiorna = function () {
+          var max = fila.scrollWidth - fila.clientWidth - 2;
+          box.classList.toggle("scorrevole", max > 0);
+          prec.disabled = fila.scrollLeft <= 2;
+          succ.disabled = fila.scrollLeft >= max;
+        };
+        var vai = function (verso) { fila.scrollBy({ left: verso * fila.clientWidth, behavior: "smooth" }); };
+        prec.addEventListener("click", function () { vai(-1); });
+        succ.addEventListener("click", function () { vai(1); });
+        fila.addEventListener("scroll", aggiorna, { passive: true });
+        window.addEventListener("resize", aggiorna);
+        aggiorna();
+      });
+    })();
+  </script>
+
+  <section class="pf-section alt pf-center">
     <span class="pf-kicker">La rete</span>
     <h2>I professionisti sulla mappa</h2>
     <p class="pf-sub">La rete è partita da Lucca e si sta aprendo a nuove zone. Cerca la tua città o esplora la mappa.</p>
@@ -153,27 +223,6 @@ const faqItems = [
   </section>
 
   <section class="pf-section alt pf-center">
-    <span class="pf-kicker">Blog salute</span>
-    <h2>Guide e consigli dei professionisti</h2>
-    <p class="pf-sub">Articoli informativi scritti con i professionisti della rete, per pazienti e famiglie.</p>
-    <div class="pf-blog-grid">
-      {ultimiArticoli.map((articolo) => (
-        <a class="pf-blog-card" href={`/articoli/${articolo.slug}`}>
-          <img src={getArticleImage(articolo)} alt="" width="900" height="540" loading="lazy" />
-          <span class="corpo">
-            <span class="cat">{articolo.category}</span>
-            <h3>{articolo.title}</h3>
-            <p>{articolo.excerpt}</p>
-          </span>
-        </a>
-      ))}
-    </div>
-    <p style="margin-top: 26px;">
-      <a class="pf-btn secondario" href="/articoli">Tutti gli articoli</a>
-    </p>
-  </section>
-
-  <section class="pf-section pf-center">
     <span class="pf-kicker">Domande frequenti</span>
     <h2>Le domande che ci fanno più spesso</h2>
     <div class="pf-faq">
@@ -195,6 +244,7 @@ const faqItems = [
           compenso lo incassi tu, per intero. Zero commissioni.
           <strong>Gratis per i primi professionisti.</strong>
         </p>
+        <p style="margin-top: 10px;">✍️ Puoi anche scrivere articoli firmati col tuo nome: dal tuo pannello.</p>
       </div>
       <a class="pf-btn" href="/lavora-con-noi">Voglio la mia scheda</a>
     </div>

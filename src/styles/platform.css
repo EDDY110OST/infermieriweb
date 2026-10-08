@@ -475,21 +475,6 @@
 .pf-band .pf-btn { background: #fff; color: var(--iw-primary-deep) !important; margin-left: auto; }
 .pf-band .pf-btn:hover { background: var(--iw-primary-soft); }
 
-/* ---------- Blog cards ---------- */
-
-.pf-blog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; max-width: var(--iw-max); margin: 0 auto; }
-.pf-blog-card {
-  background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: var(--iw-radius);
-  overflow: hidden; text-decoration: none; display: flex; flex-direction: column; text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.pf-blog-card:hover { transform: translateY(-3px); box-shadow: var(--iw-shadow); }
-.pf-blog-card img { width: 100%; height: 170px; object-fit: cover; }
-.pf-blog-card .corpo { padding: 18px; }
-.pf-blog-card .cat { color: var(--iw-primary-deep); font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
-.pf-blog-card h3 { font-size: 20px; color: var(--iw-navy); margin: 6px 0 8px; }
-.pf-blog-card p { color: var(--iw-slate); font-size: 17px; margin: 0; }
-
 /* ---------- Footer ---------- */
 
 .pf-footer { background: var(--iw-navy); color: #cfe0e8; padding: 48px 20px 28px; margin-top: 0; }
@@ -1312,6 +1297,57 @@ label.pf-spunta.piena, .pf-book label.pf-spunta.piena { opacity: 0.5; cursor: no
 .adm-tabella-wrap { -webkit-overflow-scrolling: touch; }
 .adm-tabella th:first-child, .adm-tabella td:first-child { position: sticky; left: 0; z-index: 1; background: var(--iw-card); }
 
+/* ---------- Home: «Guide e consigli dei nostri infermieri» (8/10/26) ----------
+   Telefono: una fila che si scorre col dito (scroll-snap, niente giro automatico).
+   Computer: 3 per volta, frecce (tasti veri, raggiungibili da tastiera).
+   Immagini con dimensioni fisse (aspect-ratio): niente salti di impaginazione. */
+.pf-guide { position: relative; max-width: var(--iw-max); margin: 0 auto; }
+.pf-guide-fila {
+  list-style: none; margin: 0; padding: 4px 2px 16px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 36px) / 3); gap: 18px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain;
+  scrollbar-width: thin; text-align: left;
+}
+.pf-guide-fila:focus-visible { outline: 3px solid var(--iw-primary); outline-offset: 4px; border-radius: var(--iw-r-card); }
+.pf-guide-voce { scroll-snap-align: start; min-width: 0; display: flex; }
+.pf-guide-card {
+  width: 100%; background: var(--iw-card); border: 1px solid var(--iw-line); border-radius: var(--iw-radius);
+  overflow: hidden; text-decoration: none; display: flex; flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.pf-guide-card:hover { transform: translateY(-3px); box-shadow: var(--iw-shadow); }
+.pf-guide-copertina { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; object-fit: cover; background: var(--iw-primary-soft); }
+.pf-guide-card .corpo { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+.pf-guide-card .cat { color: var(--iw-primary-deep); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.pf-guide-card h3 { font-size: 19px; line-height: 1.3; color: var(--iw-navy); margin: 6px 0 14px; }
+.pf-guide-autore { margin-top: auto; display: flex; align-items: center; gap: 10px; color: var(--iw-slate); font-size: 16px; font-weight: 600; }
+.pf-guide-autore img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex: none; background: var(--iw-bg); border: 1px solid var(--iw-line); }
+.pf-guide-freccia {
+  display: none; position: absolute; top: calc(50% - 40px); z-index: 2; width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--iw-line); background: #fff; color: var(--iw-navy); font-size: 30px; line-height: 1;
+  box-shadow: var(--iw-shadow); cursor: pointer; align-items: center; justify-content: center; padding: 0 0 4px;
+}
+.pf-guide-freccia.prec { left: -12px; }
+.pf-guide-freccia.succ { right: -12px; }
+.pf-guide-freccia:hover:not(:disabled) { background: var(--iw-primary-soft); }
+.pf-guide-freccia:focus-visible { outline: 3px solid var(--iw-primary); outline-offset: 2px; }
+.pf-guide-freccia:disabled { opacity: 0.35; cursor: default; }
+.pf-guide.scorrevole .pf-guide-freccia { display: flex; }
+@media (max-width: 760px) {
+  .pf-guide-fila { grid-auto-columns: 82%; gap: 14px; }
+  .pf-guide.scorrevole .pf-guide-freccia { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-guide-fila { scroll-behavior: auto; }
+  .pf-guide-card { transition: none; }
+}
+
+/* Scheda pubblica: «Articoli di …» */
+.pf-articoli-autore { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.pf-articoli-autore li { display: flex; flex-direction: column; gap: 2px; }
+.pf-articoli-autore a { color: var(--iw-primary-deep); font-weight: 700; font-size: 18px; }
+.pf-articoli-autore span { color: var(--iw-slate); font-size: 16px; }
+
 /* ---------- Articoli degli infermieri: pannello e coda admin (8/10/26) ---------- */
 .art-regole { margin-bottom: 16px; border-left: 5px solid var(--iw-primary); }
 .art-regole ul { margin: 0 0 10px; padding-left: 22px; display: grid; gap: 4px; }
@@ -1339,10 +1375,3 @@ label.pf-spunta.piena, .pf-book label.pf-spunta.piena { opacity: 0.5; cursor: no
 .rev-corpo { overflow-wrap: anywhere; }
 .rev-fonti { border-top: 1px solid var(--iw-line); margin-top: 12px; padding-top: 10px; }
 .rev-url { color: var(--iw-muted); font-size: 14px; overflow-wrap: anywhere; }
-
-/* Scheda pubblica: «Articoli di …» */
-.pf-articoli-autore { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.pf-articoli-autore li { display: flex; flex-direction: column; gap: 2px; }
-.pf-articoli-autore a { color: var(--iw-primary-deep); font-weight: 700; font-size: 18px; }
-.pf-articoli-autore span { color: var(--iw-slate); font-size: 16px; }
-
