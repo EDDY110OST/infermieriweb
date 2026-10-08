@@ -46,9 +46,23 @@ CREATE TABLE IF NOT EXISTS articles (
   -- (jsonb) si calcolano in entrambi i casi al salvataggio.
   body_html text NOT NULL DEFAULT ''::text,
   body_format text NOT NULL DEFAULT 'raw'::text,
+  -- Articoli scritti dagli infermieri (8/10/26, migrazione migrate-2026-10-08-articoli.mjs).
+  -- author_professional_id NULL = articolo della redazione (firmato come prima).
+  -- status: draft (bozza) | review (in revisione) | changes (da correggere) |
+  --         rejected (rifiutato) | published. review_note = nota degli admin all'infermiere.
+  -- sources = fonti [{testo, url}] in fondo all'articolo.
+  author_professional_id integer,
+  review_note text NOT NULL DEFAULT ''::text,
+  submitted_at timestamp with time zone,
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  sources jsonb NOT NULL DEFAULT '[]'::jsonb,
   CONSTRAINT articles_pkey PRIMARY KEY (id),
-  CONSTRAINT articles_slug_key UNIQUE (slug)
+  CONSTRAINT articles_slug_key UNIQUE (slug),
+  CONSTRAINT articles_status_check CHECK (status IN ('draft', 'review', 'changes', 'rejected', 'published'))
 );
+CREATE INDEX ix_articles_author ON articles USING btree (author_professional_id, status);
+CREATE INDEX ix_articles_status ON articles USING btree (status, published_at DESC);
 
 CREATE TABLE IF NOT EXISTS blocks (
   id SERIAL,
@@ -411,6 +425,7 @@ CREATE UNIQUE INDEX ux_admin_broadcasts_chiave ON admin_broadcasts USING btree (
 CREATE INDEX ix_admin_broadcasts_created ON admin_broadcasts USING btree (created_at DESC);
 
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
+ALTER TABLE articles ADD CONSTRAINT articles_author_professional_id_fkey FOREIGN KEY (author_professional_id) REFERENCES professionals(id);
 ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
 ALTER TABLE bookings ADD CONSTRAINT bookings_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
