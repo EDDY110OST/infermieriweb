@@ -1339,3 +1339,10 @@ label.pf-spunta.piena, .pf-book label.pf-spunta.piena { opacity: 0.5; cursor: no
 .rev-corpo { overflow-wrap: anywhere; }
 .rev-fonti { border-top: 1px solid var(--iw-line); margin-top: 12px; padding-top: 10px; }
 .rev-url { color: var(--iw-muted); font-size: 14px; overflow-wrap: anywhere; }
+
+/* Scheda pubblica: «Articoli di …» */
+.pf-articoli-autore { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.pf-articoli-autore li { display: flex; flex-direction: column; gap: 2px; }
+.pf-articoli-autore a { color: var(--iw-primary-deep); font-weight: 700; font-size: 18px; }
+.pf-articoli-autore span { color: var(--iw-slate); font-size: 16px; }
+

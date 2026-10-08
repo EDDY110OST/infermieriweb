@@ -2179,6 +2179,23 @@ summary:focus-visible {
 .article-fonti { color: var(--text-secondary); }
 .article-fonti .article-list { gap: 12px; }
 
+/* Articoli scritti dagli infermieri (8/10/26): firma in cima, nota in fondo, anteprima */
+.article-firma { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px 14px; background: rgba(0, 137, 123, 0.06); border-radius: 14px; max-width: 720px; }
+.article-firma img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; background: #e2e8f0; }
+.article-firma p { margin: 0; line-height: 1.4; }
+.article-firma .article-firma-nome { font-size: 18px; color: var(--text-primary); font-weight: 600; }
+.article-firma-nome a { color: var(--primary-dark); text-decoration: underline; text-underline-offset: 3px; }
+.article-firma-albo { font-weight: 500; color: var(--text-secondary); }
+.article-firma .article-firma-date { font-size: 16px; color: var(--text-secondary); margin-top: 3px !important; }
+.article-page .article-nota-autore { font-size: 16px; color: var(--text-secondary); border-top: 1px solid #e2e8f0; padding-top: 14px; margin: 8px 0 22px; }
+.article-anteprima { max-width: 1080px; margin: 0 auto 16px; background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; border-radius: 12px; padding: 12px 16px; font-size: 16px; }
+@media (max-width: 480px) {
+  .article-firma { align-items: flex-start; }
+  .article-firma img { width: 48px; height: 48px; }
+  .article-firma-albo { display: block; }
+  .article-firma-albo .sep { display: none; }
+}
+
 /* Barra azioni sopra il modulo */
 .doc-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .doc-hint { color: var(--text-secondary); font-size: 14px; }

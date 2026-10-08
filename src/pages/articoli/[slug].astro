@@ -11,9 +11,16 @@ import { mapArticolo } from "../../lib/blog.js";
 
 const { slug } = Astro.params;
 
+// Con l'autore, se l'ha scritto un infermiere (8/10/26). Mai un articolo firmato da un
+// profilo eliminato (alla cancellazione tornano in bozza: questo è solo un secondo controllo).
 const [riga] = await sql`
-  SELECT slug, title, category, excerpt, image, reading_time, published_at, sections
-  FROM articles WHERE slug = ${slug} AND status = 'published'`;
+  SELECT a.slug, a.title, a.category, a.excerpt, a.image, a.reading_time, a.published_at, a.sections,
+         a.sources, a.reviewed_at, a.author_professional_id,
+         p.name AS autore_nome, p.slug AS autore_slug, p.photo_url AS autore_foto,
+         p.albo_name AS autore_albo, p.albo_number AS autore_numero, p.status AS autore_stato
+  FROM articles a LEFT JOIN professionals p ON p.id = a.author_professional_id
+  WHERE a.slug = ${slug} AND a.status = 'published'
+    AND (a.author_professional_id IS NULL OR p.status <> 'deleted')`;
 
 if (!riga) {
   return new Response(null, { status: 404 });

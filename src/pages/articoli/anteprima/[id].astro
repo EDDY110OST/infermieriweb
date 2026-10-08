@@ -1,0 +1,36 @@
+---
+export const prerender = false;
+
+// Anteprima di un articolo NON ancora pubblicato, com'è sul sito (8/10/26). La vedono solo
+// gli amministratori e l'infermiere che l'ha scritto. Mai su Google (noindex).
+import Platform from "../../../layouts/Platform.astro";
+import ArticoloIsland from "../../../islands/ArticoloIsland.jsx";
+import { sql } from "../../../lib/db.js";
+import { sessionFromRequest } from "../../../lib/auth.js";
+import { mapArticolo } from "../../../lib/blog.js";
+
+const id = Number(Astro.params.id);
+const session = sessionFromRequest(Astro.request);
+const [riga] = id ? await sql`
+  SELECT a.id, a.slug, a.title, a.category, a.excerpt, a.image, a.reading_time, a.published_at, a.sections,
+         a.sources, a.reviewed_at, a.status, a.author_professional_id, a.submitted_at,
+         p.name AS autore_nome, p.slug AS autore_slug, p.photo_url AS autore_foto,
+         p.albo_name AS autore_albo, p.albo_number AS autore_numero, p.status AS autore_stato
+  FROM articles a LEFT JOIN professionals p ON p.id = a.author_professional_id
+  WHERE a.id = ${id}` : [];
+
+const puoVedere = riga && session && (session.role === "admin" || (riga.author_professional_id && Number(session.pid) === Number(riga.author_professional_id)));
+if (!puoVedere) {
+  return new Response(null, { status: 404 });
+}
+Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow");
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+// Non ancora pubblicato: la data che si vede è quella di oggi (sarà quella dell'uscita)
+const article = mapArticolo({ ...riga, published_at: riga.published_at || new Date() });
+const path = `/articoli/anteprima/${id}`;
+---
+
+<Platform title={`Anteprima: ${article.title} | InfermieriWeb`} description={article.excerpt || "Anteprima dell'articolo"} path={path} robots="noindex, nofollow">
+  <ArticoloIsland pathname={path} params={{ slug: article.slug }} article={article} related={[]} anteprima={riga.status !== "published"} />
+</Platform>

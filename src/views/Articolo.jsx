@@ -68,11 +68,47 @@ function analizzaSezione(section) {
   return { variante: m[1], content: pulito };
 }
 
-export default function Articolo({ article, related = [] }) {
+// Firma di un articolo scritto da un infermiere della rete (8/10/26)
+function FirmaAutore({ autore, data, rivisto, lettura }) {
+  const nome = autore.attivo ? <a href={`/p/${autore.slug}`}>{autore.nome}</a> : <span>{autore.nome}</span>;
+  const date = [
+    data && `Pubblicato il ${formatData(data)}`,
+    rivisto && `Rivisto il ${formatData(rivisto)}`,
+    lettura,
+  ].filter(Boolean).join(" · ");
+  return (
+    <div className="article-firma">
+      <img src={autore.foto} alt={`Foto di ${autore.nome}`} width="56" height="56" loading="eager" />
+      <div>
+        <p className="article-firma-nome">Scritto da {nome}<span className="article-firma-albo"><span className="sep"> · </span>{autore.albo}</span></p>
+        {date && <p className="article-firma-date">{date}</p>}
+      </div>
+    </div>
+  );
+}
+
+// Fonti in fondo all'articolo (riquadro «fonti»): testo + link, se c'è
+function FontiArticolo({ fonti }) {
+  return (
+    <section id="fonti" className="article-section article-fonti">
+      <h2>Fonti</h2>
+      <ul className="article-list">
+        {fonti.map((f, i) => (
+          <li key={i}>
+            {f.url ? <a href={f.url} target="_blank" rel="noopener noreferrer nofollow">{f.testo}</a> : f.testo}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export default function Articolo({ article, related = [], anteprima = false }) {
   const safeCategory = article?.category || "Articolo";
   const safeDate = formatData(article?.date);
   const servizioAbbinato = SERVIZIO_PER_ARTICOLO[article?.slug];
   const safeReadingTime = article?.readingTime || "";
+  const fonti = Array.isArray(article?.fonti) ? article.fonti.filter((f) => f && f.testo) : [];
   const articleSections = Array.isArray(article?.sections) && article.sections.length
     ? article.sections
     : [
@@ -111,12 +147,22 @@ export default function Articolo({ article, related = [] }) {
           <span>{article.title}</span>
         </nav>
 
+        {anteprima && (
+          <div className="article-anteprima" role="status">
+            👁️ <strong>Anteprima</strong>: l'articolo non è ancora pubblicato. Lo vedono solo l'autore e gli amministratori.
+          </div>
+        )}
+
         <div className="article-header">
           <span className="article-category">{safeCategory}</span>
           <h1>{article.title}</h1>
-          <div className="article-meta">
-            <span>{[safeDate, safeReadingTime].filter(Boolean).join(" · ")}</span>
-          </div>
+          {article.autore ? (
+            <FirmaAutore autore={article.autore} data={article.date} rivisto={article.rivisto} lettura={safeReadingTime} />
+          ) : (
+            <div className="article-meta">
+              <span>{[safeDate, safeReadingTime].filter(Boolean).join(" · ")}</span>
+            </div>
+          )}
         </div>
 
         {article?.image && (
@@ -134,6 +180,7 @@ export default function Articolo({ article, related = [] }) {
                   <a href={`#${section.id}`}>{section.title}</a>
                 </li>
               ))}
+              {fonti.length > 0 && <li><a href="#fonti">Fonti</a></li>}
             </ul>
           </aside>
 
@@ -232,6 +279,15 @@ export default function Articolo({ article, related = [] }) {
               });
             })()}
 
+            {fonti.length > 0 && <FontiArticolo fonti={fonti} />}
+
+            {article.autore && (
+              <p className="article-nota-autore">
+                Articolo scritto da {article.autore.nome} della rete InfermieriWeb e rivisto dalla redazione.
+                Serve a informare: non sostituisce il parere del tuo medico.
+              </p>
+            )}
+
             {servizioAbbinato && (
               <div className="article-cta-card">
                 <h3>Ti serve questa prestazione?</h3>
@@ -267,17 +323,19 @@ export default function Articolo({ article, related = [] }) {
               </div>
             </div>
 
-            <div className="related-articles">
-              <h3>Articoli correlati</h3>
-              <div className="related-grid">
-                {related.map((item) => (
-                  <Link key={item.slug} to={`/articoli/${item.slug}`} className="related-card">
-                    <span>{item.category}</span>
-                    <h4>{item.title}</h4>
-                  </Link>
-                ))}
+            {related.length > 0 && (
+              <div className="related-articles">
+                <h3>Articoli correlati</h3>
+                <div className="related-grid">
+                  {related.map((item) => (
+                    <Link key={item.slug} to={`/articoli/${item.slug}`} className="related-card">
+                      <span>{item.category}</span>
+                      <h4>{item.title}</h4>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </article>
         </div>
       </section>

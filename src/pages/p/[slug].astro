@@ -49,6 +49,12 @@ const reviews = await sql`
   WHERE professional_id = ${pro.id} AND status = 'published'
   ORDER BY created_at DESC LIMIT 20`;
 
+// Articoli che ha scritto (8/10/26): solo quelli pubblicati
+const articoli = await sql`
+  SELECT slug, title, excerpt, published_at FROM articles
+  WHERE author_professional_id = ${pro.id} AND status = 'published'
+  ORDER BY published_at DESC, id DESC LIMIT 6`;
+
 const [ratingAgg] = await sql`
   SELECT ROUND(AVG(rating)::numeric, 1) AS media, COUNT(*) AS totale
   FROM reviews WHERE professional_id = ${pro.id} AND status = 'published'`;
@@ -162,6 +168,20 @@ try {
           <h2>Chi è {pro.name}</h2>
           <p style="color: var(--iw-slate); margin: 0;">{soloConsulente && pro.bio_consulenza ? pro.bio_consulenza : pro.bio}</p>
         </div>
+
+        {articoli.length > 0 && (
+          <div class="pf-panel" id="articoli">
+            <h2>Articoli di {pro.name}</h2>
+            <ul class="pf-articoli-autore">
+              {articoli.map((a) => (
+                <li>
+                  <a href={`/articoli/${a.slug}`}>{a.title}</a>
+                  {a.excerpt && <span>{a.excerpt}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {!soloConsulente && (
           <div class="pf-panel">
