@@ -575,10 +575,12 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       <div className="pf-panel" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Specializzazioni <span className="pf-note" style={{ margin: 0, fontWeight: 400 }}>(dichiarate dal professionista · al massimo {spec.massimo})</span></h3>
         {spec.voci.length === 0 && <p className="pf-note">La lista è vuota: aggiungi le voci da Infermieri → Specializzazioni.</p>}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px" }}>
+        {/* stesso elenco di spunte del pannello infermiere (.pf-spunta) */}
+        <div className="pf-spunte">
           {spec.voci.map((v) => (
-            <label key={v.key} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-              <input type="checkbox" checked={spec.scelte.includes(v.key)} onChange={() => toggleSpec(v.key)} /> {v.nome}{v.su_misura ? <span className="pf-note" style={{ margin: 0 }}> · su misura</span> : null}
+            <label key={v.key} className={`pf-spunta${spec.scelte.includes(v.key) ? " sel" : ""}`}>
+              <input type="checkbox" checked={spec.scelte.includes(v.key)} onChange={() => toggleSpec(v.key)} />
+              <span>{v.nome}{v.su_misura ? <span className="pf-note" style={{ margin: 0 }}> · su misura</span> : null}</span>
             </label>
           ))}
         </div>
@@ -2444,10 +2446,11 @@ function ScriviInfermieri() {
       {/* 1. A CHI */}
       <div className="pf-panel" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>1. A chi</h3>
-        <div style={{ display: "flex", gap: "8px 18px", flexWrap: "wrap", marginBottom: 10 }}>
+        <div className="pf-spunte" style={{ marginBottom: 10 }}>
           {ETICHETTE_STATI.map(([k, nome]) => (
-            <label key={k} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontWeight: 600 }}>
-              <input type="checkbox" checked={!!stati[k]} onChange={(e) => { setStati({ ...stati, [k]: e.target.checked }); modificato(); }} /> {nome} ({perStato(k)})
+            <label key={k} className={`pf-spunta${stati[k] ? " sel" : ""}`}>
+              <input type="checkbox" checked={!!stati[k]} onChange={(e) => { setStati({ ...stati, [k]: e.target.checked }); modificato(); }} />
+              <span>{nome} ({perStato(k)})</span>
             </label>
           ))}
         </div>

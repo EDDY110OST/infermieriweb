@@ -1227,3 +1227,50 @@ label.pf-tipo, .pf-book label.pf-tipo {
 /* Ordinamento risultati ricerca */
 .pf-ordina { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; font-size: 15px; color: var(--iw-slate); }
 .pf-ordina select { padding: 8px 12px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl); font: inherit; font-size: 15px; background: #fff; color: var(--iw-ink); cursor: pointer; }
+
+/* ============================================================
+   Ordine sul telefono (8/10/2026): campi affiancati, spunte,
+   chip di stato, file di tasti, bersagli di tocco ≥ 44 px
+   ============================================================ */
+
+/* Due campi affiancati (Albo + Numero, Data + P.IVA). Le colonne possono
+   stringersi fino a zero: il campo data di iOS ha una larghezza minima sua e
+   con «1fr 1fr» sbordava nella colonna accanto. Le etichette possono andare a
+   capo in modo diverso: i campi restano allineati in basso. Sul telefono una
+   colonna sola, così la partita IVA non viene tagliata. */
+.pf-campi-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+.pf-campi-2 > div { min-width: 0; display: flex; flex-direction: column; }
+.pf-campi-2 > div > label { margin-top: auto; }
+.pf-campi-2 input { min-width: 0; }
+@media (max-width: 560px) { .pf-campi-2 { grid-template-columns: minmax(0, 1fr); } }
+
+/* Campi data e ora: niente larghezza minima propria e testo a sinistra come
+   negli altri campi (su iPhone il valore era centrato). */
+.pf input[type="date"], .pf input[type="time"], .pf input[type="datetime-local"] { min-width: 0; box-sizing: border-box; text-align: left; }
+.pf input[type="date"]::-webkit-date-and-time-value,
+.pf input[type="time"]::-webkit-date-and-time-value,
+.pf input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }
+/* Solo iOS (è l'unico che capisce -webkit-touch-callout): il campo data si
+   comporta come un campo di testo normale, con l'altezza degli altri campi
+   anche quando è vuoto. */
+@supports (-webkit-touch-callout: none) {
+  .pf-book input[type="date"], .pf-book input[type="time"] { -webkit-appearance: none; appearance: none; min-height: 48px; }
+}
+
+/* Elenco di spunte (specializzazioni, gruppi di destinatari): spunta a
+   sinistra e testo subito accanto, allineato a sinistra; tutta la riga è il
+   bersaglio del dito (44 px). Due colonne solo quando c'è spazio. */
+.pf-spunte { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 2px 14px; margin: 4px 0 12px; }
+label.pf-spunta, .pf-book label.pf-spunta {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; padding: 4px 8px;
+  border-radius: 10px; font-weight: 400; font-size: 17px; line-height: 1.3; color: var(--iw-ink);
+  text-align: left; cursor: pointer; transition: background 0.15s ease;
+}
+.pf-spunta:hover { background: var(--iw-bg); }
+label.pf-spunta.sel, .pf-book label.pf-spunta.sel { color: var(--iw-primary-deep); font-weight: 600; }
+label.pf-spunta.piena, .pf-book label.pf-spunta.piena { opacity: 0.5; cursor: not-allowed; }
+.pf-spunta input[type="checkbox"], .pf-book .pf-spunta input[type="checkbox"] {
+  flex: none; width: 20px; height: 20px; margin: 0; padding: 0; accent-color: var(--iw-primary-deep);
+}
+.pf-spunta > span { min-width: 0; }
+@media (max-width: 560px) { .pf-spunte { grid-template-columns: minmax(0, 1fr); gap: 0; } }

@@ -1207,13 +1207,15 @@ function TabProfilo({ tipo, setTipo }) {
         {spec.voci.length > 0 && (
           <>
             <label>Le tue specializzazioni <span style={{ fontWeight: 400 }}>(al massimo {spec.massimo}: compaiono sotto il tuo nome, come dichiarate da te)</span></label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginBottom: 12 }}>
+            {/* elenco pulito: spunta a sinistra, testo accanto, tutta la riga si tocca (stile .pf-spunta) */}
+            <div className="pf-spunte">
               {spec.voci.map((v) => {
                 const sel = spec.scelte.includes(v.key);
                 const pieno = !sel && spec.scelte.length >= spec.massimo;
                 return (
-                  <label key={v.key} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: pieno ? "not-allowed" : "pointer", opacity: pieno ? 0.5 : 1, fontWeight: 400 }}>
-                    <input type="checkbox" checked={sel} disabled={pieno} onChange={() => setSpec((s) => ({ ...s, scelte: sel ? s.scelte.filter((k) => k !== v.key) : [...s.scelte, v.key] }))} /> {v.nome}
+                  <label key={v.key} className={`pf-spunta${sel ? " sel" : ""}${pieno ? " piena" : ""}`}>
+                    <input type="checkbox" checked={sel} disabled={pieno} onChange={() => setSpec((s) => ({ ...s, scelte: sel ? s.scelte.filter((k) => k !== v.key) : [...s.scelte, v.key] }))} />
+                    <span>{v.nome}</span>
                   </label>
                 );
               })}
@@ -1228,7 +1230,8 @@ function TabProfilo({ tipo, setTipo }) {
           Sono dati che vediamo <strong>solo noi</strong> per la verifica: sulla scheda pubblica
           compare soltanto il numero di iscrizione all'albo.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {/* .pf-campi-2: due colonne che possono stringersi (il campo data di iOS sbordava), una sola sul telefono */}
+        <div className="pf-campi-2">
           <div>
             <label htmlFor="pr-albo">Albo / OPI di appartenenza</label>
             <input id="pr-albo" placeholder="es. OPI Lucca" value={profilo.albo_name || ""} onChange={(e) => setProfilo({ ...profilo, albo_name: e.target.value })} />
@@ -1238,7 +1241,7 @@ function TabProfilo({ tipo, setTipo }) {
             <input id="pr-albonum" placeholder="es. 12345" value={profilo.albo_number || ""} onChange={(e) => setProfilo({ ...profilo, albo_number: e.target.value })} />
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div className="pf-campi-2">
           <div>
             <label htmlFor="pr-albodata">Data di iscrizione</label>
             <input id="pr-albodata" type="date" value={(profilo.albo_date || "").slice(0, 10)} onChange={(e) => setProfilo({ ...profilo, albo_date: e.target.value })} />
