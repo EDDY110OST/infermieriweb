@@ -1311,3 +1311,31 @@ label.pf-spunta.piena, .pf-book label.pf-spunta.piena { opacity: 0.5; cursor: no
 /* Tabella dei contatori (admin): la prima colonna resta ferma mentre si scorre di lato */
 .adm-tabella-wrap { -webkit-overflow-scrolling: touch; }
 .adm-tabella th:first-child, .adm-tabella td:first-child { position: sticky; left: 0; z-index: 1; background: var(--iw-card); }
+
+/* ---------- Articoli degli infermieri: pannello e coda admin (8/10/26) ---------- */
+.art-regole { margin-bottom: 16px; border-left: 5px solid var(--iw-primary); }
+.art-regole ul { margin: 0 0 10px; padding-left: 22px; display: grid; gap: 4px; }
+.art-voce { margin-bottom: 10px; }
+.art-voce-testa { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.art-voce-testa strong { color: var(--iw-navy); font-size: 18px; flex: 1 1 220px; overflow-wrap: anywhere; }
+.art-nota { background: #fff7ed; border: 1px solid #fed7aa; color: #7c2d12; border-radius: var(--iw-r-ctrl); padding: 10px 14px; margin: 10px 0; white-space: pre-line; overflow-wrap: anywhere; }
+.pf-contatore { font-size: 14px; color: var(--iw-muted); text-align: right; margin: -6px 0 12px; }
+.pf-contatore.oltre, .pf-contatore.poco { color: #b45309; font-weight: 600; }
+.modulo-copertina { display: block; width: 100%; max-width: 360px; height: auto; aspect-ratio: 5 / 3; object-fit: cover; border-radius: var(--iw-r-ctrl); border: 1px solid var(--iw-line); margin-bottom: 8px; }
+.campo-fonti { border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl); padding: 12px 14px 14px; margin: 6px 0 12px; min-width: 0; }
+.campo-fonti legend { font-weight: 600; font-size: 16px; color: var(--iw-slate); padding: 0 6px; }
+.campo-fonti-riga { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.campo-fonti-num { font-weight: 700; color: var(--iw-muted); padding-top: 12px; min-width: 20px; }
+.campo-fonti-campi { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.pf-book .campo-fonti-campi input { margin-bottom: 0; }
+.rev-voce { margin-bottom: 16px; }
+.rev-autore { display: flex; align-items: center; gap: 12px; }
+.rev-autore img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex: none; background: var(--iw-bg); }
+.rev-autore a { color: var(--iw-primary-deep); }
+.rev-anteprima { margin-top: 12px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-card); padding: 16px 18px; background: #fff; max-height: 560px; overflow: auto; }
+.rev-titolo { font-size: 24px; color: var(--iw-navy); margin: 6px 0 8px; overflow-wrap: anywhere; }
+.rev-descrizione { color: var(--iw-slate); font-size: 16px; margin: 0 0 12px; }
+.rev-copertina { display: block; width: 100%; max-width: 640px; height: auto; aspect-ratio: 5 / 3; object-fit: cover; border-radius: var(--iw-r-ctrl); margin-bottom: 12px; }
+.rev-corpo { overflow-wrap: anywhere; }
+.rev-fonti { border-top: 1px solid var(--iw-line); margin-top: 12px; padding-top: 10px; }
+.rev-url { color: var(--iw-muted); font-size: 14px; overflow-wrap: anywhere; }

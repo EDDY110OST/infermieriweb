@@ -3,6 +3,7 @@ import { FASCE, fasciaDi, eConsulenza, TIPI_ATTIVITA, offreDomicilio, offreConsu
 import CercaComune from "./CercaComune.jsx";
 import CampoPassword from "./CampoPassword.jsx";
 import ConfermaInline from "./ConfermaInline.jsx";
+import ArticoliPannello from "./ArticoliPannello.jsx";
 import { descriviBlocco, sottotitoloBlocco, giorniBlocco } from "../lib/blocchi-testo.js";
 
 // Ogni chiamata del pannello: se torna 401 la sessione è scaduta -> avvisa tutto il pannello,
@@ -1719,10 +1720,17 @@ export default function PanelApp() {
   const [recupero, setRecupero] = useState({ aperto: false, email: "", inviato: false });
   const [utente, setUtente] = useState(null);
   const [errore, setErrore] = useState("");
-  const [tab, setTab] = useState("agenda");
+  // #articoli nel link (es. email «il tuo articolo è da correggere») apre subito quella scheda
+  const [tab, setTab] = useState(() => (typeof window !== "undefined" && window.location.hash === "#articoli" ? "articoli" : "agenda"));
   // «ancora»: punto della scheda da portare in vista (es. «blocchi» dall'avviso in cima)
   const [ancora, setAncora] = useState("");
   const vai = (t, a = "") => { setAncora(a); setTab(t); };
+  // stesso link #articoli aperto col pannello già in pagina (cambia solo l'hash)
+  useEffect(() => {
+    const suHash = () => { if (window.location.hash === "#articoli") setTab("articoli"); };
+    window.addEventListener("hashchange", suHash);
+    return () => window.removeEventListener("hashchange", suHash);
+  }, []);
   const [statoPush, setStatoPush] = useState("idle");
   // Tipo di attività (domicilio / consulenza / entrambi): null = non ancora caricato,
   // "" = il professionista non ha ancora scelto → glielo chiediamo al primo accesso.
@@ -1895,6 +1903,7 @@ export default function PanelApp() {
     { id: "orari", label: "🕒 Orari" },
     { id: "zone", label: "📍 Zone" },
     { id: "stats", label: "📊 Statistiche" },
+    { id: "articoli", label: "📰 I miei articoli" },
     { id: "profilo", label: "👤 Profilo" },
   ];
 
@@ -1919,6 +1928,7 @@ export default function PanelApp() {
       {tab === "zone" && <TabZone />}
       {tab === "stats" && <TabStatistiche />}
       {tab === "profilo" && <TabProfilo tipo={tipo || ""} setTipo={setTipo} />}
+      {tab === "articoli" && <ArticoliPannello />}
     </div>
   );
 }
