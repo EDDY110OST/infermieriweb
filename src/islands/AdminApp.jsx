@@ -436,6 +436,9 @@ function ModificaScheda({ pid, nome, onIndietro }) {
         </label>
       </div>
 
+      {/* ACCESSO AL PANNELLO: email con cui entra, correzione e benvenuto (8/10/26) */}
+      <AccessoPannello pid={pid} nome={nome} emailAccesso={prof.email_accesso} status={prof.status} onCambiata={carica} />
+
       {/* DATI */}
       <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Dati e identità</h3>
@@ -690,6 +693,126 @@ function CorreggiEmail({ p, onFatto }) {
   );
 }
 
+// Riquadro «Accesso al pannello» in Modifica scheda (8/10/26). Caso vero: un'infermiera si era
+// iscritta con l'email sbagliata; «Modifica scheda» cambiava solo l'email della scheda, non
+// quella per entrare, e non c'era modo di rimandarle il benvenuto. Qui:
+//  - «Correggi email di accesso»: cambia INSIEME l'email per entrare e quella della scheda
+//    (controlli: formato, già usata, dominio sospetto). Non parte nessuna email.
+//  - «Rimanda il benvenuto»: rimanda il benvenuto all'email di accesso, con il tasto per
+//    scegliere la password (link usa-e-getta, 72 ore). Nessuna password in chiaro.
+function AccessoPannello({ pid, nome, emailAccesso, status, onCambiata }) {
+  const [modo, setModo] = useState(""); // "" | "correggi" | "conferma" | "rimanda-avviso"
+  const [email, setEmail] = useState("");
+  const [verifica, setVerifica] = useState(null);
+  const [avvisoRimanda, setAvvisoRimanda] = useState("");
+  const [esito, setEsito] = useState(null);
+  const [errore, setErrore] = useState("");
+  const [inCorso, setInCorso] = useState(false);
+  const boxRef = useRef(null);
+  useEffect(() => { if (modo || esito) boxRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [modo, esito]);
+
+  const chiama = async (extra) => {
+    const r = await fetch("/api/admin/email-professionista", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: pid, ...extra }) });
+    return { r, d: await r.json().catch(() => ({})) };
+  };
+  const chiudi = () => { setModo(""); setVerifica(null); setErrore(""); setAvvisoRimanda(""); };
+  const controlla = async () => {
+    setInCorso(true); setErrore("");
+    try {
+      const { r, d } = await chiama({ azione: "correggi", email, verifica: true });
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito a controllare l'email");
+      if (!d.cambiata) return setErrore("È già l'email di accesso: non c'è niente da correggere.");
+      setVerifica(d); setModo("conferma");
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInCorso(false);
+    }
+  };
+  const correggi = async () => {
+    setInCorso(true); setErrore("");
+    try {
+      const { r, d } = await chiama({ azione: "correggi", email, forza: !!verifica?.avviso });
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito a correggere l'email");
+      setEsito({ tipo: "ok", testo: <>✅ Email di accesso corretta. Da ora {nome} entra con <strong>{d.email}</strong> (anche la scheda usa questa email). Se serve, premi «Rimanda il benvenuto».</> });
+      chiudi(); onCambiata?.();
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInCorso(false);
+    }
+  };
+  const rimanda = async (forza) => {
+    setInCorso(true); setErrore(""); setEsito(null);
+    try {
+      const { r, d } = await chiama({ azione: "rimanda", forza });
+      if (d.conferma_richiesta) { setAvvisoRimanda(d.avviso); setModo("rimanda-avviso"); return; }
+      if (!r.ok) return setErrore(d.error || "Non sono riuscito a rimandare il benvenuto");
+      setEsito(d.emailed
+        ? { tipo: "ok", testo: <>✅ Benvenuto rimandato a <strong>{d.email}</strong>. Dentro c'è il tasto per scegliere la password (vale 72 ore).</> }
+        : { tipo: "err", testo: <>⚠️ Il benvenuto a <strong>{d.email}</strong> NON è partito. Riprova tra poco.</> });
+      chiudi();
+    } catch {
+      setErrore("Errore di rete: riprova tra poco");
+    } finally {
+      setInCorso(false);
+    }
+  };
+
+  return (
+    <div ref={boxRef} className="pf-panel pf-book" style={{ marginBottom: 14, scrollMarginTop: 96 }}>
+      <h3 style={{ marginTop: 0 }}>🔑 Accesso al pannello</h3>
+      <p style={{ margin: "0 0 6px", overflowWrap: "anywhere" }}>Email di accesso: <strong>{emailAccesso || "— (nessun accesso)"}</strong></p>
+      <p className="pf-note" style={{ marginTop: 0 }}>Con questa email {nome} entra nel pannello e recupera la password. La password non la vediamo e non la cambiamo mai.</p>
+      {esito && <div className={esito.tipo === "ok" ? "pf-successo" : "pf-errore"} style={{ marginBottom: 10, overflowWrap: "anywhere" }}>{esito.testo}</div>}
+      {errore && <div className="pf-errore" style={{ marginBottom: 10 }}>{errore}</div>}
+
+      {modo === "" && emailAccesso && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <button type="button" className="pf-btn secondario compatto" onClick={() => { setEmail(emailAccesso || ""); setEsito(null); setErrore(""); setModo("correggi"); }}>✏️ Correggi email di accesso</button>
+          {status !== "suspended" && status !== "deleted" && (
+            <ConfermaInline etichetta="✉️ Rimanda il benvenuto" className="pf-btn secondario compatto" classeConferma="pf-btn compatto" conferma="Sì, rimanda"
+              domanda={`Rimando il benvenuto a ${emailAccesso}? Dentro c'è il tasto per scegliere la password.`} disabled={inCorso} onConferma={() => rimanda(false)} />
+          )}
+        </div>
+      )}
+      {modo === "correggi" && (
+        <>
+          <label htmlFor={`ap-${pid}`}>Nuova email di accesso di {nome}</label>
+          <input id={`ap-${pid}`} type="email" value={email} onChange={(e) => { setEmail(e.target.value); setErrore(""); }} onKeyDown={(e) => { if (e.key === "Enter" && email.trim()) { e.preventDefault(); controlla(); } }} autoComplete="off" autoFocus />
+          <p className="pf-note" style={{ marginTop: -6 }}>Cambia insieme l'email per entrare e quella della scheda. Non parte nessuna email. La password non cambia.</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="pf-btn compatto" disabled={inCorso || !email.trim()} onClick={controlla}>{inCorso ? "Controllo…" : "Controlla"}</button>
+            <button type="button" className="pf-btn secondario compatto" disabled={inCorso} onClick={chiudi}>Annulla</button>
+          </div>
+        </>
+      )}
+      {modo === "conferma" && verifica && (
+        <>
+          <strong style={{ color: "var(--iw-navy)" }}>Controlla e conferma</strong>
+          <p style={{ margin: "6px 0 8px", overflowWrap: "anywhere" }}>Prima: <span style={{ textDecoration: "line-through", color: "var(--iw-muted)" }}>{verifica.prima || "(vuota)"}</span><br />Dopo: <strong>{verifica.email}</strong></p>
+          {verifica.avviso && <div style={BOX_AVVISO}>⚠️ {verifica.avviso}</div>}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="pf-btn compatto" disabled={inCorso} onClick={correggi}>{inCorso ? "Salvo…" : verifica.avviso ? "Sì, è giusta: correggi" : "Sì, correggi"}</button>
+            <button type="button" className="pf-btn secondario compatto" disabled={inCorso} onClick={() => setModo("correggi")}>Correggi ancora</button>
+            <button type="button" className="pf-btn secondario compatto" disabled={inCorso} onClick={chiudi}>Annulla</button>
+          </div>
+        </>
+      )}
+      {modo === "rimanda-avviso" && (
+        <>
+          <div style={BOX_AVVISO}>⚠️ {avvisoRimanda}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="pf-btn compatto" disabled={inCorso} onClick={() => rimanda(true)}>{inCorso ? "Invio…" : "Manda lo stesso"}</button>
+            <button type="button" className="pf-btn secondario compatto" disabled={inCorso} onClick={() => { chiudi(); setEmail(emailAccesso || ""); setModo("correggi"); }}>Correggi prima l'email</button>
+            <button type="button" className="pf-btn secondario compatto" disabled={inCorso} onClick={chiudi}>Annulla</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Email di una candidatura in attesa: si corregge PRIMA di approvare, così il benvenuto e
 // l'accesso nascono già giusti. Un dominio sospetto (gmail.co…) si vede subito.
 function EmailCandidatura({ c, onCambiata }) {
@@ -864,6 +987,11 @@ function Professionisti({ filtroStato }) {
             <div style={{ ...BOX_AVVISO, fontSize: 15, overflowWrap: "anywhere" }}>⚠️ Per entrare usa ancora <strong>{p.email_accesso}</strong>, diversa dall'email della scheda. Allineale con «Correggi email e rimanda il benvenuto».</div>
           )}
           {p.avviso_email && <div style={{ ...BOX_AVVISO, fontSize: 15 }}>⚠️ {p.avviso_email}</div>}
+          {p.prenotabilita && !p.prenotabilita.prenotabile && (
+            <div style={{ ...BOX_AVVISO, fontSize: 15 }}>
+              ⚠️ <strong>Nessun orario prenotabile nei prossimi {p.prenotabilita.giorni} giorni.</strong> Perché: {p.prenotabilita.motivi.map((m) => m.testo).join(" · ")}. Da contattare.
+            </div>
+          )}
           <div className="pf-note" style={{ margin: "0 0 10px" }}>
             💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} richieste · ✅ {p.completate} completate · ❌ {p.annullate} annullate <span style={{ color: "var(--iw-muted)" }}>({p.prenotazioni_30gg} richieste negli ultimi 30 gg)</span>
             {Number(p.recensioni) > 0 && <> · ⭐ {String(p.rating).replace(".", ",")} ({p.recensioni})</>}
@@ -1482,6 +1610,48 @@ function Specializzazioni() {
 
 /* ============================ COPERTURA ============================ */
 
+
+// Infermieri → Disponibilità (8/10/26): chi NON ha nessun orario prenotabile nei prossimi
+// 30 giorni, e perché (stesso calcolo del sito pubblico), così lo possiamo contattare.
+function Disponibilita() {
+  const [lista, setLista] = useState(null);
+  useEffect(() => {
+    fetch("/api/admin/professionisti").then((r) => r.json()).then((d) => setLista((d.professionisti || []).filter((p) => p.status === "active")));
+  }, []);
+  if (!lista) return <Caricamento />;
+  const senza = lista.filter((p) => p.prenotabilita && !p.prenotabilita.prenotabile);
+  const con = lista.filter((p) => p.prenotabilita?.prenotabile);
+  const giorni = lista[0]?.prenotabilita?.giorni || 30;
+  return (
+    <div>
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>🗓️ Disponibilità</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>
+        Orari, ferie e blocchi li gestisce ogni professionista dal proprio pannello. Qui vediamo chi <strong>non ha nessun orario prenotabile nei prossimi {giorni} giorni</strong> e perché: così lo contattiamo. Per correggere al posto suo: Infermieri → Elenco → «Modifica scheda».
+      </p>
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>⚠️ Senza orari prenotabili ({senza.length})</h3>
+        {senza.length === 0 && <p style={{ margin: 0 }}>Nessuno: tutti gli infermieri attivi sono prenotabili. 🎉</p>}
+        {senza.map((p) => (
+          <div key={p.id} style={{ padding: "10px 0", borderTop: "1px solid var(--iw-line)" }}>
+            <strong style={{ fontSize: 18, color: "var(--iw-navy)" }}>{p.name}</strong>
+            <div className="pf-note" style={{ margin: "2px 0 4px", overflowWrap: "anywhere" }}>{p.city} ({p.province}) · 📞 {p.phone || "—"} · ✉️ {p.email || "—"}</div>
+            <ul style={{ margin: 0, paddingLeft: 22 }}>
+              {p.prenotabilita.motivi.map((m, i) => <li key={i}>{m.testo}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="pf-panel">
+        <h3 style={{ marginTop: 0 }}>✅ Prenotabili ({con.length})</h3>
+        {con.map((p) => (
+          <div key={p.id} style={{ padding: "6px 0", borderTop: "1px solid var(--iw-line)" }}>
+            <strong>{p.name}</strong> <span className="pf-note" style={{ margin: 0 }}>· prima disponibilità: {p.prenotabilita.prima?.testo || "—"}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function Copertura() {
   const [professionisti, setProfessionisti] = useState(null);
@@ -2785,15 +2955,7 @@ export default function AdminApp() {
     "inf-verifica": <Candidature aggiornaBadge={aggiornaBadge} />,
     "inf-stato": <Professionisti filtroStato="pending" />,
     "inf-specializzazioni": <Specializzazioni />,
-    "inf-disponibilita": (
-      <div className="pf-panel">
-        <h2 style={{ marginTop: 0 }}>🗓️ Disponibilità</h2>
-        <p style={{ color: "var(--iw-slate)", margin: 0 }}>
-          Orari, ferie e blocchi li gestisce ogni professionista dal proprio pannello (autonomia = agenda sempre vera).
-          Da admin li vedi riflessi negli slot pubblici della scheda di ciascuno.
-        </p>
-      </div>
-    ),
+    "inf-disponibilita": <Disponibilita />,
     "inf-zone": <Copertura />,
     "inf-recensioni": <RecensioniPubblicate />,
     "paz-anagrafica": <Pazienti />,
