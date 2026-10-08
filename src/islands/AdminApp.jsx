@@ -861,6 +861,11 @@ function Professionisti({ filtroStato }) {
             <div style={{ ...BOX_AVVISO, fontSize: 15, overflowWrap: "anywhere" }}>⚠️ Per entrare usa ancora <strong>{p.email_accesso}</strong>, diversa dall'email della scheda. Allineale con «Correggi email e rimanda il benvenuto».</div>
           )}
           {p.avviso_email && <div style={{ ...BOX_AVVISO, fontSize: 15 }}>⚠️ {p.avviso_email}</div>}
+          {p.prenotabilita && !p.prenotabilita.prenotabile && (
+            <div style={{ ...BOX_AVVISO, fontSize: 15 }}>
+              ⚠️ <strong>Nessun orario prenotabile nei prossimi {p.prenotabilita.giorni} giorni.</strong> Perché: {p.prenotabilita.motivi.map((m) => m.testo).join(" · ")}. Da contattare.
+            </div>
+          )}
           <div className="pf-note" style={{ margin: "0 0 10px" }}>
             💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} richieste · ✅ {p.completate} completate · ❌ {p.annullate} annullate <span style={{ color: "var(--iw-muted)" }}>({p.prenotazioni_30gg} richieste negli ultimi 30 gg)</span>
             {Number(p.recensioni) > 0 && <> · ⭐ {String(p.rating).replace(".", ",")} ({p.recensioni})</>}
@@ -1477,6 +1482,48 @@ function Specializzazioni() {
 
 /* ============================ COPERTURA ============================ */
 
+
+// Infermieri → Disponibilità (8/10/26): chi NON ha nessun orario prenotabile nei prossimi
+// 30 giorni, e perché (stesso calcolo del sito pubblico), così lo possiamo contattare.
+function Disponibilita() {
+  const [lista, setLista] = useState(null);
+  useEffect(() => {
+    fetch("/api/admin/professionisti").then((r) => r.json()).then((d) => setLista((d.professionisti || []).filter((p) => p.status === "active")));
+  }, []);
+  if (!lista) return <Caricamento />;
+  const senza = lista.filter((p) => p.prenotabilita && !p.prenotabilita.prenotabile);
+  const con = lista.filter((p) => p.prenotabilita?.prenotabile);
+  const giorni = lista[0]?.prenotabilita?.giorni || 30;
+  return (
+    <div>
+      <h2 style={{ marginTop: 0, color: "var(--iw-navy)" }}>🗓️ Disponibilità</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>
+        Orari, ferie e blocchi li gestisce ogni professionista dal proprio pannello. Qui vediamo chi <strong>non ha nessun orario prenotabile nei prossimi {giorni} giorni</strong> e perché: così lo contattiamo. Per correggere al posto suo: Infermieri → Elenco → «Modifica scheda».
+      </p>
+      <div className="pf-panel" style={{ marginBottom: 14 }}>
+        <h3 style={{ marginTop: 0 }}>⚠️ Senza orari prenotabili ({senza.length})</h3>
+        {senza.length === 0 && <p style={{ margin: 0 }}>Nessuno: tutti gli infermieri attivi sono prenotabili. 🎉</p>}
+        {senza.map((p) => (
+          <div key={p.id} style={{ padding: "10px 0", borderTop: "1px solid var(--iw-line)" }}>
+            <strong style={{ fontSize: 18, color: "var(--iw-navy)" }}>{p.name}</strong>
+            <div className="pf-note" style={{ margin: "2px 0 4px", overflowWrap: "anywhere" }}>{p.city} ({p.province}) · 📞 {p.phone || "—"} · ✉️ {p.email || "—"}</div>
+            <ul style={{ margin: 0, paddingLeft: 22 }}>
+              {p.prenotabilita.motivi.map((m, i) => <li key={i}>{m.testo}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="pf-panel">
+        <h3 style={{ marginTop: 0 }}>✅ Prenotabili ({con.length})</h3>
+        {con.map((p) => (
+          <div key={p.id} style={{ padding: "6px 0", borderTop: "1px solid var(--iw-line)" }}>
+            <strong>{p.name}</strong> <span className="pf-note" style={{ margin: 0 }}>· prima disponibilità: {p.prenotabilita.prima?.testo || "—"}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function Copertura() {
   const [professionisti, setProfessionisti] = useState(null);
@@ -2779,15 +2826,7 @@ export default function AdminApp() {
     "inf-verifica": <Candidature aggiornaBadge={aggiornaBadge} />,
     "inf-stato": <Professionisti filtroStato="pending" />,
     "inf-specializzazioni": <Specializzazioni />,
-    "inf-disponibilita": (
-      <div className="pf-panel">
-        <h2 style={{ marginTop: 0 }}>🗓️ Disponibilità</h2>
-        <p style={{ color: "var(--iw-slate)", margin: 0 }}>
-          Orari, ferie e blocchi li gestisce ogni professionista dal proprio pannello (autonomia = agenda sempre vera).
-          Da admin li vedi riflessi negli slot pubblici della scheda di ciascuno.
-        </p>
-      </div>
-    ),
+    "inf-disponibilita": <Disponibilita />,
     "inf-zone": <Copertura />,
     "inf-recensioni": <RecensioniPubblicate />,
     "paz-anagrafica": <Pazienti />,

@@ -5,6 +5,7 @@ import { sessionFromRequest } from "../../../lib/auth.js";
 import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
 import { linkCambio } from "../../../lib/cambio.js";
 import { avvisoEmail, normalizzaEmail } from "../../../lib/email.js";
+import { prenotabilitaTutti, GIORNI_FINESTRA } from "../../../lib/prenotabilita.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -70,8 +71,18 @@ export async function GET({ request, url }) {
     WHERE p.status <> 'deleted'
     ORDER BY p.created_at DESC`;
 
+  // «Nessun orario prenotabile nei prossimi 30 giorni» con il motivo (8/10/26): stesso
+  // calcolo del sito pubblico, per tutti in 6 query. Solo per i profili attivi: gli altri
+  // non sono prenotabili per definizione.
+  let prenotabilita = {};
+  try { prenotabilita = await prenotabilitaTutti({ giorni: GIORNI_FINESTRA }); } catch (e) { console.error("[admin] prenotabilità non calcolata:", e.message); }
+
   // dominio sospetto (es. «gmail.co») → avviso visibile nella card
-  return json({ professionisti: professionisti.map((p) => ({ ...p, avviso_email: avvisoEmail(normalizzaEmail(p.email)) })) });
+  return json({ professionisti: professionisti.map((p) => ({
+    ...p,
+    avviso_email: avvisoEmail(normalizzaEmail(p.email)),
+    prenotabilita: p.status === "active" ? (prenotabilita[p.id] || null) : null,
+  })) });
 }
 
 // PATCH /api/admin/professionisti {id, status} — attiva / sospende
