@@ -33,7 +33,7 @@ import { organizationSchema } from "../data/schema.js";
         <li><strong>Paziente</strong>: chi utilizza la Piattaforma per cercare e prenotare una prestazione infermieristica a domicilio.</li>
         <li><strong>Professionista</strong>: l'infermiere libero professionista, iscritto all'Ordine (OPI), che pubblica la propria scheda e riceve prenotazioni tramite la Piattaforma.</li>
         <li><strong>Prestazione</strong>: la prestazione infermieristica a domicilio erogata dal Professionista al Paziente.</li>
-        <li><strong>Scheda</strong>: il profilo pubblico del Professionista (foto, presentazione, prestazioni, prezzi indicativi, zone coperte, recensioni).</li>
+        <li><strong>Scheda</strong>: il profilo pubblico del Professionista (nome e cognome, numero di iscrizione all'albo, foto, presentazione, prestazioni, prezzi, zone coperte, recensioni).</li>
         <li><strong>Prenotazione</strong>: la richiesta di appuntamento inoltrata dal Paziente al Professionista tramite la Piattaforma.</li>
       </ul>
 
@@ -87,6 +87,7 @@ import { organizationSchema } from "../data/schema.js";
       <h2>12. Contenuti dei Professionisti e proprietà intellettuale</h2>
       <p>12.1. La Piattaforma, il software, la grafica e il marchio "InfermieriWeb" appartengono al Gestore. È vietato estrarne, copiarne o riprodurne contenuti o codice.</p>
       <p>12.2. I contenuti forniti dal Professionista (foto, testi, logo, curriculum, ecc.) restano di sua titolarità; con l'iscrizione, il Professionista concede al Gestore una licenza non esclusiva e gratuita di utilizzarli e pubblicarli sulla Piattaforma ai fini dell'erogazione del servizio, per la durata della pubblicazione della Scheda.</p>
+      <p>12.3. Sulla Scheda compaiono il nome e il cognome per intero del Professionista e il suo numero di iscrizione all'albo. Per gravi e documentati motivi di sicurezza il Professionista può chiedere al Gestore di mostrare solo l'iniziale del cognome.</p>
 
       <h2>13. Dati personali</h2>
       <p>Il trattamento dei dati personali è disciplinato dall'<a href="/privacy">Informativa Privacy</a> disponibile sulla Piattaforma, in conformità al Regolamento (UE) 2016/679.</p>
@@ -99,7 +100,7 @@ import { organizationSchema } from "../data/schema.js";
       <h2>15. Contatti</h2>
       <p>Per qualsiasi comunicazione: <a href="mailto:info@infermieriweb.it">info@infermieriweb.it</a>.</p>
 
-      <p class="pf-note" style="margin-top: 24px;">Ultimo aggiornamento: 19 luglio 2026.</p>
+      <p class="pf-note" style="margin-top: 24px;">Ultimo aggiornamento: {"{{DATA_PUBBLICAZIONE}}"}.</p>
     </div>
   </section>
 </Platform>

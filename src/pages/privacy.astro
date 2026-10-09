@@ -61,7 +61,7 @@ import { organizationSchema } from "../data/schema.js";
           <li><strong>Newsletter e lista d'attesa</strong> — email (e zona, per la lista d'attesa), per avvisarti delle novità o quando la rete arriva nella tua città. Base giuridica: consenso, registrato con data e ora; ti puoi cancellare in ogni momento.</li>
           <li><strong>Candidatura professionisti</strong> — dati anagrafici, di contatto, iscrizione all'albo e partita IVA. Servono a verificare l'abilitazione professionale prima dell'ingresso in rete. Base giuridica: misure precontrattuali su richiesta dell'interessato.</li>
           <li><strong>Account del professionista</strong> — email, password (conservata solo <em>cifrata</em>, mai in chiaro) e, se attivata, la chiave dell'autenticazione a due fattori. Servono ad accedere in sicurezza alla propria agenda. Base giuridica: esecuzione del contratto di servizio e sicurezza degli accessi.</li>
-          <li><strong>Scheda pubblica del professionista</strong> — nome, foto, biografia, numero di albo, comune e indirizzo dello studio, zone coperte, prestazioni e prezzi: sono pubblicati apposta, perché i pazienti possano scegliere.</li>
+          <li><strong>Scheda pubblica del professionista</strong> — nome e cognome per intero, foto, biografia, numero di iscrizione all'albo OPI, comune e indirizzo dello studio, zone coperte, prestazioni e prezzi: sono pubblicati apposta, perché i pazienti possano scegliere e verificare l'iscrizione all'albo, che è pubblico. Chi ha gravi motivi di sicurezza può chiederci di mostrare solo l'iniziale del cognome.</li>
           <li><strong>Notifiche push</strong> (solo professionisti) — un identificativo tecnico del dispositivo, per avvisarti delle nuove prenotazioni. Attivazione volontaria, revocabile dalle impostazioni del browser.</li>
           <li><strong>Conteggio delle visite alla scheda</strong> — un numero al giorno per ogni professionista, senza alcun dato di chi visita. Base giuridica: legittimo interesse a fornire al professionista le statistiche del suo profilo.</li>
           <li><strong>Registro anti-abuso</strong> — il tuo indirizzo IP viene registrato per contare i tentativi ravvicinati (prenotazioni, iscrizioni, invii di form) e fermare i robot. Viene <strong>cancellato entro 24 ore</strong>. Base giuridica: legittimo interesse alla sicurezza del servizio (art. 6.1.f GDPR).</li>
@@ -160,7 +160,7 @@ import { organizationSchema } from "../data/schema.js";
         </p>
       </div>
 
-      <p class="pf-note">Ultimo aggiornamento: 9 settembre 2026. Eventuali modifiche a questa informativa saranno pubblicate su questa pagina.</p>
+      <p class="pf-note">Ultimo aggiornamento: {"{{DATA_PUBBLICAZIONE}}"}. Eventuali modifiche a questa informativa saranno pubblicate su questa pagina.</p>
     </div>
   </section>
 </Platform>
