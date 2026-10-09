@@ -60,26 +60,27 @@ export async function GET({ url }) {
            p.photo_url, p.lat, p.lng, p.bio, p.google_rating,
            COALESCE(r.avg_rating, 0) AS avg_rating,
            COALESCE(r.review_count, 0) AS review_count,
-           COALESCE(s.min_price, 0) AS min_price_cents,
            COALESCE(c.cities, ARRAY[]::text[]) AS coverage,
            COALESCE(c.zone, '[]'::json) AS zone,
-           COALESCE(sv.nomi, ARRAY[]::text[]) AS servizi
+           COALESCE(sv.nomi, ARRAY[]::text[]) AS servizi,
+           COALESCE(sv.prezzi, '[]'::json) AS prezzi
     FROM professionals p
     LEFT JOIN LATERAL (
       SELECT ROUND(AVG(rating)::numeric, 1) AS avg_rating, COUNT(*) AS review_count
       FROM reviews WHERE professional_id = p.id AND status = 'published'
     ) r ON TRUE
     LEFT JOIN LATERAL (
-      SELECT MIN(price_cents) AS min_price FROM services
-      WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
-    ) s ON TRUE
-    LEFT JOIN LATERAL (
       SELECT array_agg(city ORDER BY city) AS cities,
              json_agg(json_build_object('city', city, 'province', province) ORDER BY city) AS zone
       FROM coverage_areas WHERE professional_id = p.id
     ) c ON TRUE
     LEFT JOIN LATERAL (
-      SELECT array_agg(name ORDER BY sort) AS nomi FROM services
+      SELECT array_agg(name ORDER BY sort) AS nomi,
+             -- il prezzo di OGNI prestazione (di giorno e, se c'è, di notte): /cerca lo
+             -- mostra solo per la prestazione cercata (lib/prezzi.js). Niente prezzo
+             -- minimo per infermiere: confronterebbe prestazioni diverse.
+             json_agg(json_build_object('k', catalog_key, 'nome', name, 'prezzo', price_cents, 'notte', price_notte_cents) ORDER BY sort) AS prezzi
+      FROM services
       WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
     ) sv ON TRUE
     WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')

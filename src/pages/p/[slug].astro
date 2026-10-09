@@ -5,6 +5,7 @@ import Platform from "../../layouts/Platform.astro";
 import Icona from "../../components/Icona.astro";
 import BookingWidget from "../../islands/BookingWidget.jsx";
 import { sql } from "../../lib/db.js";
+import { euro } from "../../lib/prezzi.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
 import { eConsulenza } from "../../data/listino.js";
@@ -26,7 +27,7 @@ if (!pro) {
 }
 
 const services = await sql`
-  SELECT id, name, duration_min, price_cents, catalog_key FROM services
+  SELECT id, name, duration_min, price_cents, price_notte_cents, catalog_key FROM services
   WHERE professional_id = ${pro.id} AND active ORDER BY sort`;
 // Due famiglie di prestazioni: a domicilio (per i pazienti) e consulenze a ora
 // (per i colleghi infermieri liberi professionisti). Un profilo può avere una
@@ -61,7 +62,6 @@ const [ratingAgg] = await sql`
 
 const professione = pro.profession.charAt(0).toUpperCase() + pro.profession.slice(1);
 const zone = coverage.map((c) => c.city);
-const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 const path = `/p/${pro.slug}`;
 const titolo = soloConsulente
   ? `${pro.name} — ${professione} consulente per la libera professione | InfermieriWeb`
@@ -105,7 +105,6 @@ const schemas = [
 ];
 
 const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-const prezzoMinimo = services.length ? Math.min(...services.map((s) => s.price_cents)) : 0;
 const prossima = services.length ? await nextAvailability(pro.id) : null;
 
 // Contatore visite (statistiche del pannello); mai bloccare la pagina se fallisce
@@ -138,7 +137,7 @@ try {
         <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
           {services.length > 0 && (
             <a class="pf-btn" style="background: #fff; color: var(--iw-primary-deep) !important;" href="#prenota">
-              {soloConsulente ? "Prenota una consulenza" : "Prenota online"}{prezzoMinimo ? ` — da ${euro(prezzoMinimo)}${soloConsulente ? "/ora" : ""}` : ""}
+              {soloConsulente ? "Prenota una consulenza" : "Prenota online"}
             </a>
           )}
         </div>
@@ -203,7 +202,10 @@ try {
                   <div class="nome">{s.name}</div>
                   <div class="durata">{s.duration_min} minuti</div>
                 </div>
-                <div class="prezzo">da {euro(s.price_cents)}</div>
+                <div class="prezzo">
+                  {euro(s.price_cents)}
+                  {s.price_notte_cents > 0 && <div class="notte">di notte {euro(s.price_notte_cents)}</div>}
+                </div>
               </div>
             ))}
             <p class="pf-note" style="margin-top: 12px;">
@@ -286,7 +288,7 @@ try {
 
   <!-- Barra azioni fissa su mobile: sparisce quando il widget è già in vista -->
   <div class="pf-cta-mobile" id="pf-cta-mobile">
-    <a class="pf-btn" href="#prenota" style="flex: 1;">{soloConsulente ? "Prenota una consulenza" : "Prenota online"}{prezzoMinimo ? ` · da ${euro(prezzoMinimo)}${soloConsulente ? "/ora" : ""}` : ""}</a>
+    <a class="pf-btn" href="#prenota" style="flex: 1;">{soloConsulente ? "Prenota una consulenza" : "Prenota online"}</a>
   </div>
   <script is:inline>
     (function () {

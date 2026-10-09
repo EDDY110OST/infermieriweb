@@ -7,6 +7,7 @@ import { sql } from "../../lib/db.js";
 import { CONSULENZE, CONSULENZE_PER_SLUG, FAQ_CONSULENZE } from "../../data/consulenze.js";
 import { organizationSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
+import { euro } from "../../lib/prezzi.js";
 
 const { slug } = Astro.params;
 const c = CONSULENZE_PER_SLUG[slug];
@@ -24,7 +25,6 @@ const consulenti = await Promise.all(righe.map(async (p) => ({ ...p, prossima: a
 const altre = CONSULENZE.filter((x) => x.key !== c.key);
 
 const clip = (t, max = 220) => (String(t).length <= max ? String(t) : `${String(t).slice(0, max - 1).trimEnd()}…`);
-const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 const path = `/consulenza/${c.slug}`;
 const titolo = `${c.titolo}: consulenza a ora per infermieri liberi professionisti | InfermieriWeb`;
 const descrizione = `${c.breve} Consulenza di un'ora, online o per telefono, con un infermiere libero professionista iscritto all'albo. Prenotazione online, prezzo del consulente.`;

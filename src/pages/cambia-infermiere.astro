@@ -4,6 +4,7 @@ export const prerender = false;
 import Platform from "../layouts/Platform.astro";
 import Icona from "../components/Icona.astro";
 import { prenotazionePerCambio, alternativePer, leggiToken } from "../lib/cambio.js";
+import { euro } from "../lib/prezzi.js";
 
 // Il paziente arriva qui dall'email «scegli un altro infermiere» (link firmato).
 // Mostra SOLO chi copre esattamente il suo comune e fa la stessa prestazione.
@@ -20,7 +21,6 @@ const quando = b
       return t.charAt(0).toUpperCase() + t.slice(1);
     })()
   : "";
-const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 const titolo = !b ? "Questo link non funziona più" : b.replaced_by ? "Hai già cambiato infermiere" : passata ? "L'appuntamento è passato" : "Scegli un altro infermiere";
 ---
 
@@ -88,7 +88,7 @@ const titolo = !b ? "Questo link non funziona più" : b.replaced_by ? "Hai già 
                       <a class="nome" href={`/p/${p.slug}?servizio=${p.service_id}&cambio=${encodeURIComponent(token)}#prenota`}>{p.name}</a>
                       <div class="zona"><Icona nome="posizione" size={15} class="pf-ic-inline" /> {p.city} ({p.province}){consulenza ? " · online o telefono" : ` · copre ${b.city}`}</div>
                       {p.prossima && <div class="disponibilita"><span class="pf-dot"></span> Prossima disponibilità: <strong>{p.prossima.testo}</strong></div>}
-                      <div class="prezzo">{b.service_name}: {consulenza ? `${euro(p.price_cents)}/ora` : `da ${euro(p.price_cents)}`}</div>
+                      <div class="prezzo">{b.service_name}: {euro(p.price_cents)}{consulenza ? "/ora" : ""}</div>
                     </div>
                     <a class="pf-btn" href={`/p/${p.slug}?servizio=${p.service_id}&cambio=${encodeURIComponent(token)}#prenota`}>Prenota con {p.name}</a>
                   </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { stessoComune } from "../lib/ricerca.js";
+import { euro } from "../lib/prezzi.js";
 
 const GIORNI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 const MESI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
@@ -19,7 +20,6 @@ function prossimiGiorni(n = 14) {
   return out;
 }
 
-const euro = (cents) => `${(cents / 100).toFixed(2).replace(".", ",")} €`;
 // Le consulenze per colleghi (chiavi "consulenza-*") si svolgono online o per
 // telefono: niente indirizzo, niente "per un familiare", testi da collega a collega.
 const eConsulenza = (s) => String(s?.catalog_key || "").startsWith("consulenza-");
@@ -305,12 +305,12 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {servizioSel && slot && (
             <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
-              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · {consulenza ? `${euro(servizioSel.price_cents)}/ora` : `da ${euro(prezzoSlot(servizioSel, slot))}`}{!consulenza && slot.notte && " 🌙 (tariffa notturna)"}
+              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · {consulenza ? `${euro(servizioSel.price_cents)}/ora` : euro(prezzoSlot(servizioSel, slot))}{!consulenza && slot.notte && " 🌙 (tariffa notturna)"}
             </div>
           )}
 
           <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
-            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? (consulenza ? ` · ${euro(servizioSel.price_cents)}/ora` : ` · da ${euro(prezzoSlot(servizioSel, slot))}`) : ""}`}
+            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? (consulenza ? ` · ${euro(servizioSel.price_cents)}/ora` : ` · ${euro(prezzoSlot(servizioSel, slot))}`) : ""}`}
           </button>
           <p className="pf-note" style={{ marginTop: 10, textAlign: "center" }}>
             Se cambi idea, la disdetta online è <strong>gratuita e senza penali</strong>.

@@ -7,6 +7,7 @@ import { sql } from "../../lib/db.js";
 import { CONSULENZE, FAQ_CONSULENZE } from "../../data/consulenze.js";
 import { organizationSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
+import { euro } from "../../lib/prezzi.js";
 
 // Chi offre consulenze: profili attivi con almeno una consulenza attiva
 const righe = await sql`
@@ -20,7 +21,6 @@ const righe = await sql`
   GROUP BY p.id ORDER BY p.name`;
 const consulenti = await Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 
-const euro = (c) => `${(c / 100).toFixed(2).replace(".", ",")} €`;
 const clip = (t, max = 220) => (String(t).length <= max ? String(t) : `${String(t).slice(0, max - 1).trimEnd()}…`);
 const path = "/consulenza";
 const titolo = "Consulenze per infermieri liberi professionisti: avvio, tariffario, organizzazione | InfermieriWeb";

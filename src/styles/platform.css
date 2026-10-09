@@ -307,6 +307,9 @@
 .pf-pro-card .bio { color: var(--iw-slate); font-size: 15.5px; margin: 4px 0 2px; line-height: 1.45; }
 
 .pf-pro-card .prezzo { color: var(--iw-muted); font-size: 16px; margin-top: 4px; }
+/* prezzo della prestazione cercata (9/10/26): «Iniezione IM: 30 € · di notte 40 €» */
+.pf-pro-card .prezzo strong { color: var(--iw-navy); }
+.pf-pro-card .prezzo .notte { white-space: nowrap; }
 
 .pf-stars { color: var(--iw-star); font-size: 17px; letter-spacing: 1px; }
 .pf-stars .n { color: var(--iw-slate); font-weight: 600; margin-left: 5px; letter-spacing: 0; }
@@ -372,7 +375,8 @@
 .pf-servizio-row:last-child { border-bottom: none; }
 .pf-servizio-row .nome { font-weight: 600; font-size: 18px; }
 .pf-servizio-row .durata { color: var(--iw-muted); font-size: 16px; }
-.pf-servizio-row .prezzo { font-weight: 700; color: var(--iw-navy); white-space: nowrap; }
+.pf-servizio-row .prezzo { font-weight: 700; color: var(--iw-navy); white-space: nowrap; text-align: right; }
+.pf-servizio-row .prezzo .notte { font-weight: 600; font-size: 15px; color: var(--iw-muted); }
 
 .pf-recensione { border-bottom: 1px solid var(--iw-line); padding: 16px 0; }
 .pf-recensione:last-child { border-bottom: none; }
@@ -1210,8 +1214,8 @@ label.pf-tipo, .pf-book label.pf-tipo {
 }
 
 /* Ordinamento risultati ricerca */
-.pf-ordina { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; font-size: 15px; color: var(--iw-slate); }
-.pf-ordina select { padding: 8px 12px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl); font: inherit; font-size: 15px; background: #fff; color: var(--iw-ink); cursor: pointer; }
+.pf-ordina { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 14px; font-size: 15px; color: var(--iw-slate); }
+.pf-ordina select { max-width: 100%; min-width: 0; padding: 8px 12px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl); font: inherit; font-size: 15px; background: #fff; color: var(--iw-ink); cursor: pointer; }
 
 /* ============================================================
    Ordine sul telefono (8/10/2026): campi affiancati, spunte,

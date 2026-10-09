@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { filtraProfessionisti, localitaCercate, comuneFraCercati } from "../lib/ricerca.js";
 import { indiceSuggerimenti } from "../lib/suggerimenti.js";
+import { euro, prestazioniCercate, prezzoPrestazione } from "../lib/prezzi.js";
 import CampoRicerca from "./CampoRicerca.jsx";
 
 const capitalizza = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const prezzo = (cents) => (cents > 0 ? `da ${(cents / 100).toFixed(2).replace(".", ",")} €` : "");
 
 // Popup del segnaposto, costruito con textContent come in home: nome e foto
 // arrivano dal profilo e non devono poter iniettare HTML nella pagina.
@@ -126,12 +126,27 @@ export default function SearchApp() {
     if (window.location.pathname + window.location.search !== url) window.history.replaceState(null, "", url);
   }, [q]);
 
+  // Prezzi (9/10/26): niente «da X €» per infermiere. Se il paziente ha scelto o
+  // scritto una prestazione precisa, ogni card mostra il prezzo DI QUELLA
+  // prestazione, e solo allora si può ordinare per prezzo (vedi lib/prezzi.js).
+  const cercate = useMemo(
+    () => prestazioniCercate(tutti, q, opzioni).filter((c) => risultati.some((p) => prezzoPrestazione(p, c.chiave))),
+    [q, tutti, opzioni, risultati]
+  );
+  // l'ordine per prezzo vale solo finché quella prestazione è fra le cercate
+  const ordinaValido = ordina.startsWith("prezzo:") && !cercate.some((c) => `prezzo:${c.chiave}` === ordina) ? "consigliati" : ordina;
+
   const risultatiOrdinati = useMemo(() => {
     const arr = [...risultati];
-    if (ordina === "recensioni") arr.sort((a, b) => (Number(b.avg_rating) || 0) - (Number(a.avg_rating) || 0) || (b.review_count || 0) - (a.review_count || 0));
-    else if (ordina === "prezzo") arr.sort((a, b) => (a.min_price_cents || Infinity) - (b.min_price_cents || Infinity));
+    if (ordinaValido === "recensioni") arr.sort((a, b) => (Number(b.avg_rating) || 0) - (Number(a.avg_rating) || 0) || (b.review_count || 0) - (a.review_count || 0));
+    else if (ordinaValido.startsWith("prezzo:")) {
+      // chi non offre quella prestazione va in fondo; a parità resta l'ordine consigliato
+      const chiave = ordinaValido.slice("prezzo:".length);
+      const cents = (p) => prezzoPrestazione(p, chiave)?.prezzo ?? Infinity;
+      arr.sort((a, b) => cents(a) - cents(b));
+    }
     return arr;
-  }, [risultati, ordina]);
+  }, [risultati, ordinaValido]);
 
   // Mappa Leaflet
   useEffect(() => {
@@ -204,10 +219,14 @@ export default function SearchApp() {
         {!caricamento && risultati.length > 1 && (
           <div className="pf-ordina">
             <label htmlFor="pf-ordina">Ordina per</label>
-            <select id="pf-ordina" value={ordina} onChange={(e) => setOrdina(e.target.value)}>
+            <select id="pf-ordina" value={ordinaValido} onChange={(e) => setOrdina(e.target.value)}>
               <option value="consigliati">Consigliati</option>
               <option value="recensioni">Migliori recensioni</option>
-              <option value="prezzo">Prezzo più basso</option>
+              {cercate.map((c) => (
+                <option key={c.chiave} value={`prezzo:${c.chiave}`}>
+                  {cercate.length === 1 ? "Prezzo più basso" : `Prezzo più basso: ${c.nome}`}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -240,7 +259,15 @@ export default function SearchApp() {
                 <div className="prof">{capitalizza(p.profession)}</div>
                 <Stelle pro={p} />
                 <div className="zona">📍 {p.city}{p.coverage?.length > 1 ? ` e altre ${p.coverage.length - 1} zone` : ""} ({p.province})</div>
-                {prezzo(p.min_price_cents) && <div className="prezzo">{prezzo(p.min_price_cents)}</div>}
+                {cercate.map((c) => {
+                  const s = prezzoPrestazione(p, c.chiave);
+                  return s && (
+                    <div className="prezzo" key={c.chiave}>
+                      {s.nome}: <strong>{euro(s.prezzo)}</strong>
+                      {s.notte > 0 && <span className="notte"> · di notte {euro(s.notte)}</span>}
+                    </div>
+                  );
+                })}
               </div>
               <a className="pf-btn" href={`/p/${p.slug}`}>Prenota servizio</a>
             </div>
