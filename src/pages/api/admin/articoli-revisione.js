@@ -98,7 +98,7 @@ export async function POST({ request }) {
       sources = ${JSON.stringify(campi.fonti)}::jsonb, reading_time = ${campi.reading},
       image = ${image}, cover_data = ${coverData},
       status = 'published', published_at = COALESCE(published_at, (now() AT TIME ZONE 'Europe/Rome')::date),
-      reviewed_at = now(), reviewed_by = ${chi}, review_note = '', updated_at = now()
+      reviewed_at = now(), reviewed_by = ${chi}, review_note = '', replaced_by_id = NULL, updated_at = now()
     WHERE id = ${id} AND status = 'review'
     RETURNING id, slug, title`;
   if (!fatto.length) return json({ error: "Questo articolo è appena stato gestito da un altro amministratore." }, 409);

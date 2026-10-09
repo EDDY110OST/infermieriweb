@@ -6,6 +6,7 @@ import { parseBody, readingTime, slugifyTitolo } from "../../../lib/blog.js";
 import { sanificaHtml, testoNudo, sezioniDaHtml, rawToHtml } from "../../../lib/blog-html.js";
 import { validaCover, registraDecisione, contaDaApprovare } from "../../../lib/articoli-infermieri.js";
 import { validaFonti } from "../../../lib/articoli-regole.js";
+import { sostituisciArticolo, annullaSostituzione } from "../../../lib/articoli-sostituiti.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -26,14 +27,17 @@ export async function GET({ request, url }) {
     return json({ html: a.body_format === "html" ? a.body_html : rawToHtml(a.body_raw, a.title) });
   }
   // Elenco «Articoli»: quelli della redazione + quelli degli infermieri già pubblicati +
-  // quelli tornati in bozza perché l'autore è stato eliminato. Le bozze e gli invii degli
-  // infermieri stanno nella coda «Da approvare» (e le bozze restano solo loro).
+  // quelli tornati in bozza perché l'autore è stato eliminato + quelli sostituiti (9/10/26).
+  // Le bozze e gli invii degli infermieri stanno nella coda «Da approvare» (e le bozze
+  // restano solo loro). Per i sostituiti: titolo, indirizzo e stato del nuovo articolo.
   const articoli = await sql`
     SELECT a.id, a.slug, a.title, a.category, a.excerpt, a.image, a.status, a.published_at, a.body_raw, a.body_html,
            a.body_format, a.updated_at, a.sources, a.review_note, a.author_professional_id,
-           p.name AS autore_nome, p.slug AS autore_slug, p.status AS autore_stato
+           p.name AS autore_nome, p.slug AS autore_slug, p.status AS autore_stato,
+           a.replaced_by_id, s.title AS sostituto_titolo, s.slug AS sostituto_slug, s.status AS sostituto_stato
     FROM articles a LEFT JOIN professionals p ON p.id = a.author_professional_id
-    WHERE a.author_professional_id IS NULL OR a.status = 'published' OR p.status = 'deleted'
+    LEFT JOIN articles s ON s.id = a.replaced_by_id
+    WHERE a.author_professional_id IS NULL OR a.status = 'published' OR p.status = 'deleted' OR a.replaced_by_id IS NOT NULL
     ORDER BY COALESCE(a.published_at, CURRENT_DATE) DESC, a.id DESC`;
   return json({ articoli, da_approvare: await contaDaApprovare() });
 }
@@ -100,12 +104,23 @@ export async function POST({ request }) {
 }
 
 // PATCH /api/admin/blog — modifica {id, title?, category?, excerpt?, image?, body_raw?, publish?|unpublish?}
+//   {id, sostituisci_con: idNuovo} — articolo sostituito: il vecchio indirizzo porta al nuovo (301)
+//   {id, annulla_sostituzione: true} — toglie la sostituzione (l'articolo resta fuori dal sito)
 export async function PATCH({ request }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
   const id = Number(body.id);
   if (!id) return json({ error: "Id mancante" }, 400);
+
+  if (body.sostituisci_con !== undefined || body.annulla_sostituzione) {
+    const session = sessionFromRequest(request);
+    const esito = body.annulla_sostituzione
+      ? await annullaSostituzione(session, id)
+      : await sostituisciArticolo(session, id, Number(body.sostituisci_con) || 0);
+    if (!esito.ok) return json({ error: esito.error }, esito.status);
+    return json(esito);
+  }
 
   const [attuale] = await sql`SELECT * FROM articles WHERE id = ${id}`;
   if (!attuale) return json({ error: "Articolo non trovato" }, 404);
@@ -181,6 +196,8 @@ export async function PATCH({ request }) {
       body_format = ${v.formato}, sections = ${sections}::jsonb, sources = ${JSON.stringify(v.fonti)}::jsonb,
       reading_time = ${v.reading}, status = ${status}, published_at = ${publishedAt}, review_note = ${nota},
       reviewed_at = ${rivisto ? new Date().toISOString() : attuale.reviewed_at}, reviewed_by = ${rivisto ? session?.name || "admin" : attuale.reviewed_by},
+      -- ripubblicato: non è più sostituito, il suo indirizzo mostra di nuovo lui
+      replaced_by_id = CASE WHEN ${status}::text = 'published' THEN NULL ELSE replaced_by_id END,
       updated_at = now()
     WHERE id = ${id}`;
   if (diInfermiere && (body.unpublish || rivisto)) {

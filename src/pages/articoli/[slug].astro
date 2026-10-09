@@ -8,6 +8,7 @@ import { getArticleImage } from "../../utils/articleImageFallback.js";
 import { organizationSchema, articleSchema, breadcrumbSchema, SITE_URL } from "../../data/schema.js";
 import { sql } from "../../lib/db.js";
 import { mapArticolo } from "../../lib/blog.js";
+import { slugSostituto } from "../../lib/articoli-sostituiti.js";
 
 const { slug } = Astro.params;
 
@@ -23,6 +24,12 @@ const [riga] = await sql`
     AND (a.author_professional_id IS NULL OR p.status <> 'deleted')`;
 
 if (!riga) {
+  // Articolo sostituito (9/10/26): il vecchio indirizzo porta al nuovo articolo con un 301.
+  // Si controlla qui, dopo la ricerca dell'articolo pubblicato, con lo stesso risultato che
+  // controllandolo prima (un articolo sostituito non è mai pubblicato) e una query in meno
+  // per ogni articolo normale. Sostituto non online → 404 come prima.
+  const nuovo = await slugSostituto(slug);
+  if (nuovo) return Astro.redirect(`/articoli/${nuovo}`, 301);
   return new Response(null, { status: 404 });
 }
 const article = mapArticolo(riga);

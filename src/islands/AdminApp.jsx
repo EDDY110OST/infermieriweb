@@ -2269,10 +2269,48 @@ function BlogAdmin({ vai, daApprovare = 0 }) {
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) return avvisa("err", d.error || "Errore nell'operazione");
-    avvisa("ok", publish ? "Pubblicato ✅"
+    avvisa("ok", publish ? (art.replaced_by_id ? "Pubblicato ✅ La sostituzione è tolta: il suo indirizzo mostra di nuovo questo articolo." : "Pubblicato ✅")
       : d.status === "changes" ? "Tolto dal sito. Torna all'infermiere come «da correggere», con una nota." : "Riportato in bozza.");
     carica();
   };
+
+  // ↪️ Articolo sostituito (9/10/26): il vecchio indirizzo porta (301) a un articolo pubblicato
+  // e il vecchio articolo esce dal sito. Si sceglie il nuovo da un menu, poi conferma in pagina.
+  const [sostituendo, setSostituendo] = useState(null); // id dell'articolo con il menu aperto
+  const [sceltaSostituto, setSceltaSostituto] = useState("");
+  const apriSostituisci = (art) => {
+    setSostituendo((attuale) => (attuale === art.id ? null : art.id));
+    setSceltaSostituto("");
+  };
+  const sostituisci = async (art, nuovo) => {
+    try {
+      const r = await fetch("/api/admin/blog", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: art.id, sostituisci_con: nuovo.id }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return avvisa("err", d.error || "Sostituzione non riuscita: riprova");
+      setSostituendo(null);
+      setSceltaSostituto("");
+      avvisa("ok", `Fatto ✅ Il vecchio indirizzo di «${art.title}» ora porta a «${nuovo.title}».${art.status === "published" ? " Il vecchio articolo non è più sul sito." : ""}`);
+    } catch {
+      avvisa("err", "Errore di rete: la sostituzione non è stata salvata, riprova tra poco");
+    }
+    carica();
+  };
+  const annullaSostituzione = async (art) => {
+    try {
+      const r = await fetch("/api/admin/blog", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: art.id, annulla_sostituzione: true }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return avvisa("err", d.error || "Operazione non riuscita: riprova");
+      avvisa("ok", `Sostituzione tolta. «${art.title}» resta fuori dal sito: il suo vecchio indirizzo ora dà «pagina non trovata».`);
+    } catch {
+      avvisa("err", "Errore di rete: la sostituzione non è stata tolta, riprova tra poco");
+    }
+    carica();
+  };
+  // I vecchi articoli che portano a questo (per avvisare prima di ritirarlo o eliminarlo)
+  const chiPortaQui = (art) => (articoli || []).filter((a) => a.replaced_by_id === art.id);
+  const avvisoPortanoQui = (vecchi) => vecchi.length === 0 ? ""
+    : vecchi.length === 1 ? " Anche il vecchio indirizzo che porta qui darà «pagina non trovata»."
+      : ` Anche i ${vecchi.length} vecchi indirizzi che portano qui daranno «pagina non trovata».`;
 
   // Articolo di un infermiere eliminato: diventa della redazione (resta in bozza)
   const allaRedazione = async (art) => {
@@ -2384,6 +2422,11 @@ function BlogAdmin({ vai, daApprovare = 0 }) {
       {articoli && !editor && articoli.map((art) => {
         const orfano = art.author_professional_id && art.autore_stato === "deleted";
         const diInfermiere = art.author_professional_id && !orfano;
+        const sostituito = !!art.replaced_by_id;
+        const sostitutoOnline = art.sostituto_stato === "published";
+        const portanoQui = chiPortaQui(art);
+        const candidati = sostituendo === art.id ? articoli.filter((a) => a.status === "published" && a.id !== art.id) : [];
+        const nuovo = candidati.find((a) => String(a.id) === sceltaSostituto);
         return (
           <div className="pf-panel" key={art.id} style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 220 }}>
@@ -2394,18 +2437,62 @@ function BlogAdmin({ vai, daApprovare = 0 }) {
                 {diInfermiere && <> · ✍️ di <a href={`/p/${art.autore_slug}`} target="_blank" rel="noreferrer">{art.autore_nome}</a></>}
                 {orfano && <> · <strong style={{ color: "#9a3412" }}>autore eliminato</strong></>}
               </div>
+              {sostituito && (
+                <div className="pf-note adm-sostituito" style={{ margin: "4px 0 0" }}>
+                  ↪️ sostituito da «{sostitutoOnline
+                    ? <a href={`/articoli/${art.sostituto_slug}`} target="_blank" rel="noreferrer">{art.sostituto_titolo}</a>
+                    : art.sostituto_titolo}»
+                  {" · "}<a href={`/articoli/${art.slug}`} target="_blank" rel="noreferrer">prova il vecchio indirizzo</a>
+                  {!sostitutoOnline && <strong style={{ color: "#9a3412" }}> · ⚠️ il nuovo articolo non è online: il vecchio indirizzo dà «pagina non trovata»</strong>}
+                </div>
+              )}
+              {portanoQui.length > 0 && (
+                <div className="pf-note" style={{ margin: "4px 0 0" }}>
+                  ↪️ qui {portanoQui.length === 1 ? "porta anche il vecchio indirizzo di" : "portano anche i vecchi indirizzi di"} {portanoQui.map((a) => `«${a.title}»`).join(", ")}
+                </div>
+              )}
             </div>
-            <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : "Bozza"}</span>
+            <span className={`stato ${art.status === "published" ? "done" : "noshow"}`}>{art.status === "published" ? "Online" : sostituito ? "Sostituito" : "Bozza"}</span>
             <span className="pf-azioni">
               <button className="pf-btn secondario compatto" onClick={() => setEditor({ id: art.id, title: art.title, category: art.category, excerpt: art.excerpt, image: art.image, body_raw: art.body_raw, body_html: art.body_html || "", body_format: art.body_format === "html" ? "html" : "raw", sources: art.sources || [], author_professional_id: diInfermiere ? art.author_professional_id : null })}>Modifica</button>
               {orfano ? (
                 <ConfermaInline etichetta="Rendi della redazione" className="pf-btn secondario compatto" classeConferma="pf-btn compatto"
                   domanda="Lo rendo un articolo della redazione (resta in bozza)?" conferma="Sì" onConferma={() => allaRedazione(art)} />
+              ) : art.status === "published" && portanoQui.length > 0 ? (
+                <ConfermaInline etichetta="Ritira" className="pf-btn secondario compatto" classeConferma="pf-btn compatto"
+                  domanda={`Lo ritiro dal sito?${avvisoPortanoQui(portanoQui)}`} conferma="Sì, ritira" onConferma={() => cambiaStato(art)} />
               ) : (art.status === "published" || !diInfermiere) && (
                 <button className="pf-btn secondario compatto" onClick={() => cambiaStato(art)}>{art.status === "published" ? "Ritira" : "Pubblica"}</button>
               )}
-              <ConfermaInline etichetta="Elimina" domanda={`Elimino «${art.title}» per sempre?`} conferma="Sì, elimina" onConferma={() => elimina(art)} />
+              {sostituito ? (
+                <ConfermaInline etichetta="Annulla sostituzione" className="pf-btn secondario compatto" classeConferma="pf-btn compatto"
+                  domanda="Tolgo la sostituzione? Il vecchio indirizzo darà «pagina non trovata»." conferma="Sì, togli" onConferma={() => annullaSostituzione(art)} />
+              ) : (
+                <button type="button" className="pf-btn secondario compatto" aria-expanded={sostituendo === art.id} onClick={() => apriSostituisci(art)}><span style={{ lineHeight: 1 }}>↪️</span> Sostituisci con…</button>
+              )}
+              <ConfermaInline etichetta="Elimina" conferma="Sì, elimina" onConferma={() => elimina(art)}
+                domanda={`Elimino «${art.title}» per sempre?${sostituito ? " Il suo vecchio indirizzo non porterà più al nuovo articolo: darà «pagina non trovata»." : ""}${avvisoPortanoQui(portanoQui)}`} />
             </span>
+            {sostituendo === art.id && !sostituito && (
+              <div className="pf-book adm-sostituisci" style={{ flexBasis: "100%", minWidth: 0, borderTop: "1px solid var(--iw-line)", paddingTop: 12 }}>
+                <label htmlFor={`sostituto-${art.id}`}>Con quale articolo? Chi apre il vecchio indirizzo arriverà lì.</label>
+                {candidati.length === 0 ? (
+                  <p className="pf-note" style={{ margin: "0 0 10px" }}>Non c'è nessun altro articolo pubblicato da scegliere.</p>
+                ) : (
+                  <select id={`sostituto-${art.id}`} value={sceltaSostituto} onChange={(e) => setSceltaSostituto(e.target.value)}>
+                    <option value="">Scegli un articolo pubblicato…</option>
+                    {candidati.map((a) => <option key={a.id} value={String(a.id)}>{a.title}</option>)}
+                  </select>
+                )}
+                <div className="pf-azioni">
+                  <ConfermaInline key={nuovo?.id || "nessuno"} etichetta={<><span style={{ lineHeight: 1 }}>↪️</span> Sostituisci</>} disabled={!nuovo}
+                    className="pf-btn compatto" classeConferma="pf-btn compatto" conferma="Sì, sostituisci"
+                    domanda={nuovo ? `Il vecchio indirizzo porterà a «${nuovo.title}».${art.status === "published" ? " Il vecchio articolo esce dal sito." : ""}` : ""}
+                    onConferma={() => sostituisci(art, nuovo)} />
+                  <button type="button" className="pf-btn secondario compatto" onClick={() => setSostituendo(null)}>Annulla</button>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
