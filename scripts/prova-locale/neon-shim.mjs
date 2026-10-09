@@ -27,6 +27,12 @@ const serializza = (v) => {
   return v;
 };
 
+// Parametri delle query: un array di valori semplici (es. «id = ANY(${ids})») resta un
+// array, come fa il driver Neon vero; prima diventava JSON e PGlite rispondeva
+// «malformed array literal» (pagine comune in errore 500 solo in prova).
+const serializzaParam = (v) =>
+  Array.isArray(v) && v.every((x) => x === null || typeof x !== "object") ? v : serializza(v);
+
 async function prepara() {
   const pg = new PGlite();
   await pg.exec(readFileSync(SCHEMA, "utf8"));
@@ -55,7 +61,7 @@ async function esegui(testo, params) {
     if (process.env.IW_SHIM_LOG) console.log("[neon-shim] migrazione di prova eseguita:", process.env.IW_SHIM_MIGRAZIONE);
   }
   if (process.env.IW_SHIM_LOG === "2") console.log("[sql]", testo.replace(/\s+/g, " ").slice(0, 160), params || "");
-  return (await db.query(testo, (params || []).map(serializza))).rows;
+  return (await db.query(testo, (params || []).map(serializzaParam))).rows;
 }
 
 export function neon() {
