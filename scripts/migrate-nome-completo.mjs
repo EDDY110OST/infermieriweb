@@ -6,7 +6,7 @@
 // (nomi presi dal nome completo + iniziale del cognome). Chi ha un nome pubblico scritto a
 // mano diverso (es. «Inf. Eduard G.D.») resta com'è e viene elencato. Gli eliminati non si
 // toccano. Chi nei 15 giorni di preavviso chiede di tenere solo l'iniziale per gravi motivi
-// di sicurezza si esclude con --escludi=<id,id>.
+// di sicurezza si esclude con --escludi=<id,id> (l'esclusione resta anche nei giri dopo).
 //
 // Backup: per ogni riga cambiata, il nome di prima va in professionals_nome_backup (id, name,
 // data) NELLA STESSA ISTRUZIONE dell'aggiornamento (o tutte e due o nessuna). Chi è già nel
@@ -78,6 +78,10 @@ if (RIPRISTINA) {
     FROM professionals_nome_backup b JOIN professionals p ON p.id = b.id ORDER BY b.id`;
   const rimessi = [], lasciati = [];
   for (const r of righe) {
+    if (String(r.attuale).trim() === String(r.vecchio).trim()) {
+      lasciati.push({ id: r.id, prima: r.attuale, dopo: r.attuale, nota: "uguale a prima (escluso, o iniziale rimessa a mano): resta nel backup" });
+      continue;
+    }
     if (String(r.attuale).trim() !== nomePubblico(r.full_name)) {
       lasciati.push({ id: r.id, prima: r.attuale, dopo: r.attuale, nota: `cambiato a mano dopo la migrazione; nel backup: ${r.vecchio}` });
       continue;
@@ -104,7 +108,7 @@ if (RIPRISTINA) {
     FROM professionals p ORDER BY p.id`;
 
   const cambiare = [], aPosto = [], lasciati = [];
-  let eliminati = 0;
+  let eliminati = 0, giaFatti = 0;
   for (const p of professionisti) {
     if (p.deleted_at || p.status === "deleted") { eliminati++; continue; }
     const attuale = String(p.name || "").trim();
@@ -112,11 +116,16 @@ if (RIPRISTINA) {
     const nuovo = nomePubblico(full);
     const admin = String(p.ruoli || "").includes("admin") ? "amministratore" : "";
     const nota = (testo) => [testo, admin].filter(Boolean).join(" · ");
-    if (fatti.has(p.id)) { aPosto.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota("già fatto da questa migrazione") }); continue; }
+    if (fatti.has(p.id)) { giaFatti++; continue; } // nel backup: già fatto (o iniziale rimessa a mano dopo)
     if (!full) { lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota("nome completo vuoto") }); continue; }
     if (attuale === nuovo) { aPosto.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota(full.split(/\s+/).length < 2 ? "nome completo senza cognome" : "già nome e cognome") }); continue; }
     if (!natoConIniziale(attuale, full)) { lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota(`scritto a mano; dal nome completo sarebbe «${nuovo}»`) }); continue; }
-    if (ESCLUSI.has(p.id)) { lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota("escluso a mano (--escludi)") }); continue; }
+    if (ESCLUSI.has(p.id)) {
+      // l'esclusione resta: la riga va nel backup col nome di oggi, i prossimi giri non la toccano
+      if (!PROVA) await sql`INSERT INTO professionals_nome_backup (id, name) VALUES (${p.id}, ${attuale}) ON CONFLICT (id) DO NOTHING`;
+      lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota("escluso (--escludi): resta con l'iniziale anche nei prossimi giri") });
+      continue;
+    }
     const avvisi = [];
     if (full === full.toUpperCase() || full === full.toLowerCase()) avvisi.push(`nome completo «${full}» con maiuscole sistemate`);
     cambiare.push({ id: p.id, prima: attuale, dopo: nuovo, nota: nota(avvisi.join("; ")) });
@@ -142,7 +151,8 @@ if (RIPRISTINA) {
   console.log(`\nDa «Inf. Nome X.» a nome e cognome: ${cambiare.length}${PROVA ? "" : ` (cambiati ${cambiati})`}`); tabella(cambiare);
   console.log(`\nGià a posto: ${aPosto.length}`); tabella(aPosto);
   console.log(`\nLasciati come sono (da guardare): ${lasciati.length}`); tabella(lasciati);
-  console.log(`\nEliminati (non toccati): ${eliminati}`);
+  console.log(`\nGià fatti da questa migrazione (nel backup, non si toccano più): ${giaFatti}`);
+  console.log(`Eliminati (non toccati): ${eliminati}`);
   const [b] = conBackup ? await sql`SELECT COUNT(*)::int AS n FROM professionals_nome_backup` : [{ n: 0 }];
   console.log(`Righe nel backup professionals_nome_backup: ${b.n}${conBackup ? "" : " (la tabella non esiste ancora: si crea alla prima applicazione)"}`);
 }
