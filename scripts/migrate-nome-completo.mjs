@@ -38,6 +38,10 @@ const ESCLUSI = new Set(
 // sono tutte nel nome completo e l'iniziale è quella dell'unica parola che avanza (il
 // cognome). Copre anche «Inf. Giovanni Del R.» e un nome completo corretto dopo
 // (es. «Sargentelli Diletta» → «Diletta Sargentelli» con «Inf. Sargentelli D.»).
+// Nomi pubblici scelti dalla persona (stessa regola «Inf. nome cognome», ma con un solo nome
+// di battesimo). Valgono anche se oggi il nome è scritto a mano. Eduard, 9/10/2026: «un solo nome».
+const NOMI_SCELTI = new Map([[1, "Inf. Eduard Duduc"]]);
+
 const RE_INIZIALE = /^Inf\.\s+(.+)\s(\p{Lu})\.$/u;
 function natoConIniziale(nome, fullName) {
   const m = String(nome || "").trim().match(RE_INIZIALE);
@@ -113,13 +117,13 @@ if (RIPRISTINA) {
     if (p.deleted_at || p.status === "deleted") { eliminati++; continue; }
     const attuale = String(p.name || "").trim();
     const full = String(p.full_name || "").trim();
-    const nuovo = nomePubblico(full);
+    const nuovo = NOMI_SCELTI.get(p.id) || nomePubblico(full);
     const admin = String(p.ruoli || "").includes("admin") ? "amministratore" : "";
     const nota = (testo) => [testo, admin].filter(Boolean).join(" · ");
     if (fatti.has(p.id)) { giaFatti++; continue; } // nel backup: già fatto (o iniziale rimessa a mano dopo)
     if (!full) { lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota("nome completo vuoto") }); continue; }
     if (attuale === nuovo) { aPosto.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota(full.split(/\s+/).length < 2 ? "nome completo senza cognome" : "già nome e cognome") }); continue; }
-    if (!natoConIniziale(attuale, full)) { lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota(`scritto a mano; dal nome completo sarebbe «${nuovo}»`) }); continue; }
+    if (!NOMI_SCELTI.has(p.id) && !natoConIniziale(attuale, full)) { lasciati.push({ id: p.id, prima: attuale, dopo: attuale, nota: nota(`scritto a mano; dal nome completo sarebbe «${nuovo}»`) }); continue; }
     if (ESCLUSI.has(p.id)) {
       // l'esclusione resta: la riga va nel backup col nome di oggi, i prossimi giri non la toccano
       if (!PROVA) await sql`INSERT INTO professionals_nome_backup (id, name) VALUES (${p.id}, ${attuale}) ON CONFLICT (id) DO NOTHING`;
