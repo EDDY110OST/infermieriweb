@@ -7,6 +7,7 @@ import { sql } from "../../lib/db.js";
 import { CONSULENZE, CONSULENZE_PER_SLUG, FAQ_CONSULENZE } from "../../data/consulenze.js";
 import { organizationSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
+import { ordinaOggi } from "../../lib/ordine-equo-server.js";
 import { euro } from "../../lib/prezzi.js";
 
 const { slug } = Astro.params;
@@ -20,8 +21,9 @@ const righe = await sql`
   FROM professionals p
   JOIN services s ON s.professional_id = p.id AND s.active AND s.catalog_key = ${c.key}
   WHERE p.status = 'active'
-  ORDER BY p.name`;
-const consulenti = await Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
+  ORDER BY p.id`;
+// ordine equo (lib/ordine-equo.js): primo orario libero più vicino, poi a turno fra loro
+const consulenti = await Promise.all((await ordinaOggi(righe)).map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 const altre = CONSULENZE.filter((x) => x.key !== c.key);
 
 const clip = (t, max = 220) => (String(t).length <= max ? String(t) : `${String(t).slice(0, max - 1).trimEnd()}…`);

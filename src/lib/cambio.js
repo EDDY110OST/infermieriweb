@@ -9,6 +9,7 @@ import { createSession, readSession } from "./auth.js";
 import { nextAvailability } from "./slots.js";
 import { sendEmail, emailCambiaInfermiere } from "./mailer.js";
 import { stessoComune } from "./ricerca.js";
+import { ordinaOggi } from "./ordine-equo-server.js";
 
 export const SITE = "https://infermieriweb.it";
 
@@ -53,7 +54,7 @@ export async function alternativePer(b) {
         FROM professionals p
         JOIN services s ON s.professional_id = p.id AND s.active AND s.deleted_at IS NULL AND s.catalog_key = ${b.catalog_key}
         WHERE p.status = 'active' AND p.id <> ${b.professional_id}
-        ORDER BY p.name`
+        ORDER BY p.id`
     : (await sql`
         SELECT p.id, p.slug, p.name, p.city, p.province, p.photo_url, s.id AS service_id, s.price_cents, s.duration_min,
                ARRAY(SELECT c.city FROM coverage_areas c WHERE c.professional_id = p.id) AS zone
@@ -61,11 +62,13 @@ export async function alternativePer(b) {
         JOIN services s ON s.professional_id = p.id AND s.active AND s.deleted_at IS NULL AND s.catalog_key = ${b.catalog_key}
         WHERE p.status = 'active' AND p.id <> ${b.professional_id}
           AND ${b.city || ""} <> ''
-        ORDER BY p.name`)
+        ORDER BY p.id`)
         // stesso confronto della ricerca: "Citta Sant'Angelo" = "Città Sant'Angelo"
         .filter((p) => (p.zone || []).some((z) => stessoComune(z, b.city)))
         .map((p) => { delete p.zone; return p; });
-  return Promise.all(righe.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
+  // ordine equo, lo stesso della ricerca (lib/ordine-equo.js): non più alfabetico
+  const ordinati = await ordinaOggi(righe);
+  return Promise.all(ordinati.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) })));
 }
 
 // Manda al paziente l'email con il link; segna cambio_inviato_at solo se è partita davvero.

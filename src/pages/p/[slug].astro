@@ -5,7 +5,7 @@ import Platform from "../../layouts/Platform.astro";
 import Icona from "../../components/Icona.astro";
 import BookingWidget from "../../islands/BookingWidget.jsx";
 import { sql } from "../../lib/db.js";
-import { euro } from "../../lib/prezzi.js";
+import { euro, notteDaMostrare } from "../../lib/prezzi.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 import { nextAvailability } from "../../lib/slots.js";
 import { eConsulenza } from "../../data/listino.js";
@@ -204,7 +204,7 @@ try {
                 </div>
                 <div class="prezzo">
                   {euro(s.price_cents)}
-                  {s.price_notte_cents > 0 && <div class="notte">di notte {euro(s.price_notte_cents)}</div>}
+                  {notteDaMostrare(s.price_cents, s.price_notte_cents) && <div class="notte">di notte {euro(s.price_notte_cents)}</div>}
                 </div>
               </div>
             ))}

@@ -41,3 +41,22 @@ if (process.env.IW_MAIL_DUMP) {
     return fetchVero(url, opts);
   };
 }
+
+// Data simulata: con IW_ORA_FINTA=2026-10-12T09:00:00+02:00 il server «vive» in quel giorno
+// (Date.now e new Date() senza argomenti partono da lì e poi scorrono normalmente). Serve a
+// provare ciò che cambia col giorno, ad esempio il turno dell'ordine equo (lib/ordine-equo.js).
+// Solo nel processo del server di prova: il Postgres in memoria resta sull'ora vera.
+if (process.env.IW_ORA_FINTA) {
+  const DataVera = Date;
+  const scarto = new DataVera(process.env.IW_ORA_FINTA).getTime() - DataVera.now();
+  if (!Number.isFinite(scarto)) throw new Error(`IW_ORA_FINTA non valida: ${process.env.IW_ORA_FINTA}`);
+  function DataFinta(...a) {
+    if (!new.target) return new DataVera(DataVera.now() + scarto).toString();
+    return a.length ? new DataVera(...a) : new DataVera(DataVera.now() + scarto);
+  }
+  DataFinta.prototype = DataVera.prototype;
+  DataFinta.now = () => DataVera.now() + scarto;
+  DataFinta.parse = DataVera.parse;
+  DataFinta.UTC = DataVera.UTC;
+  globalThis.Date = DataFinta;
+}

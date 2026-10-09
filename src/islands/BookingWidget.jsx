@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { stessoComune } from "../lib/ricerca.js";
-import { euro } from "../lib/prezzi.js";
+import { euro, notteDaMostrare } from "../lib/prezzi.js";
 
 const GIORNI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 const MESI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
@@ -27,6 +27,8 @@ const eConsulenza = (s) => String(s?.catalog_key || "").startsWith("consulenza-"
 export default function BookingWidget({ professionalId, services, servizioIniziale, zone = [], cambio = "" }) {
   // il prezzo dipende dallo slot: di notte (22-07) vale la maggiorazione del professionista
   const prezzoSlot = (sv, sl) => (sl?.notte && sl?.price_cents ? sl.price_cents : sv?.price_cents);
+  // 🌙 e «tariffa notturna» solo se di notte il prezzo è davvero diverso (lib/prezzi.js)
+  const tariffaNotturna = (sv, sl) => Boolean(sl?.notte && notteDaMostrare(sv?.price_cents, sl?.price_cents));
   const giorni = useMemo(() => prossimiGiorni(14), []);
   // Nessuna prestazione preselezionata: un utente frettoloso confermerebbe
   // l'esame sbagliato (es. ECG da 50€ invece della medicazione che gli serve)
@@ -219,7 +221,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
               onClick={() => setSlot(s)}
               aria-selected={slot?.start === s.start}
             >
-              {s.label}{s.notte && " 🌙"}
+              {s.label}{tariffaNotturna(servizioSel, s) && " 🌙"}
             </button>
           ))}
         </div>
@@ -305,7 +307,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {servizioSel && slot && (
             <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
-              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · {consulenza ? `${euro(servizioSel.price_cents)}/ora` : euro(prezzoSlot(servizioSel, slot))}{!consulenza && slot.notte && " 🌙 (tariffa notturna)"}
+              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · {consulenza ? `${euro(servizioSel.price_cents)}/ora` : euro(prezzoSlot(servizioSel, slot))}{!consulenza && tariffaNotturna(servizioSel, slot) && " 🌙 (tariffa notturna)"}
             </div>
           )}
 

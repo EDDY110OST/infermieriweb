@@ -1216,6 +1216,8 @@ label.pf-tipo, .pf-book label.pf-tipo {
 /* Ordinamento risultati ricerca */
 .pf-ordina { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 14px; font-size: 15px; color: var(--iw-slate); }
 .pf-ordina select { max-width: 100%; min-width: 0; padding: 8px 12px; border: 1px solid var(--iw-line); border-radius: var(--iw-r-ctrl); font: inherit; font-size: 15px; background: #fff; color: var(--iw-ink); cursor: pointer; }
+/* come funziona «Consigliati» (ordine equo, 9/10/26): in piccolo, sotto la tendina */
+.pf-ordina-nota { flex-basis: 100%; margin: 0; font-size: 14px; line-height: 1.4; color: var(--iw-muted); }
 
 /* ============================================================
    Ordine sul telefono (8/10/2026): campi affiancati, spunte,

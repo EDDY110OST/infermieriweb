@@ -5,6 +5,7 @@ import Platform from "../../layouts/Platform.astro";
 import Icona from "../../components/Icona.astro";
 import { sql } from "../../lib/db.js";
 import { nextAvailability } from "../../lib/slots.js";
+import { ordinaOggi } from "../../lib/ordine-equo-server.js";
 import { SITE_URL, breadcrumbSchema } from "../../data/schema.js";
 
 const slugify = (s) =>
@@ -83,10 +84,11 @@ if (!regione) {
         LEFT JOIN LATERAL (
           SELECT MIN(price_cents) AS min_price FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
         ) s ON TRUE
-        WHERE p.id = ANY(${ids}) ORDER BY p.name`
+        WHERE p.id = ANY(${ids}) ORDER BY p.id`
     : [];
+  // ordine equo, lo stesso della ricerca (lib/ordine-equo.js): non più alfabetico
   professionisti = await Promise.all(
-    professionisti.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) }))
+    (await ordinaOggi(professionisti)).map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) }))
   );
 }
 

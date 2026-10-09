@@ -4,6 +4,7 @@ import { sql } from "../../lib/db.js";
 import { coordinateComune, normalizza, comuniFuoriReteMemo, siglaComune } from "../../data/comuni.js";
 import { jitterPerId } from "../../lib/geocode.js";
 import { filtraProfessionisti } from "../../lib/ricerca.js";
+import { ordineEquoDiOggi } from "../../lib/ordine-equo-server.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -55,7 +56,10 @@ export function segnapostiPerZona(righe) {
 export async function GET({ url }) {
   const q = (url.searchParams.get("q") || "").trim().toLowerCase();
 
-  const rows = await sql`
+  // l'ordine equo (primo orario libero di tutti, in memoria per 3 minuti) si calcola
+  // mentre parte la query: nessuna attesa in più quando è già pronto
+  const equoPronto = ordineEquoDiOggi();
+  const righe = await sql`
     SELECT p.id, p.slug, p.name, p.profession, p.city, p.province, p.region,
            p.photo_url, p.lat, p.lng, p.bio, p.google_rating,
            COALESCE(r.avg_rating, 0) AS avg_rating,
@@ -84,9 +88,17 @@ export async function GET({ url }) {
       WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%'
     ) sv ON TRUE
     WHERE p.status = 'active' AND EXISTS (SELECT 1 FROM services WHERE professional_id = p.id AND active AND catalog_key NOT LIKE 'consulenza-%')
-    -- in ordine di NOME, non di titolo (oggi «Inf.» per tutti; la regex copre anche
-    -- i vecchi «Dott./Dott.ssa», che mettevano gli uomini sempre prima delle donne)
-    ORDER BY regexp_replace(p.name, '^(Dott\\.(ssa)?|Inf\\.)\\s+', '', 'i'), p.id`;
+    ORDER BY p.id`;
+
+  // ORDINE EQUO (9/10/26, lib/ordine-equo.js): prima chi ha il primo orario libero più
+  // vicino, a parità di giorno a turno (cambia ogni giorno). Prima era alfabetico e chi
+  // aveva il nome che veniva prima stava sempre in cima. Ogni riga porta il giorno del
+  // suo primo orario libero (primo_giorno) e la risposta il giorno di oggi a Roma: /cerca
+  // rifà lo stesso ordine sui risultati che restano dopo il filtro (turno fra loro).
+  // Chi esce lo decide solo lib/ricerca.js.
+  const equo = await equoPronto;
+  for (const r of righe) r.primo_giorno = equo.primo.get(Number(r.id)) ?? null;
+  const rows = equo.ordina(righe);
 
   segnapostiPerZona(rows);
 
@@ -94,5 +106,6 @@ export async function GET({ url }) {
   // ricerca nel browser li usa per non pescare San Giovanni Teatino quando si
   // scrive "San Giovanni Rotondo" (vedi lib/ricerca.js)
   const fuori = comuniFuoriReteMemo(rows);
-  return json({ professionisti: filtraProfessionisti(rows, q, { comuniFuoriRete: fuori }), comuniFuoriRete: fuori });
+  const trovati = filtraProfessionisti(rows, q, { comuniFuoriRete: fuori });
+  return json({ professionisti: q ? equo.ordina(trovati) : trovati, comuniFuoriRete: fuori, oggi: equo.oggi });
 }

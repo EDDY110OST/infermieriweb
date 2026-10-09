@@ -6,6 +6,7 @@ import Icona from "../components/Icona.astro";
 import { pageSeo } from "../data/seo.js";
 import { organizationSchema } from "../data/schema.js";
 import { sql } from "../lib/db.js";
+import { ordinaOggi } from "../lib/ordine-equo-server.js";
 
 // Le recensioni native (per professionista) più recenti, se ci sono
 const recensioni = await sql`
@@ -16,9 +17,10 @@ const dataIt = (d) => new Date(d).toLocaleDateString("it-IT", { month: "long", y
 // Eventuale valutazione Google di un professionista (campo facoltativo, oggi
 // nessuno lo usa: Eduard l'ha tolta dalla sua scheda il 17/8/26). Si mostra
 // SOLO se qualcuno ha davvero un rating (il default è '' e non NULL).
-const [primo] = await sql`
-  SELECT name, google_rating, google_reviews_url FROM professionals
-  WHERE status = 'active' AND google_rating <> '' ORDER BY id LIMIT 1`;
+// Se sono più d'uno, nessun posto fisso: si sceglie con l'ordine equo (lib/ordine-equo.js).
+const [primo] = await ordinaOggi(await sql`
+  SELECT id, name, google_rating, google_reviews_url FROM professionals
+  WHERE status = 'active' AND google_rating <> '' ORDER BY id`);
 ---
 
 <Platform

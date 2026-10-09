@@ -9,6 +9,7 @@ import { serviceSeo } from "../../data/seo.js";
 import { organizationSchema, breadcrumbSchema, faqSchema, SITE_URL } from "../../data/schema.js";
 import { NOMI_COLLOQUIALI, ARTICOLO_PER_SERVIZIO, faqServizio, matchServizio } from "../../data/servizi-extra.js";
 import { nextAvailability } from "../../lib/slots.js";
+import { ordinaOggi } from "../../lib/ordine-equo-server.js";
 
 const { serviceId } = Astro.params;
 const service = servicesData[serviceId];
@@ -21,13 +22,15 @@ const righe = await sql`
   FROM professionals p
   JOIN services s ON s.professional_id = p.id AND s.active
   WHERE p.status = 'active'
-  ORDER BY p.name, s.price_cents`;
+  ORDER BY p.id, s.price_cents`;
 const perProfessionista = new Map();
 for (const r of righe) {
   if (!matchServizio(serviceId, r.service_name)) continue;
   if (!perProfessionista.has(r.id)) perProfessionista.set(r.id, r);
 }
-const professionisti = [...perProfessionista.values()].slice(0, 6);
+// Ordine equo, lo stesso della ricerca (lib/ordine-equo.js). Le card sono al massimo 6:
+// prima erano i primi 6 in ordine alfabetico, sempre gli stessi; ora ruotano ogni giorno.
+const professionisti = (await ordinaOggi([...perProfessionista.values()])).slice(0, 6);
 const conDisponibilita = await Promise.all(
   professionisti.map(async (p) => ({ ...p, prossima: await nextAvailability(p.id) }))
 );

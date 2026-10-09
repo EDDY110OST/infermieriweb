@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { filtraProfessionisti, localitaCercate, comuneFraCercati } from "../lib/ricerca.js";
 import { indiceSuggerimenti } from "../lib/suggerimenti.js";
-import { euro, prestazioniCercate, prezzoPrestazione } from "../lib/prezzi.js";
+import { euro, notteDaMostrare, prestazioniCercate, prezzoPrestazione } from "../lib/prezzi.js";
+import { ordinaEquo, SPIEGAZIONE_ORDINE } from "../lib/ordine-equo.js";
 import CampoRicerca from "./CampoRicerca.jsx";
 
 const capitalizza = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -88,6 +89,8 @@ export default function SearchApp() {
   );
   const [tutti, setTutti] = useState([]);
   const [opzioni, setOpzioni] = useState({});
+  // il giorno di oggi secondo il server (ora di Roma): stesso ordine per tutti i visitatori
+  const [oggi, setOggi] = useState(null);
   const [ordina, setOrdina] = useState("consigliati");
   const [caricamento, setCaricamento] = useState(true);
   const mapRef = useRef(null);
@@ -103,13 +106,19 @@ export default function SearchApp() {
       .then((d) => {
         setTutti(d.professionisti || []);
         setOpzioni({ comuniFuoriRete: d.comuniFuoriRete || [] });
+        setOggi(d.oggi || null);
       })
       .finally(() => setCaricamento(false));
   }, []);
 
   // La regola sta tutta in lib/ricerca.js: chi scrive una località vede solo
-  // chi quella località la copre davvero.
-  const risultati = useMemo(() => filtraProfessionisti(tutti, q, opzioni), [q, tutti, opzioni]);
+  // chi quella località la copre davvero. L'ordine («Consigliati») è l'ordine equo
+  // di lib/ordine-equo.js, rifatto fra chi resta: primo orario libero più vicino,
+  // poi a turno fra loro (cambia ogni giorno). Non toglie né aggiunge nessuno.
+  const risultati = useMemo(
+    () => ordinaEquo(filtraProfessionisti(tutti, q, opzioni), { oggi: oggi || undefined, primo: (p) => p.primo_giorno }),
+    [q, tutti, opzioni, oggi]
+  );
 
   // Le località scritte dal paziente: la mappa mostra i segnaposti solo di quelle.
   const localita = useMemo(() => localitaCercate(tutti, q, opzioni), [q, tutti, opzioni]);
@@ -228,6 +237,7 @@ export default function SearchApp() {
                 </option>
               ))}
             </select>
+            {ordinaValido === "consigliati" && <p className="pf-ordina-nota">{SPIEGAZIONE_ORDINE}</p>}
           </div>
         )}
 
@@ -264,7 +274,7 @@ export default function SearchApp() {
                   return s && (
                     <div className="prezzo" key={c.chiave}>
                       {s.nome}: <strong>{euro(s.prezzo)}</strong>
-                      {s.notte > 0 && <span className="notte"> · di notte {euro(s.notte)}</span>}
+                      {notteDaMostrare(s.prezzo, s.notte) && <span className="notte"> · di notte {euro(s.notte)}</span>}
                     </div>
                   );
                 })}

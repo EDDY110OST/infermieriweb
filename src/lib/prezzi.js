@@ -15,6 +15,15 @@ export function euro(cents) {
   return `${c % 100 === 0 ? String(c / 100) : (c / 100).toFixed(2).replace(".", ",")} €`;
 }
 
+// «di notte X €» si scrive SOLO se il prezzo di notte è diverso da quello di giorno
+// (9/10/26): «Flebo 50 € · di notte 50 €» non dice niente e fa pensare a un errore.
+// Vale ovunque: card della ricerca, scheda, modulo di prenotazione (🌙 e «tariffa notturna»).
+// Ritorna il prezzo di notte da mostrare, o null.
+export function notteDaMostrare(giornoCents, notteCents) {
+  const g = Number(giornoCents), n = Number(notteCents);
+  return n > 0 && n !== g ? n : null;
+}
+
 // Oltre questo numero di prestazioni diverse la ricerca non è «una prestazione
 // precisa»: niente prezzi sulle card e niente ordine per prezzo.
 const MASSIMO_PRESTAZIONI = 4;

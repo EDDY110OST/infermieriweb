@@ -55,7 +55,11 @@ async function esegui(testo, params) {
     if (process.env.IW_SHIM_LOG) console.log("[neon-shim] migrazione di prova eseguita:", process.env.IW_SHIM_MIGRAZIONE);
   }
   if (process.env.IW_SHIM_LOG === "2") console.log("[sql]", testo.replace(/\s+/g, " ").slice(0, 160), params || "");
-  return (await db.query(testo, (params || []).map(serializza))).rows;
+  // Parametri delle query come fa il driver Neon vero: un elenco JS diventa un ARRAY
+  // Postgres (serve a «id = ANY(${ids})»), un oggetto diventa JSON. Prima anche gli
+  // elenchi diventavano testo JSON e la pagina comune dava 500 solo in prova (9/10/26).
+  const param = (v) => (Array.isArray(v) ? v : serializza(v));
+  return (await db.query(testo, (params || []).map(param))).rows;
 }
 
 export function neon() {
