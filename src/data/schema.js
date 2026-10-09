@@ -1,6 +1,24 @@
 // Dati strutturati schema.org condivisi tra le pagine.
+import { senzaTitolo, titoloDi } from "../lib/appellativo.js";
 
 export const SITE_URL = "https://infermieriweb.it";
+
+// Il professionista come persona (9/10/26): nome e cognome per intero, come sulla scheda;
+// il titolo «Inf.» va in honorificPrefix. Si parte SEMPRE dal nome pubblico (mai da
+// full_name): se per gravi motivi di sicurezza la scheda mostra solo l'iniziale del
+// cognome, anche qui esce solo l'iniziale. Stesso @id sulla scheda e negli articoli firmati.
+export function personaSchema({ nome, slug, foto, professione = "Infermiere", conId = true }) {
+  const n = String(nome || "").trim();
+  const titolo = titoloDi(n);
+  return {
+    "@type": "Person",
+    name: senzaTitolo(n),
+    ...(titolo && { honorificPrefix: titolo }),
+    jobTitle: professione,
+    ...(conId && slug && { url: `${SITE_URL}/p/${slug}`, "@id": `${SITE_URL}/p/${slug}#persona` }),
+    ...(foto && !foto.startsWith("data:") && { image: new URL(foto, SITE_URL).href }),
+  };
+}
 
 export const organizationSchema = {
   "@context": "https://schema.org",
@@ -22,13 +40,7 @@ export function articleSchema(article, imageUrl) {
   // con la sua scheda. Gli articoli della redazione restano firmati come prima.
   const a = article.autore;
   const author = a
-    ? {
-        "@type": "Person",
-        name: a.nome,
-        jobTitle: "Infermiere",
-        ...(a.attivo && { url: `${SITE_URL}/p/${a.slug}`, "@id": `${SITE_URL}/p/${a.slug}#persona` }),
-        ...(a.foto && !a.foto.startsWith("data:") && { image: new URL(a.foto, SITE_URL).href }),
-      }
+    ? personaSchema({ nome: a.nome, slug: a.slug, foto: a.foto, conId: a.attivo })
     : { "@type": "Person", name: "InfermieriWeb" };
   const fonti = (article.fonti || []).map((f) => f.url || f.testo).filter(Boolean);
   return {
