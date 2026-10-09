@@ -447,7 +447,7 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Dati e identità</h3>
         <div style={griglia2}>
-          <div><label>Nome pubblico (di solito «Inf. Nome Cognome»; solo l'iniziale del cognome per gravi motivi di sicurezza)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} />
+          <div style={{ gridColumn: "1 / -1" }}><label>Nome pubblico (di solito «Inf. Nome Cognome»; solo l'iniziale del cognome per gravi motivi di sicurezza)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} />
             {/* 9/10/26: il nome pubblico è nome e cognome per intero; il tasto lo rimette dal nome completo */}
             {String(prof.full_name || "").trim() && nomePubblico(prof.full_name) !== String(prof.name || "").trim() && (
               <p className="pf-note" style={{ marginTop: -6 }}>
