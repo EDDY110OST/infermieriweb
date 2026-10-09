@@ -5,7 +5,7 @@
 // stili in linea (le email non leggono i fogli di stile).
 import { sql } from "./db.js";
 import { sanificaHtml, testoNudo, TONI } from "./blog-html.js";
-import { senzaTitolo } from "./appellativo.js";
+import { senzaTitolo, PARTICELLE } from "./appellativo.js";
 import { emailValida, normalizzaEmail } from "./email.js";
 import { layout, PIEDE_COMUNICAZIONE } from "./mailer.js";
 
@@ -16,19 +16,26 @@ export const PAUSA_MS = 400;        // fra un invio e l'altro
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-// Nome di battesimo per {nome}. Si parte dal nome pubblico («Inf. Maria Grazia B.»): è
-// quello che gli admin hanno già sistemato a mano. Via il titolo, le iniziali del cognome
-// e le particelle rimaste in coda («Giovanni Del R.» → «Giovanni»). Maiuscole sistemate
-// solo se il nome è tutto maiuscolo o tutto minuscolo («MARIA» → «Maria»).
-const PARTICELLE = new Set(["de", "del", "della", "dei", "degli", "delle", "di", "da", "dal", "dalla", "dallo", "lo", "la", "le", "van", "von"]);
+// Nome di battesimo per {nome}. Si parte dal nome pubblico: è quello che gli admin hanno
+// già sistemato a mano. Dal 9/10/26 è «Inf. Nome Cognome» per intero: via il titolo, via
+// l'ultima parola (il cognome) e le particelle rimaste in coda («Giovanni Del Rio» →
+// «Giovanni», «Maria Grazia Bensi» → «Maria Grazia»). Chi per sicurezza ha solo l'iniziale
+// del cognome («Inf. Maria Grazia B.», «Inf. Eduard G.D.») perde solo le iniziali.
+// Maiuscole sistemate solo se il nome è tutto maiuscolo o tutto minuscolo («MARIA» → «Maria»).
 const sistemaMaiuscole = (nome) => nome.split(" ").map((p) =>
   (p === p.toUpperCase() || p === p.toLowerCase()) ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p).join(" ");
+const INIZIALI = /^(\p{Lu}\.)+$/u;
 export function nomeDiBattesimo({ name, full_name, nome_accesso }) {
   const parti = senzaTitolo(name).replace(/\([^)]*\)/g, " ").trim().split(/\s+/).filter(Boolean);
-  while (parti.length > 1 && /^(\p{Lu}\.)+$/u.test(parti[parti.length - 1])) parti.pop();
+  const rimosso = parti.join(" ") === "Professionista rimosso";
+  if (parti.length > 1 && INIZIALI.test(parti[parti.length - 1])) {
+    while (parti.length > 1 && INIZIALI.test(parti[parti.length - 1])) parti.pop();
+  } else if (parti.length > 1) {
+    parti.pop(); // il cognome
+  }
   while (parti.length > 1 && PARTICELLE.has(parti[parti.length - 1].toLowerCase())) parti.pop();
   let nome = parti.join(" ");
-  if (!nome || /^\p{Lu}\.$/u.test(nome) || nome === "Professionista rimosso") {
+  if (!nome || INIZIALI.test(nome) || rimosso) {
     nome = String(nome_accesso || full_name || "").trim().split(/\s+/)[0] || "";
   }
   return sistemaMaiuscole(nome) || "collega";

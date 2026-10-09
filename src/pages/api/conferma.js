@@ -2,7 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../lib/db.js";
 import { readSession, createSession } from "../../lib/auth.js";
-import { conTitolo } from "../../lib/appellativo.js";
+import { nomePubblico } from "../../lib/appellativo.js";
 import { sendEmail, emailConfermaPaziente, emailNotificaProfessionista, emailSostituitoProfessionista } from "../../lib/mailer.js";
 import { pushToProfessional } from "../../lib/push.js";
 import { linkAccetta } from "../../lib/cambio.js";
@@ -51,9 +51,11 @@ export async function POST({ request }) {
     name: b.customer_name, phone: b.customer_phone, email: b.customer_email,
     address: b.address, city: b.city, start: new Date(b.start_dt).toISOString(),
   };
-  // Nella conferma il paziente ha diritto al nome COMPLETO di chi verrà a casa
+  // Nella conferma il paziente ha diritto al nome COMPLETO di chi verrà a casa: di solito
+  // è uguale alla scheda; resta completo anche se, per gravi motivi di sicurezza, la
+  // scheda mostra solo l'iniziale del cognome
   const professional = {
-    name: b.professional_full_name ? conTitolo(b.professional_full_name) : b.professional_name,
+    name: b.professional_full_name ? nomePubblico(b.professional_full_name) : b.professional_name,
     email: b.professional_email,
     slug: b.professional_slug, cancel_hours: b.cancel_hours,
   };

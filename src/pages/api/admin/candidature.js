@@ -2,7 +2,7 @@ export const prerender = false;
 
 import { randomBytes } from "node:crypto";
 import { sql } from "../../../lib/db.js";
-import { nomePubblico as nomePubblico_ } from "../../../lib/appellativo.js";
+import { nomePubblico as nomePubblico_, maiuscoleNome } from "../../../lib/appellativo.js";
 import { sessionFromRequest, hashPassword } from "../../../lib/auth.js";
 import { geocodePerMappa, jitterPerId } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
@@ -89,9 +89,11 @@ export async function POST({ request }) {
   const zoneCand = String(cand.city || "").split(",").map((c) => ({ city: c.trim(), province: provincia })).filter((z) => z.city);
   const geo = await geocodePerMappa({ address: cand.address, city: (zoneCand[0]?.city || cand.city), province: provincia, zone: zoneCand });
   // password scelta dal candidato in registrazione; ripiego a temporanea solo per i vecchi record senza hash
-  // Nome pubblico «Inf. Nome I.» (titolo unico, vedi lib/appellativo.js): il nome
-  // completo resta riservato (va solo nell'email di conferma al paziente prenotato)
-  const nomePubblico = nomePubblico_(cand.name);
+  // Nome pubblico «Inf. Nome Cognome» per intero, con le maiuscole giuste (decisione dei
+  // soci 9/10/26, vedi lib/appellativo.js). Solo per gravi motivi di sicurezza l'admin lo
+  // accorcia a mano all'iniziale del cognome, da «Modifica scheda».
+  const nomeCompleto = maiuscoleNome(cand.name);
+  const nomePubblico = nomePubblico_(nomeCompleto);
 
   const passwordScelta = cand.pass_hash && cand.pass_hash.startsWith("scrypt$");
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
@@ -99,7 +101,7 @@ export async function POST({ request }) {
   const [prof] = await sql`
     INSERT INTO professionals (slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by, tipo)
     VALUES (
-      ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${cand.albo_name || ''}, ${cand.albo_number || ''}, ${cand.albo_date || ''},
+      ${slug}, ${nomePubblico}, ${nomeCompleto}, ${cand.gender || ''}, ${cand.profession}, ${cand.albo_name || ''}, ${cand.albo_number || ''}, ${cand.albo_date || ''},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
       '/professionisti-foto/placeholder.svg',
       ${regione}, ${provincia}, ${cand.city}, ${cand.address},
