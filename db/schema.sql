@@ -57,11 +57,17 @@ CREATE TABLE IF NOT EXISTS articles (
   reviewed_at timestamp with time zone,
   reviewed_by text NOT NULL DEFAULT ''::text,
   sources jsonb NOT NULL DEFAULT '[]'::jsonb,
+  -- Articolo SOSTITUITO (9/10/26, migrazione migrate-articoli-sostituiti.mjs): il suo indirizzo
+  -- porta con un 301 all'articolo replaced_by_id (se pubblicato; al massimo 3 salti). Un
+  -- articolo sostituito non è mai 'published': esce da elenchi, home, sitemap e correlati.
+  replaced_by_id integer,
   CONSTRAINT articles_pkey PRIMARY KEY (id),
   CONSTRAINT articles_slug_key UNIQUE (slug),
-  CONSTRAINT articles_status_check CHECK (status IN ('draft', 'review', 'changes', 'rejected', 'published'))
+  CONSTRAINT articles_status_check CHECK (status IN ('draft', 'review', 'changes', 'rejected', 'published')),
+  CONSTRAINT articles_replaced_by_not_self CHECK (replaced_by_id IS NULL OR replaced_by_id <> id)
 );
 CREATE INDEX ix_articles_author ON articles USING btree (author_professional_id, status);
+CREATE INDEX ix_articles_replaced_by ON articles USING btree (replaced_by_id) WHERE replaced_by_id IS NOT NULL;
 CREATE INDEX ix_articles_status ON articles USING btree (status, published_at DESC);
 
 CREATE TABLE IF NOT EXISTS blocks (
@@ -426,6 +432,7 @@ CREATE INDEX ix_admin_broadcasts_created ON admin_broadcasts USING btree (create
 
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE articles ADD CONSTRAINT articles_author_professional_id_fkey FOREIGN KEY (author_professional_id) REFERENCES professionals(id);
+ALTER TABLE articles ADD CONSTRAINT articles_replaced_by_id_fkey FOREIGN KEY (replaced_by_id) REFERENCES articles(id) ON DELETE SET NULL;
 ALTER TABLE blocks ADD CONSTRAINT blocks_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
 ALTER TABLE bookings ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
 ALTER TABLE bookings ADD CONSTRAINT bookings_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES professionals(id) ON DELETE CASCADE;
