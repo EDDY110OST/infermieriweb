@@ -8,6 +8,7 @@ import ArticoliDaApprovare from "./AdminArticoliRevisione.jsx";
 // L'editor visuale degli articoli (TipTap) si carica solo quando serve: pesa ~120 KB
 const EditorArticolo = React.lazy(() => import("./EditorArticolo.jsx"));
 import { eConsulenza, TIPI_ATTIVITA } from "../data/listino.js";
+import { nomePubblico } from "../lib/appellativo.js";
 
 const dataIt = (iso) =>
   new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -446,8 +447,16 @@ function ModificaScheda({ pid, nome, onIndietro }) {
       <div className="pf-panel pf-book" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>Dati e identità</h3>
         <div style={griglia2}>
-          <div><label>Nome pubblico (es. Inf. Mario R.)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} /></div>
-          <div><label>Nome completo (riservato)</label><input value={prof.full_name || ""} onChange={(e) => setProf({ ...prof, full_name: e.target.value })} /></div>
+          <div><label>Nome pubblico (di solito «Inf. Nome Cognome»; solo l'iniziale del cognome per gravi motivi di sicurezza)</label><input value={prof.name || ""} onChange={(e) => setProf({ ...prof, name: e.target.value })} />
+            {/* 9/10/26: il nome pubblico è nome e cognome per intero; il tasto lo rimette dal nome completo */}
+            {String(prof.full_name || "").trim() && nomePubblico(prof.full_name) !== String(prof.name || "").trim() && (
+              <p className="pf-note" style={{ marginTop: -6 }}>
+                Dal nome completo: <strong>{nomePubblico(prof.full_name)}</strong>{" "}
+                <button type="button" className="pf-btn secondario compatto" onClick={() => setProf({ ...prof, name: nomePubblico(prof.full_name) })}>Usa questo</button>
+              </p>
+            )}
+          </div>
+          <div><label>Nome completo (nome e cognome come all'albo)</label><input value={prof.full_name || ""} onChange={(e) => setProf({ ...prof, full_name: e.target.value })} /></div>
           <div><label>Sesso (appellativo)</label>
             <select value={prof.gender || ""} onChange={(e) => setProf({ ...prof, gender: e.target.value })}>
               <option value="">—</option><option value="m">Uomo</option><option value="f">Donna</option>
