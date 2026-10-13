@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../../../lib/db.js";
 import { readSession, hashPassword, improntaPassword } from "../../../lib/auth.js";
 import { consenti, ipDa } from "../../../lib/ratelimit.js";
+import { registraAccesso } from "../../../lib/accessi-server.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -27,13 +28,14 @@ export async function POST({ request }) {
   const password = String(body.password || "");
   if (password.length < 10) return json({ error: "La nuova password deve avere almeno 10 caratteri" }, 400);
 
-  const [utente] = await sql`SELECT id, pass_hash FROM professional_users WHERE lower(email) = ${sessione.email}`;
+  const [utente] = await sql`SELECT id, professional_id, pass_hash FROM professional_users WHERE lower(email) = ${sessione.email}`;
   if (!utente) return json({ error: "Account non trovato: forse l'email per entrare è cambiata. Usa «Password dimenticata?» nella pagina di accesso." }, 404);
   if (sessione.fp && sessione.fp !== improntaPassword(utente.pass_hash)) {
     return json({ error: "Questo link è già stato usato. Se ti serve, chiedine uno nuovo con «Password dimenticata?» nella pagina di accesso." }, 400);
   }
 
   await sql`UPDATE professional_users SET pass_hash = ${hashPassword(password)} WHERE id = ${utente.id}`;
+  await registraAccesso({ evento: "password_reimpostata", request, uid: utente.id, pid: utente.professional_id });
 
   return json({ ok: true });
 }

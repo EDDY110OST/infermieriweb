@@ -14,6 +14,10 @@ const SEED = process.env.IW_SEED_JSON || path.join(qui, "seed.json");
 // ordine di inserimento = ordine delle chiavi esterne
 const ORDINE = ["applications", "professionals", "professional_users", "catalog_services", "services", "articles", "coverage_areas",
   "opening_hours", "day_overrides", "blocks", "bookings", "reviews"];
+// Colonne che puntano alla STESSA tabella (es. l'articolo 1 «sostituito da» il 17): inserite
+// vuote e rimesse a posto dopo, altrimenti la chiave esterna fallisce perché il 17 arriva
+// dopo l'1 (seed in ordine di id). Senza questo il server di prova moriva alla prima query (13/10/26).
+const AUTO_RIFERIMENTI = { articles: ["replaced_by_id"] };
 
 let pronto = null;
 // Migrazione di prova: con IW_SHIM_MIGRAZIONE=<script .mjs> lo script gira sullo STESSO
@@ -33,9 +37,16 @@ async function prepara() {
   const seed = JSON.parse(readFileSync(SEED, "utf8"));
   for (const t of ORDINE) {
     const righe = seed[t] || [];
+    const auto = AUTO_RIFERIMENTI[t] || [];
     for (const r of righe) {
       const cols = Object.keys(r);
-      await pg.query(`INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(",")})`, cols.map((c) => serializza(r[c])));
+      const valori = cols.map((c) => (auto.includes(c) ? null : serializza(r[c])));
+      await pg.query(`INSERT INTO ${t} (${cols.join(",")}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(",")})`, valori);
+    }
+    for (const c of auto) {
+      for (const r of righe) {
+        if (r[c] != null) await pg.query(`UPDATE ${t} SET ${c} = $1 WHERE id = $2`, [serializza(r[c]), r.id]);
+      }
     }
     if (righe.length && righe[0].id !== undefined) {
       await pg.query(`SELECT setval(pg_get_serial_sequence('${t}','id'), (SELECT MAX(id) FROM ${t}))`);

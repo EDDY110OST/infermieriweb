@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest, verifyPassword, hashPassword } from "../../../lib/auth.js";
+import { registraAccesso } from "../../../lib/accessi-server.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -25,5 +26,6 @@ export async function POST({ request }) {
   }
 
   await sql`UPDATE professional_users SET pass_hash = ${hashPassword(nuova)} WHERE id = ${session.uid}`;
+  await registraAccesso({ evento: "password_cambiata", request, uid: session.uid, pid: session.pid });
   return json({ ok: true });
 }

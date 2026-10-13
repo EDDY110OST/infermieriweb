@@ -7,6 +7,7 @@ import { linkCambio } from "../../../lib/cambio.js";
 import { avvisoEmail, normalizzaEmail } from "../../../lib/email.js";
 import { prenotabilitaTutti, GIORNI_FINESTRA } from "../../../lib/prenotabilita.js";
 import { NOTA_AUTORE_RIMOSSO } from "../../../lib/articoli-infermieri.js";
+import { riepilogoAccessi } from "../../../lib/accessi-server.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -83,9 +84,15 @@ export async function GET({ request, url }) {
   let prenotabilita = {};
   try { prenotabilita = await prenotabilitaTutti({ giorni: GIORNI_FINESTRA }); } catch (e) { console.error("[admin] prenotabilità non calcolata:", e.message); }
 
+  // «È mai entrato nel pannello?» (13/10/26, lib/accessi.js): se il registro non risponde
+  // l'elenco esce lo stesso, senza quella riga
+  let accessi = null;
+  try { accessi = await riepilogoAccessi(); } catch (e) { console.error("[admin] registro accessi non letto:", e.message); }
+
   // dominio sospetto (es. «gmail.co») → avviso visibile nella card
   return json({ professionisti: professionisti.map((p) => ({
     ...p,
+    accessi: accessi ? (accessi[p.id] || {}) : null,
     avviso_email: avvisoEmail(normalizzaEmail(p.email)),
     prenotabilita: p.status === "active" ? (prenotabilita[p.id] || null) : null,
   })) });
@@ -120,7 +127,7 @@ export async function PATCH({ request }) {
 //     link per scegliere un altro infermiere;
 //  2. prenotazioni passate → restano agganciate all'id (i dati del paziente seguono la
 //     pulizia a 24 mesi); il nome mostrato diventa «Professionista rimosso»;
-//  3. cancellati: login e 2FA, notifiche push, zone, orari, disponibilità, blocchi, visite,
+//  3. cancellati: login e 2FA, registro degli accessi, notifiche push, zone, orari, disponibilità, blocchi, visite,
 //     specializzazioni (anche su misura), prestazioni su misura, prestazioni senza
 //     prenotazioni (le altre archiviate), recensioni, candidatura con la stessa email;
 //  4. la riga viene svuotata di ogni dato personale (nome, foto, contatti, albo, P.IVA,
@@ -172,6 +179,8 @@ export async function DELETE({ request }) {
 
   // 2./3. tutto il resto (istruzioni esplicite, tabella per tabella)
   await sql`DELETE FROM professional_users WHERE professional_id = ${id}`;
+  // il registro degli accessi è suo: va via con lui (mai fermare la cancellazione per questo)
+  try { await sql`DELETE FROM access_log WHERE professional_id = ${id}`; } catch (e) { console.error("[admin] registro accessi non cancellato:", e.message); }
   await sql`DELETE FROM push_subscriptions WHERE professional_id = ${id}`;
   await sql`DELETE FROM coverage_areas WHERE professional_id = ${id}`;
   await sql`DELETE FROM opening_hours WHERE professional_id = ${id}`;

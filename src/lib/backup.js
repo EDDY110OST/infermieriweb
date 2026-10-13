@@ -1,7 +1,7 @@
 import { gzipSync } from "node:zlib";
 import { randomBytes, scryptSync, createCipheriv } from "node:crypto";
 import { sql } from "./db.js";
-import { eseguiPulizia, MESI_PRENOTAZIONI, MESI_CANDIDATURE } from "./pulizia.js";
+import { eseguiPulizia, MESI_PRENOTAZIONI, MESI_CANDIDATURE, MESI_REGISTRO_ACCESSI } from "./pulizia.js";
 
 const TABELLE = [
   "professionals", "professional_users", "services", "coverage_areas",
@@ -73,7 +73,8 @@ export async function eseguiBackup() {
          ${pulizia.prenotazioni} prenotazioni oltre ${MESI_PRENOTAZIONI} mesi da anonimizzare,
          ${pulizia.candidature} candidature non accettate oltre ${MESI_CANDIDATURE} mesi,
          ${pulizia.richieste} richieste informazioni scadute,
-         ${pulizia.recensioniRespinte} recensioni respinte scadute.
+         ${pulizia.recensioniRespinte} recensioni respinte scadute,
+         ${pulizia.accessi} righe del registro accessi oltre ${MESI_REGISTRO_ACCESSI} mesi.
        </p>`;
 
   const avviso = contenuto

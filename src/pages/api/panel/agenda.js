@@ -3,6 +3,7 @@ export const prerender = false;
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
 import { romeDateTime } from "../../../lib/slots.js";
+import { registraPresenza } from "../../../lib/accessi-server.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -11,6 +12,8 @@ const json = (data, status = 200) =>
 export async function GET({ request, url }) {
   const session = sessionFromRequest(request);
   if (!session?.pid) return json({ error: "Non autenticato" }, 401);
+  // registro accessi: l'agenda è la prima cosa che il pannello carica (max una riga all'ora)
+  registraPresenza(session, request);
 
   const from = url.searchParams.get("from") || new Date().toISOString().slice(0, 10);
   const days = Math.min(Number(url.searchParams.get("days")) || 7, 42); // 42 = griglia mensile completa

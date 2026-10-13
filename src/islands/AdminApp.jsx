@@ -4,6 +4,7 @@ import CercaComune from "./CercaComune.jsx";
 import ConfermaInline from "./ConfermaInline.jsx";
 import CampoFonti from "./CampoFonti.jsx";
 import ArticoliDaApprovare from "./AdminArticoliRevisione.jsx";
+import RegistroAccessi, { RigaAccessi } from "./AdminRegistroAccessi.jsx";
 
 // L'editor visuale degli articoli (TipTap) si carica solo quando serve: pesa ~120 KB
 const EditorArticolo = React.lazy(() => import("./EditorArticolo.jsx"));
@@ -30,6 +31,7 @@ const MENU = [
       { k: "inf-stato", label: "Stato approvazione" },
       { k: "inf-specializzazioni", label: "Specializzazioni" },
       { k: "inf-disponibilita", label: "Disponibilità" },
+      { k: "inf-accessi", label: "🔑 Registro accessi" },
       { k: "inf-zone", label: "Zone coperte" },
       { k: "inf-recensioni", label: "Recensioni" },
     ],
@@ -998,6 +1000,8 @@ function Professionisti({ filtroStato }) {
               ⚠️ <strong>Nessun orario prenotabile nei prossimi {p.prenotabilita.giorni} giorni.</strong> Perché: {p.prenotabilita.motivi.map((m) => m.testo).join(" · ")}. Da contattare.
             </div>
           )}
+          {/* «È mai entrato nel pannello?» (registro accessi, 13/10/26) */}
+          <RigaAccessi p={p} />
           <div className="pf-note" style={{ margin: "0 0 10px" }}>
             💉 {p.servizi} prestazioni · 📅 {p.prenotazioni_totali} richieste · ✅ {p.completate} completate · ❌ {p.annullate} annullate <span style={{ color: "var(--iw-muted)" }}>({p.prenotazioni_30gg} richieste negli ultimi 30 gg)</span>
             {Number(p.recensioni) > 0 && <> · ⭐ {String(p.rating).replace(".", ",")} ({p.recensioni})</>}
@@ -3102,6 +3106,7 @@ export default function AdminApp() {
     "inf-stato": <Professionisti filtroStato="pending" />,
     "inf-specializzazioni": <Specializzazioni />,
     "inf-disponibilita": <Disponibilita />,
+    "inf-accessi": <RegistroAccessi />,
     "inf-zone": <Copertura />,
     "inf-recensioni": <RecensioniPubblicate />,
     "paz-anagrafica": <Pazienti />,

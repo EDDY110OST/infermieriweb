@@ -430,6 +430,21 @@ CREATE TABLE IF NOT EXISTS admin_broadcasts (
 CREATE UNIQUE INDEX ux_admin_broadcasts_chiave ON admin_broadcasts USING btree (chiave);
 CREATE INDEX ix_admin_broadcasts_created ON admin_broadcasts USING btree (created_at DESC);
 
+-- Registro degli accessi all'area riservata (13/10/2026): chi entra, quando, chi ci prova
+-- senza riuscirci. Niente indirizzo IP: solo il tipo di dispositivo. Vedi lib/accessi.js.
+CREATE TABLE IF NOT EXISTS access_log (
+  id BIGSERIAL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  evento text NOT NULL,
+  user_id integer,
+  professional_id integer,
+  email text NOT NULL DEFAULT ''::text,
+  dispositivo text NOT NULL DEFAULT ''::text,
+  CONSTRAINT access_log_pkey PRIMARY KEY (id)
+);
+CREATE INDEX ix_access_log_prof ON access_log USING btree (professional_id, created_at DESC);
+CREATE INDEX ix_access_log_created ON access_log USING btree (created_at DESC);
+
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE articles ADD CONSTRAINT articles_author_professional_id_fkey FOREIGN KEY (author_professional_id) REFERENCES professionals(id);
 ALTER TABLE articles ADD CONSTRAINT articles_replaced_by_id_fkey FOREIGN KEY (replaced_by_id) REFERENCES articles(id) ON DELETE SET NULL;

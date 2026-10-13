@@ -15,6 +15,7 @@ import { sql } from "./db.js";
  *  - candidature non accettate: eliminate dopo 12 mesi
  *  - richieste di informazioni: eliminate dopo 24 mesi
  *  - recensioni respinte: eliminate dopo 12 mesi
+ *  - registro degli accessi all'area riservata: righe eliminate dopo 12 mesi
  *  - lista d'attesa e newsletter: restano finché l'interessato non si cancella
  */
 
@@ -22,6 +23,7 @@ export const MESI_PRENOTAZIONI = 24;
 export const MESI_CANDIDATURE = 12;
 export const MESI_RICHIESTE = 24;
 export const MESI_RECENSIONI_RESPINTE = 12;
+export const MESI_REGISTRO_ACCESSI = 12;
 
 const spenta = () => ["0", "false", "no"].includes(String(process.env.PULIZIA_ATTIVA || "").toLowerCase());
 
@@ -77,6 +79,15 @@ export async function eseguiPulizia({ backupPossibile = false } = {}) {
       await sql`
         DELETE FROM reviews
         WHERE status = 'rejected' AND created_at < now() - (${MESI_RECENSIONI_RESPINTE} || ' months')::interval`;
+    }
+
+    // 5. Registro degli accessi all'area riservata (lib/accessi.js)
+    const accessi = await sql`
+      SELECT COUNT(*) AS n FROM access_log
+      WHERE created_at < now() - (${MESI_REGISTRO_ACCESSI} || ' months')::interval`;
+    esito.accessi = Number(accessi[0].n);
+    if (!simulazione && esito.accessi > 0) {
+      await sql`DELETE FROM access_log WHERE created_at < now() - (${MESI_REGISTRO_ACCESSI} || ' months')::interval`;
     }
   } catch (err) {
     esito.errore = err.message;

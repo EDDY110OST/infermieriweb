@@ -4,6 +4,7 @@ import { sql } from "../../../lib/db.js";
 import { linkReimpostaPassword } from "../../../lib/auth.js";
 import { sendEmail, emailRecuperoPasswordProfessionista } from "../../../lib/mailer.js";
 import { consenti, ipDa } from "../../../lib/ratelimit.js";
+import { registraAccesso } from "../../../lib/accessi-server.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -22,7 +23,12 @@ export async function POST({ request }) {
   }
 
   const [utente] = await sql`
-    SELECT name, pass_hash FROM professional_users WHERE lower(email) = ${email}`;
+    SELECT id, professional_id, name, pass_hash FROM professional_users WHERE lower(email) = ${email}`;
+
+  // registro accessi: chi chiede il link, e chi lo chiede con un'email che non ha un account
+  await registraAccesso(utente
+    ? { evento: "password_richiesta", request, uid: utente.id, pid: utente.professional_id }
+    : { evento: "recupero_sconosciuta", request, email });
 
   if (utente) {
     // vale 60 minuti e una volta sola (impronta della password attuale, vedi lib/auth.js)
