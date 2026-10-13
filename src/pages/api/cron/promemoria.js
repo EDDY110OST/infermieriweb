@@ -98,8 +98,15 @@ async function esegui() {
   // così l'ambiente di prova può spostare il giorno (IW_ORA_FINTA). Massimo 30 a giro.
   try {
     const adesso = new Date();
+    // Partono solo di giorno (9-18 ora italiana): un promemoria alle 23 infastidisce e basta.
+    // Per fermarli del tutto: PROMEMORIA_PROFILO_ATTIVO=0 fra le variabili d'ambiente su Render
+    // (stesso meccanismo di PULIZIA_ATTIVA in lib/pulizia.js).
+    const oraRoma = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Rome", hour: "2-digit", hour12: false }).format(adesso));
+    const spento = ["0", "false", "no"].includes(String(process.env.PROMEMORIA_PROFILO_ATTIVO || "").toLowerCase());
+    if (spento) console.log("[completa-profilo] disattivato (PROMEMORIA_PROFILO_ATTIVO=0)");
+    const inOrario = oraRoma >= 9 && oraRoma < 18;
     const daAlmeno3Giorni = new Date(adesso.getTime() - 3 * 86400000).toISOString();
-    const candidati = await sql`
+    const candidati = (spento || !inOrario) ? [] : await sql`
       SELECT id, name, full_name, email, created_at, promemoria_profilo_3_at, promemoria_profilo_10_at
       FROM professionals
       WHERE status = 'active' AND email <> ''
