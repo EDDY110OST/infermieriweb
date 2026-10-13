@@ -8,6 +8,7 @@ import { geocodePerMappa, jitterPerId } from "../../../lib/geocode.js";
 import { trovaComune } from "../../../data/comuni.js";
 import { sendEmail, emailBenvenutoProfessionista } from "../../../lib/mailer.js";
 import { normalizzaEmail, emailValida, avvisoEmail, emailUsataDaAltri, registraCambioEmail } from "../../../lib/email.js";
+import { creaServiziDaCandidatura } from "../../../lib/servizi.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -27,7 +28,7 @@ export async function GET({ request }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
   const candidature = await sql`
     SELECT id, name, email, phone, profession, albo_name, albo_number, albo_date,
-           vat_number, city, province, address, message, created_at, tipo
+           vat_number, city, province, address, message, created_at, tipo, prestazioni
     FROM applications WHERE status = 'new' ORDER BY created_at`;
   // dominio sospetto (es. «gmail.co»): si vede PRIMA di approvare, così si corregge
   return json({ candidature: candidature.map((c) => ({ ...c, avviso_email: avvisoEmail(normalizzaEmail(c.email)) })) });
@@ -126,11 +127,18 @@ export async function POST({ request }) {
     await sql`UPDATE professionals SET lat = ${j.lat}, lng = ${j.lng} WHERE id = ${prof.id}`;
   }
 
+  // Prestazioni scelte in candidatura (13/10/26) → righe `services`: la scheda nasce già
+  // completa e compare subito in ricerca e sulla mappa. Anche per chi è `network`:
+  // pronte per quando aprirà la P.IVA. Una voce ritirata nel frattempo si salta, un
+  // prezzo sotto il nuovo minimo si alza: l'admin lo legge nell'esito.
+  const servizi = await creaServiziDaCandidatura(prof.id, Array.isArray(cand.prestazioni) ? cand.prestazioni : []);
+
   await sql`UPDATE applications SET status = 'approved' WHERE id = ${id}`;
 
   const benvenuto = emailBenvenutoProfessionista({
     name: cand.name, email: cand.email, passwordTemporanea, slug,
     senzaPiva: !cand.vat_number,
+    nPrestazioni: servizi.create.length,
   });
   const emailed = await sendEmail({ to: cand.email, toName: cand.name, ...benvenuto });
 
@@ -138,6 +146,9 @@ export async function POST({ request }) {
     ok: true, slug, emailed,
     credenziali: { email: cand.email, password: passwordTemporanea },
     geocodificato: geo ? geo.precision : null,
+    prestazioni_create: servizi.create,
+    prestazioni_saltate: servizi.saltate,
+    prestazioni_alzate: servizi.alzate,
   });
 }
 

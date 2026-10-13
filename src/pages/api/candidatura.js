@@ -6,7 +6,8 @@ import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { sendEmail, EMAIL_AVVISI_ADMIN } from "../../lib/mailer.js";
 import { hashPassword } from "../../lib/auth.js";
 import { trovaComune } from "../../data/comuni.js";
-import { TIPI_ATTIVITA } from "../../data/listino.js";
+import { TIPI_ATTIVITA, offreDomicilio } from "../../data/listino.js";
+import { validaPrestazioniCandidatura, euroTesto } from "../../lib/servizi.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -61,6 +62,22 @@ export async function POST({ request }) {
   if (!["m", "f"].includes(gender)) return json({ error: "Indica se sei infermiere o infermiera" }, 400);
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
 
+  // Prestazioni a domicilio scelte nel modulo (13/10/26): il modulo nuovo manda sempre
+  // l'elenco `prestazioni` (anche vuoto, e allora si blocca: senza almeno una prestazione
+  // la scheda non comparirebbe nelle ricerche). Chi NON manda il campo (modulo vecchio
+  // ancora aperto in una scheda del browser) passa come prima, con l'elenco vuoto: la
+  // scheda nascerà senza prestazioni e l'admin lo vede nella card. Chi offre solo
+  // consulenze non sceglie prestazioni a domicilio.
+  let prestazioni = [];
+  if (body.prestazioni !== undefined && offreDomicilio(tipo)) {
+    const v = await validaPrestazioniCandidatura(body.prestazioni);
+    if (v.error) return json({ error: v.error }, 400);
+    prestazioni = v.prestazioni;
+    if (!prestazioni.length) {
+      return json({ error: "Scegli almeno una prestazione a domicilio: è quella che fa comparire la tua scheda nelle ricerche dei pazienti" }, 400);
+    }
+  }
+
   if (!(await consenti(`candidatura:${ipDa(request)}`, 3, 60))) {
     return json({ error: "Troppe richieste ravvicinate: riprova più tardi" }, 429);
   }
@@ -70,8 +87,15 @@ export async function POST({ request }) {
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
-    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender, tipo)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender}, ${tipo})`;
+    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender, tipo, prestazioni)
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender}, ${tipo}, ${JSON.stringify(prestazioni)}::jsonb)`;
+
+  // Le prestazioni scelte, per l'email agli admin: l'elenco con i prezzi, oppure
+  // l'avviso che la scheda nascerà vuota (candidatura a domicilio dal modulo vecchio)
+  const rigaPrestazioni = !offreDomicilio(tipo) ? ""
+    : prestazioni.length
+      ? `<tr><td style="padding: 4px 0; color: #7b909b; vertical-align: top;">Prestazioni (${prestazioni.length})</td><td>${prestazioni.map((p) => `${esc(p.nome)} · ${euroTesto(p.price_cents)}`).join("<br>")}</td></tr>`
+      : `<tr><td style="padding: 4px 0; color: #7b909b;">Prestazioni</td><td><strong>nessuna</strong> — candidatura dal modulo vecchio: la scheda nascerà vuota</td></tr>`;
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
@@ -89,6 +113,7 @@ export async function POST({ request }) {
           <tr><td style="padding: 4px 0; color: #7b909b;">Albo</td><td>${esc(alboName)} n. ${esc(alboNumber)} (dal ${esc(alboDate)})</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${vatNumber ? esc(vatNumber) : "<strong>assente</strong> — pre-iscrizione (profilo non prenotabile finché non apre la P.IVA)"}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${esc(email)} · ${esc(phone)}</td></tr>
+          ${rigaPrestazioni}
         </table>
         ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${esc(message)}</p>` : ""}
         <p style="margin: 20px 0;">
@@ -109,7 +134,11 @@ export async function POST({ request }) {
         <p>Grazie per aver scelto InfermieriWeb. Ecco come funziona da qui in poi:</p>
         <p style="margin: 6px 0;">1️⃣ <strong>Verifichiamo la tua iscrizione all'albo</strong> (${esc(alboName)} n. ${esc(alboNumber)}): è la verifica che facciamo per ogni professionista della rete, ed è ciò che dà valore anche alla tua scheda.</p>
         <p style="margin: 6px 0;">2️⃣ <strong>Entro pochi giorni ricevi la nostra risposta</strong> a questa email.</p>
-        <p style="margin: 6px 0;">3️⃣ Se è tutto in regola, nella stessa email troverai <strong>le credenziali di accesso</strong> ${vatNumber ? "alla tua agenda e i passi per completare la scheda (foto, prestazioni, prezzi, orari e zone coperte)" : "al tuo profilo. Non avendo la P.IVA, il tuo profilo non sarà ancora prenotabile dai pazienti: appena aprirai la P.IVA e ce lo segnalerai dal pannello, attiveremo la tua scheda pubblica e le prenotazioni a domicilio"}.</p>
+        <p style="margin: 6px 0;">3️⃣ Se è tutto in regola, nella stessa email troverai <strong>le credenziali di accesso</strong> ${vatNumber
+          ? (prestazioni.length
+            ? `alla tua agenda. La tua scheda nascerà già con le <strong>${prestazioni.length} prestazioni</strong> e i prezzi che hai scelto: per ricevere prenotazioni ti mancherà solo l'orario settimanale (5 minuti dal pannello)`
+            : "alla tua agenda e i passi per completare la scheda (foto, prestazioni, prezzi, orari e zone coperte)")
+          : `al tuo profilo. Non avendo la P.IVA, il tuo profilo non sarà ancora prenotabile dai pazienti: appena aprirai la P.IVA e ce lo segnalerai dal pannello, attiveremo la tua scheda pubblica e le prenotazioni a domicilio${prestazioni.length ? ` (le ${prestazioni.length} prestazioni che hai scelto restano salvate)` : ""}`}.</p>
         <p style="color: #7b909b; font-size: 13px; margin-top: 18px;">Non devi fare nulla nel frattempo. Se hai domande, rispondi pure a questa email.</p>
       </div>`,
     });

@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS applications (
   pass_hash text NOT NULL DEFAULT ''::text,
   gender text NOT NULL DEFAULT ''::text,
   tipo text NOT NULL DEFAULT ''::text, -- attività dichiarata: '' | domicilio | consulenza | entrambi (17/8/26)
+  -- 13/10/26: prestazioni a domicilio scelte già in candidatura, con il prezzo proposto
+  -- ([{key, nome, price_cents}]); all'approvazione diventano righe `services`
+  prestazioni jsonb NOT NULL DEFAULT '[]'::jsonb,
   CONSTRAINT applications_pkey PRIMARY KEY (id)
 );
 
@@ -197,6 +200,10 @@ CREATE TABLE IF NOT EXISTS professionals (
   tipo text NOT NULL DEFAULT ''::text,
   -- 7/10/26: presentazione per i colleghi (pagine /consulenza); vuota = si usa bio
   bio_consulenza text NOT NULL DEFAULT ''::text,
+  -- 13/10/26: promemoria «completa la scheda» a chi dopo 3 e 10 giorni dall'approvazione
+  -- è ancora senza prestazioni o senza orari; ognuno parte UNA volta sola
+  promemoria_profilo_3_at timestamp with time zone,
+  promemoria_profilo_10_at timestamp with time zone,
   -- 7/10/26: "lapide anonima". status='deleted' + dati personali svuotati; la riga resta
   -- perché le prenotazioni passate (e i conteggi) non spariscano con la cascata.
   deleted_at timestamp with time zone,

@@ -16,7 +16,8 @@ export async function GET({ request, url }) {
 import { neon } from "@neondatabase/serverless";
 import { tokenRecensione } from "../../../lib/recensioni.js";
 import { inviaEmailCambio, DAL_GIORNO_ACCETTA } from "../../../lib/cambio.js";
-import { sendEmail, emailRichiestaRecensione } from "../../../lib/mailer.js";
+import { sendEmail, emailRichiestaRecensione, emailCompletaProfilo, ASSISTENZA_EMAIL } from "../../../lib/mailer.js";
+import { prenotabilitaTutti } from "../../../lib/prenotabilita.js";
 
 const SITE = "https://infermieriweb.it";
 const API_KEY = process.env.BREVO_API_KEY || "";
@@ -87,6 +88,66 @@ async function esegui() {
     console.log("[promemoria] BREVO_API_KEY assente: salto il giro.");
     return new Response("no-key");
   }
+
+  // Completa la scheda (13/10/26): 8 approvati su 32 avevano la scheda vuota e non
+  // tornavano più. A chi è attivo, a domicilio, approvato da almeno 3 giorni e ancora
+  // NON prenotabile perché senza prestazioni o senza orari, parte un promemoria a 3
+  // giorni (finestra 3-9) e uno a 10 giorni (da 10 in poi), ciascuno UNA volta sola
+  // (guardie promemoria_profilo_3_at / _10_at). Chi è iscritto da mesi riceve solo
+  // quello dei 10 giorni. Le soglie si calcolano qui in JS e non con now() in SQL,
+  // così l'ambiente di prova può spostare il giorno (IW_ORA_FINTA). Massimo 30 a giro.
+  try {
+    const adesso = new Date();
+    const daAlmeno3Giorni = new Date(adesso.getTime() - 3 * 86400000).toISOString();
+    const candidati = await sql`
+      SELECT id, name, full_name, email, created_at, promemoria_profilo_3_at, promemoria_profilo_10_at
+      FROM professionals
+      WHERE status = 'active' AND email <> ''
+        AND tipo IN ('', 'domicilio', 'entrambi')
+        AND created_at <= ${daAlmeno3Giorni}::timestamptz
+        AND (promemoria_profilo_3_at IS NULL OR promemoria_profilo_10_at IS NULL)
+      ORDER BY created_at`;
+    if (candidati.length) {
+      const stato = await prenotabilitaTutti({ now: adesso });
+      // il calcolo di prenotabilità conta anche le consulenze: qui serve sapere se c'è
+      // almeno una prestazione A DOMICILIO (è quella che fa uscire in ricerca e mappa)
+      const conDomicilio = new Set((await sql`
+        SELECT DISTINCT professional_id FROM services
+        WHERE active AND deleted_at IS NULL AND catalog_key NOT LIKE 'consulenza-%'`).map((r) => Number(r.professional_id)));
+      // chi è senza prestazioni esce dal calcolo PRIMA del controllo orari (motivo
+      // «nessun_orario» mai segnalato): gli orari si guardano a parte, così l'email dice
+      // tutto ciò che manca. Orario = settimanale fisso oppure un giorno aperto a mano.
+      const oggiRoma = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(adesso);
+      const conOrari = new Set((await sql`
+        SELECT DISTINCT professional_id FROM opening_hours
+        UNION
+        SELECT DISTINCT professional_id FROM day_overrides
+        WHERE jsonb_array_length(fasce) > 0 AND day >= ${oggiRoma}::date`).map((r) => Number(r.professional_id)));
+      let inviate = 0, daInviare = 0;
+      for (const p of candidati) {
+        const s = stato[p.id];
+        if (!s || s.prenotabile) continue;
+        const tipi = new Set((s.motivi || []).map((m) => m.tipo));
+        const mancaPrestazioni = tipi.has("nessuna_prestazione") || !conDomicilio.has(Number(p.id));
+        const mancaOrari = tipi.has("nessun_orario") || !conOrari.has(Number(p.id));
+        if (!mancaPrestazioni && !mancaOrari) continue; // non prenotabile per altri motivi (blocchi, giorni chiusi…): non è questo promemoria
+        const giorni = Math.floor((adesso.getTime() - new Date(p.created_at).getTime()) / 86400000);
+        const soglia = giorni >= 10 && !p.promemoria_profilo_10_at ? 10
+          : giorni >= 3 && giorni <= 9 && !p.promemoria_profilo_3_at ? 3
+          : 0;
+        if (!soglia) continue;
+        daInviare++;
+        if (inviate >= 30) continue; // il resto al prossimo giro
+        const mail = emailCompletaProfilo({ name: p.full_name || p.name, mancaPrestazioni, mancaOrari, soglia });
+        const ok = await sendEmail({ to: p.email, toName: p.full_name || p.name, replyTo: ASSISTENZA_EMAIL, ...mail });
+        if (!ok) continue;
+        if (soglia === 10) await sql`UPDATE professionals SET promemoria_profilo_10_at = now() WHERE id = ${p.id}`;
+        else await sql`UPDATE professionals SET promemoria_profilo_3_at = now() WHERE id = ${p.id}`;
+        inviate++;
+      }
+      if (daInviare) console.log(`[completa-profilo] ${inviate}/${daInviare} promemoria inviati.`);
+    }
+  } catch (e) { console.log("[completa-profilo] errore:", e?.message || e); }
 
   const inScadenza = await sql`
     SELECT b.id, b.start_dt, b.customer_name, b.customer_email, b.cancel_token, b.address, b.city,

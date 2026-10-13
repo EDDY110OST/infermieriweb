@@ -1073,6 +1073,21 @@ function Candidature({ aggiornaBadge }) {
   const nEsiti = Object.keys(esiti).length;
   useEffect(() => { if (nEsiti) esitiRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [nEsiti]);
 
+  // Esito delle prestazioni scelte in candidatura (13/10/26): quante righe sono nate con
+  // la scheda, quali voci si sono saltate (ritirate dal listino) e quali prezzi si sono
+  // alzati al minimo di oggi. Solo se la risposta le porta (candidature dal modulo nuovo).
+  const righePrestazioni = (e) => {
+    if (!e || !Array.isArray(e.prestazioni_create)) return null;
+    const n = e.prestazioni_create.length;
+    return (
+      <div style={{ margin: "6px 0 0" }}>
+        <p style={{ margin: 0 }}>💉 {n ? <>Scheda nata con <strong>{n} {n === 1 ? "prestazione" : "prestazioni"}</strong> e i prezzi scelti in candidatura: compare già in ricerca e sulla mappa.</> : "Nessuna prestazione dalla candidatura: la scheda è vuota finché non le inserisce dal pannello."}</p>
+        {e.prestazioni_alzate?.length > 0 && <p style={{ margin: "4px 0 0" }}>⚠️ Prezzo alzato al minimo di oggi: {e.prestazioni_alzate.map((p) => `${p.nome} (${euro(p.da_cents)} → ${euro(p.a_cents)})`).join(", ")}.</p>}
+        {e.prestazioni_saltate?.length > 0 && <p style={{ margin: "4px 0 0" }}>⚠️ Saltate: {e.prestazioni_saltate.map((p) => `${p.nome} (${p.motivo})`).join(", ")}.</p>}
+      </div>
+    );
+  };
+
   if (!candidature) return <Caricamento />;
 
   return (
@@ -1087,6 +1102,7 @@ function Candidature({ aggiornaBadge }) {
               {e.emailed
                 ? <p style={{ margin: "6px 0 0" }}>Benvenuto inviato a <strong>{e.credenziali?.email}</strong>.</p>
                 : <p style={{ margin: "6px 0 0" }}>⚠️ Email NON partita — comunica tu le credenziali: <code>{e.credenziali?.email}</code>{e.credenziali?.password ? <> / <code>{e.credenziali.password}</code></> : " (password scelta da lui in candidatura)"}</p>}
+              {righePrestazioni(e)}
             </div>
           ))}
         </div>
@@ -1104,6 +1120,22 @@ function Candidature({ aggiornaBadge }) {
             📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ <EmailCandidatura c={c} onCambiata={carica} />
           </p>
           {c.message && <p style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
+          {/* Prestazioni scelte già in candidatura (13/10/26): all'approvazione diventano la scheda.
+              Chi offre solo consulenze non le sceglie; chi è a domicilio senza prestazioni viene dal modulo vecchio. */}
+          {c.tipo !== "consulenza" && (
+            <div style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px", margin: "6px 0" }}>
+              {Array.isArray(c.prestazioni) && c.prestazioni.length > 0 ? (
+                <>
+                  💉 <strong>Prestazioni scelte ({c.prestazioni.length})</strong> — con l'approvazione entrano subito nella scheda:
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 22 }}>
+                    {c.prestazioni.map((p) => <li key={p.key}>{p.nome} · <strong>{euro(p.price_cents)}</strong></li>)}
+                  </ul>
+                </>
+              ) : (
+                <>💉 <strong>Nessuna prestazione scelta</strong> (candidatura dal modulo vecchio): la scheda nascerà vuota e dovrà inserirle dal pannello.</>
+              )}
+            </div>
+          )}
 
           <div style={{ background: "#fff8e6", border: "1px solid #f4dfa5", borderRadius: 12, padding: "14px 16px", margin: "12px 0" }}>
             <strong style={{ color: "#0b3954" }}>🔒 Verifica obbligatoria prima di attivare</strong>
@@ -1130,6 +1162,7 @@ function Candidature({ aggiornaBadge }) {
               {esiti[c.id].emailed
                 ? <p style={{ margin: "6px 0 0" }}>Email di benvenuto inviata con le credenziali.</p>
                 : <p style={{ margin: "6px 0 0" }}>⚠️ Email NON partita — comunica tu le credenziali: <code>{esiti[c.id].credenziali.email}</code> / <code>{esiti[c.id].credenziali.password}</code></p>}
+              {righePrestazioni(esiti[c.id])}
             </div>
           ) : (
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>

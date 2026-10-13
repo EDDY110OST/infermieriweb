@@ -981,6 +981,28 @@ label.pf-tipo, .pf-book label.pf-tipo {
 .pf-tipo input[type="radio"], .pf-book .pf-tipo input[type="radio"] { margin: 5px 0 0; width: 18px; height: 18px; flex: none; accent-color: var(--iw-primary-deep); padding: 0; }
 .pf-tipo strong { color: var(--iw-navy); font-size: 17px; }
 
+/* Candidatura, passo «Le tue prestazioni» (13/10/26): una riga per voce del listino,
+   spunta + nome a sinistra e prezzo a destra; tutto in colonna, mai più largo dello
+   schermo (390 px). Il prezzo si scrive solo se la voce è spuntata. */
+.cf-prestazioni { display: grid; gap: 8px; margin: 6px 0 14px; }
+.cf-prestazione {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
+  border: 1.5px solid var(--iw-line); border-radius: 12px; padding: 8px 10px 8px 12px; background: #fff;
+}
+.cf-prestazione.sel { border-color: var(--iw-primary-deep); background: var(--iw-primary-soft); }
+.cf-prestazione.sotto { border-color: var(--iw-danger); }
+.pf-book label.cf-prestazione-nome {
+  display: flex; gap: 10px; align-items: center; min-height: 44px; margin: 0; min-width: 0;
+  font-weight: 400; font-size: 16px; color: var(--iw-ink); cursor: pointer;
+}
+.pf-book .cf-prestazione-nome input[type="checkbox"] { flex: none; width: 22px; height: 22px; margin: 0; padding: 0; accent-color: var(--iw-primary-deep); }
+.cf-prestazione-nome strong { color: var(--iw-navy); font-size: 17px; }
+.cf-prestazione-nome small { display: block; color: var(--iw-muted); font-size: 14px; }
+.pf-book label.cf-prestazione-prezzo { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; color: var(--iw-slate); }
+.pf-book .cf-prestazione-prezzo input { width: 92px; margin: 0; padding: 10px 10px; text-align: right; font-size: 18px; }
+.pf-book .cf-prestazione-prezzo input:disabled { background: var(--iw-bg); color: var(--iw-muted); }
+.cf-prestazione-errore { grid-column: 1 / -1; color: var(--iw-danger); font-size: 15px; font-weight: 600; }
+
 /* Bottone elimina prestazione (pannello professionista) */
 .pf-elimina {
   border: 1.5px solid var(--iw-line); background: #fff; color: #b91c1c;

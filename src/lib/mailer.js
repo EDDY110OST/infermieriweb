@@ -244,7 +244,9 @@ export function emailDisdettaPaziente({ booking, professional, service, cambioLi
 //  - passwordScelta = l'aveva scelta lui in candidatura → resta quella; il tasto serve
 //    solo se l'ha dimenticata;
 //  - altrimenti (password temporanea) → il tasto è il modo per sceglierla.
-export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug, senzaPiva = false, resetLink = "", passwordScelta = true, rimandato = false, emailCambiata = true, oreLink = 72 }) {
+// nPrestazioni (13/10/26): quante prestazioni la scheda ha GIÀ, scelte in candidatura.
+// Con almeno una, i «5 passi» lasciano il posto a un solo passo: l'orario settimanale.
+export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, slug, senzaPiva = false, resetLink = "", passwordScelta = true, rimandato = false, emailCambiata = true, oreLink = 72, nPrestazioni = 0 }) {
   const rigaPassword = resetLink
     ? `<tr><td style="padding: 10px 14px; color: #7b909b;">Password</td><td style="padding: 10px 0; font-weight: bold;">${passwordScelta ? "quella che hai scelto tu (non cambia)" : "la scegli tu con il tasto qui sotto"}</td></tr>`
     : passwordTemporanea
@@ -257,7 +259,9 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
         <p style="color: #7b909b; font-size: 13px; text-align: center; margin: 0 0 14px;">${passwordScelta ? "Se la ricordi, non devi fare nulla. " : "Se l'hai già cambiata, continua a usare la tua. "}Il tasto vale ${oreLink} ore e si usa una volta. Dopo, usa «Password dimenticata?» nella pagina di accesso.</p>` : "";
   const subject = rimandato
     ? (emailCambiata ? "La tua email su InfermieriWeb è stata corretta ✅" : "Ti rimandiamo il benvenuto su InfermieriWeb")
-    : (senzaPiva ? "Benvenuto su InfermieriWeb: il tuo profilo è attivo 🎉" : "Benvenuto su InfermieriWeb: la tua agenda è pronta 🎉");
+    : (senzaPiva ? "Benvenuto su InfermieriWeb: il tuo profilo è attivo 🎉"
+      : nPrestazioni > 0 ? "Benvenuto su InfermieriWeb: la tua scheda è pronta, manca solo l'orario 🎉"
+      : "Benvenuto su InfermieriWeb: la tua agenda è pronta 🎉");
   const introRimandato = emailCambiata
     ? `<p>Abbiamo corretto la tua email. Da ora per entrare usi <strong>${email}</strong>. Qui sotto trovi di nuovo tutto quello che serve.</p>`
     : `<p>Ti rimandiamo il benvenuto. Per entrare usi <strong>${email}</strong>. Qui sotto trovi di nuovo tutto quello che serve.</p>`;
@@ -274,6 +278,7 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
         </table>${tastoPassword}
         <p><strong>Come funziona per te (senza partita IVA):</strong></p>
         <p style="margin: 4px 0;">📌 La tua registrazione è <strong>salvata</strong>. Finché non hai la partita IVA il tuo profilo NON compare nelle ricerche dei pazienti e non è prenotabile: è normale, la prestazione a domicilio richiede di operare come libero professionista.</p>
+        ${nPrestazioni > 0 ? `<p style="margin: 4px 0;">💉 Le <strong>${nPrestazioni} prestazioni</strong> con i prezzi che hai scelto in candidatura sono già salvate nella tua scheda.</p>` : ""}
         <p style="margin: 4px 0;">📋 Intanto <strong>completa il profilo</strong>: entra con le tue credenziali${passwordTemporanea ? ", cambia la password temporanea" : ""}, carica la foto e scrivi due righe su di te — così quando ti attiviamo sei subito pronto.</p>
         <p style="margin: 4px 0;">🚀 <strong>Quando aprirai la partita IVA</strong>, aggiungila nella scheda Profilo del tuo pannello: ci avvisi e attiviamo la tua scheda pubblica, così i pazienti potranno prenotarti online a domicilio, con zero commissioni.</p>
         <p style="text-align: center; margin: 22px 0;">
@@ -292,6 +297,14 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
         <tr><td style="padding: 10px 14px; color: #7b909b;">Email</td><td style="padding: 10px 0; font-weight: bold;">${email}</td></tr>
         ${rigaPassword}
       </table>${tastoPassword}
+      ${nPrestazioni > 0 ? `
+      <p><strong>La tua scheda ha già ${nPrestazioni} prestazioni con i prezzi</strong> che hai scelto in candidatura: compare già nelle ricerche e sulla mappa della tua zona.</p>
+      <p><strong>Per andare in campo manca solo l'orario settimanale (5 minuti):</strong></p>
+      <p style="margin: 4px 0;">1️⃣ Entra con le tue credenziali${passwordTemporanea ? " e <strong>cambia subito la password temporanea</strong> (scheda Profilo)" : ""}</p>
+      <p style="margin: 4px 0;">2️⃣ Apri la scheda <strong>Orari</strong> e segna i giorni e le ore in cui ricevi prenotazioni. Da quel momento i pazienti possono prenotarti.</p>
+      <p style="margin: 10px 0 4px;">Poi, con calma: la <strong>foto</strong> e l'<strong>indirizzo</strong> (scheda Profilo), gli altri <strong>comuni che copri</strong> (scheda Zone), il <strong>prezzo di notte</strong> se lavori anche dopo le 22 (scheda Servizi).</p>
+      <p style="margin: 10px 0 4px; color: #7b909b; font-size: 14px;">Finché gli orari non ci sono, la tua scheda dice "sta completando il profilo" e nessuno può prenotarti.</p>
+      ` : `
       <p><strong>I tuoi primi passi (15 minuti in tutto):</strong></p>
       <p style="margin: 4px 0;">1️⃣ Entra con le tue credenziali${passwordTemporanea ? " e <strong>cambia subito la password temporanea</strong> (scheda Profilo)" : ""}</p>
       <p style="margin: 4px 0;">2️⃣ Carica la tua <strong>foto</strong> e il tuo <strong>indirizzo</strong> (il segnaposto sulla mappa si posiziona da solo)</p>
@@ -299,6 +312,7 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
       <p style="margin: 4px 0;">4️⃣ Imposta i tuoi <strong>orari settimanali</strong> (scheda Orari)</p>
       <p style="margin: 4px 0;">5️⃣ Aggiungi i <strong>comuni che copri a domicilio</strong> (scheda Zone): più comuni copri, più pazienti ti trovano</p>
       <p style="margin: 10px 0 4px; color: #7b909b; font-size: 14px;">Finché prestazioni e orari non sono inseriti, la tua scheda dice "sta completando il profilo" e non è prenotabile: bastano i passi 3 e 4 per andare in campo.</p>
+      `}
 
       <div style="background: #f0fdfa; border: 1px solid #ccebe6; border-radius: 12px; padding: 16px 18px; margin: 18px 0;">
         <p style="margin: 0 0 4px; font-weight: bold; color: #0b3954; font-size: 16px;">📲 Porta l'agenda sul telefono, come una vera app (2 minuti)</p>
@@ -334,6 +348,33 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
       </p>
       <p>La tua scheda pubblica: <a href="${SITE}/p/${slug}">${SITE}/p/${slug}</a> — condividila su WhatsApp, Google e i social: è tua, e le prenotazioni che porta sono tue al 100%. Zero commissioni.</p>
     `),
+  };
+}
+
+// Promemoria «completa la scheda» (13/10/26): a chi, 3 o 10 giorni dopo l'approvazione,
+// è ancora senza prestazioni e/o senza orari, quindi non prenotabile. Dice esattamente
+// cosa manca e quanto ci vuole; un solo tasto; le risposte arrivano all'assistenza.
+export function emailCompletaProfilo({ name, mancaPrestazioni = false, mancaOrari = false, soglia = 3 }) {
+  const nome = String(name || "").trim().split(" ")[0] || "";
+  const minuti = (mancaPrestazioni ? 3 : 0) + (mancaOrari ? 5 : 0);
+  const subject = soglia >= 10
+    ? "I pazienti della tua zona non possono ancora prenotarti"
+    : "La tua scheda su InfermieriWeb non è ancora prenotabile: manca poco";
+  return {
+    subject,
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Ciao${nome ? " " + nome : ""}, manca poco 👋</h2>
+      <p>Sei nella rete da ${soglia >= 10 ? "più di dieci giorni" : "tre giorni"}, ma la tua scheda <strong>non è ancora prenotabile</strong>: i pazienti della tua zona non possono fissare un appuntamento con te. Ecco cosa manca:</p>
+      <ul style="padding-left: 22px; margin: 10px 0;">
+        ${mancaPrestazioni ? `<li style="margin: 6px 0;"><strong>Le prestazioni con i prezzi</strong> (scheda Servizi, 3 minuti). Senza almeno una prestazione a domicilio la scheda non compare nelle ricerche né sulla mappa.</li>` : ""}
+        ${mancaOrari ? `<li style="margin: 6px 0;"><strong>L'orario settimanale</strong> (scheda Orari, 5 minuti). Senza orari nessuno può prenotarti.</li>` : ""}
+      </ul>
+      <p>In tutto ci vogliono <strong>${minuti} minuti</strong>, anche dal telefono.</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${SITE}/area-professionisti" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 34px; border-radius: 999px; font-weight: bold; font-size: 16px;">Entra nel pannello</a>
+      </p>
+      <p style="color: #46626e; font-size: 14px;">Hai bisogno di una mano? Scrivi a <a href="mailto:${ASSISTENZA_EMAIL}" style="color: #00897b;">${ASSISTENZA_EMAIL}</a>: rispondiamo noi.</p>
+    `, PIEDE_COMUNICAZIONE),
   };
 }
 
