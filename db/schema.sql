@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS applications (
   -- 13/10/26: prestazioni a domicilio scelte già in candidatura, con il prezzo proposto
   -- ([{key, nome, price_cents}]); all'approvazione diventano righe `services`
   prestazioni jsonb NOT NULL DEFAULT '[]'::jsonb,
+  -- 14/10/26: quando il candidato ha spuntato «accetto le Condizioni d'uso» e la
+  -- dichiarazione sull'assicurazione RC professionale (prova di cosa ha accettato)
+  condizioni_accettate_at timestamp with time zone,
+  rc_dichiarata_at timestamp with time zone,
   CONSTRAINT applications_pkey PRIMARY KEY (id)
 );
 

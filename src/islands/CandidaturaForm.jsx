@@ -32,6 +32,7 @@ export default function CandidaturaForm() {
     name: "", email: "", phone: "", profession: "", gender: "", tipo: "domicilio",
     albo_name: "", albo_number: "", albo_date: "", vat_number: "",
     city: "", province: "", region: "", sigla: "", address: "", message: "", privacy: false,
+    condizioni: false, rc: false,
     password: "", password2: "",
   });
   // listino: null = in carico · [] = non caricato/vuoto · [...] voci a domicilio
@@ -87,6 +88,8 @@ export default function CandidaturaForm() {
   const invia = async (e) => {
     e.preventDefault();
     setErrore("");
+    if (!dati.condizioni) return setErrore("Per iscriverti devi accettare le Condizioni d'uso: spunta la casella.");
+    if (!dati.rc) return setErrore("Serve la dichiarazione sull'assicurazione professionale: spunta la casella.");
     if (!dati.privacy) return setErrore("Serve il consenso al trattamento dei dati: spunta la casella.");
     let prestazioni = [];
     if (aDomicilio) {
@@ -135,11 +138,27 @@ export default function CandidaturaForm() {
     </div>
   );
 
-  // Consenso privacy + tasto d'invio: stanno SEMPRE all'ultimo passo (2 o 3)
+  // Condizioni d'uso, assicurazione RC (14/10/26), consenso privacy + tasto d'invio:
+  // stanno SEMPRE all'ultimo passo (2 o 3). Chi non ha ancora la P.IVA non lavora dal
+  // sito: per lui la dichiarazione RC vale «prima di ricevere prenotazioni».
   const blocchoFinale = (indietro) => (
     <>
       <div className="pf-check">
-        <input id="cf-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
+        <input id="cf-condizioni" type="checkbox" checked={dati.condizioni} onChange={(e) => { setErrore(""); setDati({ ...dati, condizioni: e.target.checked }); }} />
+        <label htmlFor="cf-condizioni" style={{ margin: 0, fontWeight: 400 }}>
+          Ho letto e accetto le <a href="/condizioni" target="_blank" rel="noopener">Condizioni d'uso</a>, in particolare il punto 9 per i professionisti. *
+        </label>
+      </div>
+      <div className="pf-check">
+        <input id="cf-rc" type="checkbox" checked={dati.rc} onChange={(e) => { setErrore(""); setDati({ ...dati, rc: e.target.checked }); }} />
+        <label htmlFor="cf-rc" style={{ margin: 0, fontWeight: 400 }}>
+          {dati.vat_number
+            ? "Ho un'assicurazione di responsabilità civile professionale valida e la terrò attiva finché ricevo prenotazioni da InfermieriWeb. *"
+            : "Prima di ricevere prenotazioni da InfermieriWeb avrò un'assicurazione di responsabilità civile professionale valida. *"}
+        </label>
+      </div>
+      <div className="pf-check">
+        <input id="cf-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => { setErrore(""); setDati({ ...dati, privacy: e.target.checked }); }} />
         <label htmlFor="cf-privacy" style={{ margin: 0, fontWeight: 400 }}>
           Acconsento al trattamento dei miei dati per la gestione della candidatura (<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>). *
         </label>

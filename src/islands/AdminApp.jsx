@@ -1117,7 +1117,11 @@ function Candidature({ aggiornaBadge }) {
           <p style={{ margin: "6px 0", fontSize: 17, color: "var(--iw-slate)" }}>
             {c.profession} · {c.albo_name} n. {c.albo_number} (dal {c.albo_date}) · P.IVA {c.vat_number}<br />
             🧭 Attività: <strong>{(TIPI_ATTIVITA.find((t) => t.key === c.tipo) || TIPI_ATTIVITA[0]).nome}</strong><br />
-            📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ <EmailCandidatura c={c} onCambiata={carica} />
+            📍 {c.address ? `${c.address}, ` : ""}{c.city} ({c.province}) · 📞 <a href={`tel:${c.phone}`}>{c.phone}</a> · ✉️ <EmailCandidatura c={c} onCambiata={carica} /><br />
+            {/* Spunte del modulo (14/10/26): chi si è candidato prima non le ha */}
+            {c.condizioni_accettate_at
+              ? <>📝 Condizioni accettate e assicurazione RC {c.vat_number ? "dichiarata" : "promessa prima delle prenotazioni"} il {dataIt(c.condizioni_accettate_at)}</>
+              : <>⚠️ Candidatura dal modulo vecchio: condizioni e assicurazione RC non dichiarate</>}
           </p>
           {c.message && <p style={{ fontSize: 17, background: "var(--iw-bg)", borderRadius: 10, padding: "8px 12px" }}>{c.message}</p>}
           {/* Prestazioni scelte già in candidatura (13/10/26): all'approvazione diventano la scheda.

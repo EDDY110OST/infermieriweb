@@ -60,6 +60,13 @@ export async function POST({ request }) {
   }
   if (password.length < 8) return json({ error: "Scegli una password di almeno 8 caratteri" }, 400);
   if (!["m", "f"].includes(gender)) return json({ error: "Indica se sei infermiere o infermiera" }, 400);
+  // Condizioni d'uso e assicurazione RC (14/10/26): obbligatorie. Un modulo vecchio ancora
+  // aperto nel browser non manda i campi: va solo ricaricato.
+  if (body.condizioni === undefined || body.rc === undefined) {
+    return json({ error: "Il modulo è stato aggiornato: ricarica la pagina e invia di nuovo" }, 400);
+  }
+  if (!body.condizioni) return json({ error: "Per iscriverti devi accettare le Condizioni d'uso" }, 400);
+  if (!body.rc) return json({ error: "Serve la dichiarazione sull'assicurazione professionale" }, 400);
   if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
 
   // Prestazioni a domicilio scelte nel modulo (13/10/26): il modulo nuovo manda sempre
@@ -87,8 +94,8 @@ export async function POST({ request }) {
   if (recente.length) return json({ error: "Candidatura già ricevuta: ti ricontatteremo a breve." }, 429);
 
   await sql`
-    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender, tipo, prestazioni)
-    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender}, ${tipo}, ${JSON.stringify(prestazioni)}::jsonb)`;
+    INSERT INTO applications (name, email, phone, profession, albo_name, albo_number, albo_date, vat_number, city, province, address, message, pass_hash, gender, tipo, prestazioni, condizioni_accettate_at, rc_dichiarata_at)
+    VALUES (${name}, ${email}, ${phone}, ${profession}, ${alboName}, ${alboNumber}, ${alboDate}, ${vatNumber}, ${city}, ${province}, ${address}, ${message}, ${hashPassword(password)}, ${gender}, ${tipo}, ${JSON.stringify(prestazioni)}::jsonb, now(), now())`;
 
   // Le prestazioni scelte, per l'email agli admin: l'elenco con i prezzi, oppure
   // l'avviso che la scheda nascerà vuota (candidatura a domicilio dal modulo vecchio)
@@ -114,6 +121,7 @@ export async function POST({ request }) {
           <tr><td style="padding: 4px 0; color: #7b909b;">P.IVA</td><td>${vatNumber ? esc(vatNumber) : "<strong>assente</strong> — pre-iscrizione (profilo non prenotabile finché non apre la P.IVA)"}</td></tr>
           <tr><td style="padding: 4px 0; color: #7b909b;">Contatti</td><td>${esc(email)} · ${esc(phone)}</td></tr>
           ${rigaPrestazioni}
+          <tr><td style="padding: 4px 0; color: #7b909b;">Dichiarazioni</td><td>Condizioni d'uso accettate · assicurazione RC ${vatNumber ? "dichiarata" : "promessa prima delle prenotazioni"}</td></tr>
         </table>
         ${message ? `<p style="background: #f6f9f9; padding: 12px 14px; border-radius: 10px;">${esc(message)}</p>` : ""}
         <p style="margin: 20px 0;">

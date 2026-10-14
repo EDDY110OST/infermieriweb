@@ -28,7 +28,8 @@ export async function GET({ request }) {
   if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
   const candidature = await sql`
     SELECT id, name, email, phone, profession, albo_name, albo_number, albo_date,
-           vat_number, city, province, address, message, created_at, tipo, prestazioni
+           vat_number, city, province, address, message, created_at, tipo, prestazioni,
+           condizioni_accettate_at, rc_dichiarata_at
     FROM applications WHERE status = 'new' ORDER BY created_at`;
   // dominio sospetto (es. «gmail.co»): si vede PRIMA di approvare, così si corregge
   return json({ candidature: candidature.map((c) => ({ ...c, avviso_email: avvisoEmail(normalizzaEmail(c.email)) })) });
