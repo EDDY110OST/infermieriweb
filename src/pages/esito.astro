@@ -1,0 +1,98 @@
+---
+export const prerender = false;
+
+import Platform from "../layouts/Platform.astro";
+import { sql } from "../lib/db.js";
+import { leggiToken } from "../lib/cambio.js";
+import { tokenRecensione } from "../lib/recensioni.js";
+import { sendEmail, emailRichiestaRecensione } from "../lib/mailer.js";
+
+// «Com'è andata?» (14/10/26): dal link firmato dell'email l'infermiere segna l'esito
+// dell'appuntamento. Aprire il link NON cambia niente (gli antivirus delle email aprono
+// i link da soli): lo stato cambia solo premendo uno dei due tasti (POST). Con «fatta»
+// parte l'invito alla recensione al paziente, come dall'agenda del pannello.
+const token = Astro.url.searchParams.get("token") || "";
+const sessione = leggiToken(token, "esito");
+let esito = "non-valido"; // non-valido | chiedi | fatta | assente | gia
+let b = null;
+if (sessione) {
+  [b] = await sql`
+    SELECT b.id, b.status, b.start_dt, b.end_dt, b.customer_name, b.customer_email, b.address, b.city,
+           s.name AS service_name, p.name AS professional_name, p.email AS professional_email
+    FROM bookings b JOIN services s ON s.id = b.service_id JOIN professionals p ON p.id = b.professional_id
+    WHERE b.id = ${sessione.bid}`;
+  if (!b) esito = "non-valido";
+  else if (b.status !== "active") esito = "gia";
+  else esito = "chiedi";
+}
+
+if (Astro.request.method === "POST" && esito === "chiedi") {
+  const form = await Astro.request.formData();
+  const scelta = String(form.get("esito") || "");
+  if (scelta === "fatta" || scelta === "assente") {
+    const nuovo = scelta === "fatta" ? "done" : "noshow";
+    const r = await sql`UPDATE bookings SET status = ${nuovo} WHERE id = ${b.id} AND status = 'active' RETURNING id`;
+    if (r.length) {
+      b.status = nuovo;
+      esito = scelta;
+      if (nuovo === "done" && b.customer_email) {
+        try {
+          const invito = emailRichiestaRecensione({
+            booking: { name: b.customer_name },
+            professional: { name: b.professional_name },
+            service: { name: b.service_name },
+            reviewUrl: `https://infermieriweb.it/recensione?token=${tokenRecensione(b.id)}`,
+          });
+          await sendEmail({ to: b.customer_email, toName: b.customer_name, replyTo: b.professional_email || undefined, ...invito });
+        } catch { /* lo stato è salvato comunque */ }
+      }
+    } else {
+      esito = "gia";
+    }
+  }
+}
+
+const quando = b
+  ? (() => {
+      const t = new Date(b.start_dt).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    })()
+  : "";
+const STATO = { done: "fatta", noshow: "non avvenuta (paziente assente)", cancelled: "annullata", expired: "scaduta", pending: "da convalidare" };
+---
+
+<Platform title="Com'è andata? | InfermieriWeb" description="Segna l'esito dell'appuntamento." path="/esito" robots="noindex, nofollow">
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Area professionisti</span>
+    <h1>{esito === "non-valido" ? "Questo link non funziona più" : esito === "chiedi" ? "Com'è andato l'appuntamento?" : "Grazie, è segnato"}</h1>
+  </section>
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 560px;">
+      {b && esito !== "non-valido" && (
+        <div class="pf-panel">
+          <p style="margin: 0 0 14px;">
+            <strong>{b.service_name}</strong> con {b.customer_name}<br />
+            <strong>{quando}</strong>{b.address ? <span><br />{b.address}{b.city ? `, ${b.city}` : ""}</span> : null}
+          </p>
+          {esito === "chiedi" && (
+            <form method="post" style="display: grid; gap: 10px;">
+              <button class="pf-btn" type="submit" name="esito" value="fatta" id="esito-fatta">✅ Sì, la prestazione è stata fatta</button>
+              <button class="pf-btn secondario" type="submit" name="esito" value="assente" id="esito-assente">❌ No, il paziente non c'era</button>
+              <p class="pf-note" style="margin: 4px 0 0;">Con «fatta» il paziente riceve l'invito a lasciarti una recensione. Se l'appuntamento è stato spostato o annullato, aprilo dalla tua agenda.</p>
+            </form>
+          )}
+          {esito === "fatta" && <div class="pf-successo"><strong>Segnata come fatta ✅</strong><p style="margin: 8px 0 0;">Abbiamo mandato al paziente l'invito a lasciarti una recensione.</p></div>}
+          {esito === "assente" && <div class="pf-successo"><strong>Segnata come non avvenuta</strong><p style="margin: 8px 0 0;">Il paziente non riceverà l'invito alla recensione.</p></div>}
+          {esito === "gia" && <div class="pf-successo"><strong>Questa prenotazione è già segnata: {STATO[b.status] || b.status}.</strong><p style="margin: 8px 0 0;">Se è sbagliato, correggila dalla tua agenda.</p></div>}
+          <p style="margin: 14px 0 0;"><a class="pf-btn secondario" href="/area-professionisti">Apri la tua agenda</a></p>
+        </div>
+      )}
+      {esito === "non-valido" && (
+        <div class="pf-panel">
+          <div class="pf-errore">Il link non è valido o è scaduto. Apri la tua agenda e segna l'esito dalla prenotazione.</div>
+          <p style="margin: 14px 0;"><a class="pf-btn" href="/area-professionisti">Apri la tua agenda</a></p>
+        </div>
+      )}
+    </div>
+  </section>
+</Platform>

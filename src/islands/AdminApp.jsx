@@ -3092,6 +3092,7 @@ export default function AdminApp() {
       return setErrore(d.error || "Errore di accesso");
     }
     if (d.role !== "admin") return setErrore("Questo account non è amministratore");
+    if (d.serve_2fa) return setErrore("Per entrare nell'amministrazione serve la doppia autenticazione (il codice dell'app sul telefono). Attivala dal pannello: Area professionisti → Profilo → Sicurezza, poi torna qui.");
     verificaAccesso();
   };
 

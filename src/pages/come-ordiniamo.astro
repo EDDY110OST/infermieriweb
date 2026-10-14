@@ -1,0 +1,58 @@
+---
+import Platform from "../layouts/Platform.astro";
+
+// Come ordiniamo gli infermieri negli elenchi (14/10/26, audit L9 e L7): i criteri devono
+// essere pubblici (Codice del consumo art. 22 c. 4-bis; regolamento P2B art. 5). Il testo
+// descrive lib/ordine-equo.js e il menu «Ordina per» di /cerca: se cambia il codice,
+// cambia anche questa pagina.
+---
+
+<Platform
+  title="Come ordiniamo gli infermieri | InfermieriWeb"
+  description="Come InfermieriWeb decide l'ordine degli infermieri nelle ricerche: prima chi ha l'orario libero più vicino, poi a turno. Nessuno paga per stare in alto."
+  path="/come-ordiniamo"
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Trasparenza</span>
+    <h1>Come ordiniamo gli infermieri</h1>
+    <p class="sottotitolo" style="max-width: 640px; margin: 0 auto;">
+      Nessuno paga per stare più in alto. Nemmeno chi gestisce InfermieriWeb.
+    </p>
+  </section>
+
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 760px; display: grid; gap: 18px;">
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">Chi compare nell'elenco</h2>
+        <p>Compaiono solo gli infermieri con la scheda attiva che vanno davvero a domicilio nel comune che hai scritto. Se cerchi una prestazione, compaiono solo quelli che la offrono.</p>
+      </div>
+
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">L'ordine «Consigliati»</h2>
+        <p>È l'ordine che vedi di solito, nella ricerca e nelle pagine dei comuni e delle prestazioni.</p>
+        <ol class="pf-lista">
+          <li><strong>Prima chi può venire prima.</strong> In cima c'è chi ha il primo orario libero nel giorno più vicino: oggi, poi domani, e così via.</li>
+          <li><strong>A parità di giorno, a turno.</strong> L'ordine cambia ogni giorno ed è uguale per tutti i visitatori di quel giorno. Ogni infermiere passa per tutte le posizioni: nessuno ha un posto fisso.</li>
+          <li><strong>In fondo chi non ha orari liberi</strong> nei prossimi 30 giorni, anche lui a turno.</li>
+        </ol>
+      </div>
+
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">Cosa non conta</h2>
+        <p>Per l'ordine «Consigliati» non contano il nome, la data di iscrizione, il prezzo, il numero di prenotazioni né le recensioni. Nessun infermiere paga per comparire o per salire: oggi l'iscrizione è gratuita e non esistono posizioni a pagamento.</p>
+        <p style="margin-bottom: 0;">Uno dei due gestori di InfermieriWeb, Eduard Gabriel Duduc, è anche infermiere e ha una sua scheda: segue esattamente le stesse regole di tutte le altre.</p>
+      </div>
+
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">Gli altri ordini che puoi scegliere</h2>
+        <p>Nella ricerca, dal menu «Ordina per», puoi cambiare ordine in qualsiasi momento:</p>
+        <ul class="pf-lista">
+          <li><strong>Migliori recensioni</strong>: prima la media delle stelle più alta, poi chi ha più recensioni.</li>
+          <li><strong>Prezzo più basso</strong>: prima il prezzo più basso per la prestazione che hai cercato.</li>
+        </ul>
+      </div>
+
+      <p class="pf-note" style="text-align: center;">Qualcosa non torna? <a href="/segnala">Segnalacelo</a>.</p>
+    </div>
+  </section>
+</Platform>

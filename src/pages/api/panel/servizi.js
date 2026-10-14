@@ -29,7 +29,8 @@ export async function GET({ request }) {
 
 // Controlla la prestazione contro il LISTINO (tabella catalog_services, gestita
 // dagli amministratori): il professionista può inserire solo voci del listino
-// generale o create su misura per lui, e non sotto il prezzo minimo deciso.
+// generale o create su misura per lui. Il prezzo lo decide lui (dal 14/10/26 niente
+// minimo bloccante: il «consigliato» del listino è solo un riferimento).
 const valida = async (body, pid, catalogKeyEsistente = "") => {
   const catalogKey = String(body.catalog_key || catalogKeyEsistente || "").trim();
   const voce = await voceDiListino(catalogKey, pid);
@@ -41,10 +42,8 @@ const valida = async (body, pid, catalogKeyEsistente = "") => {
   const price = Math.round(Number(body.price_cents));
   if (!Number.isFinite(duration) || duration < 5 || duration > 480) return { error: "Durata non valida (5-480 minuti)" };
   if (!Number.isFinite(price) || price > 100000000) return { error: "Prezzo non valido" };
-  if (price < voce.min_cents) {
-    const eu = (c) => (c / 100).toFixed(2).replace(".", ",");
-    return { error: `Per "${voce.nome}" il prezzo minimo è ${eu(voce.min_cents)} €${consulenza ? " all'ora" : ""} (consigliato ${eu(voce.sugg_cents)} €)` };
-  }
+  // solo buon senso (niente prezzi a zero), non un prezzo minimo di mercato
+  if (price < 100) return { error: `Scrivi un prezzo valido per "${voce.nome}" (almeno 1 €)` };
 
   // Prezzo notturno (22:00-07:00): facoltativo. Vuoto = questa prestazione di notte non si fa.
   // Se indicato è una MAGGIORAZIONE, quindi non può essere inferiore al prezzo di giorno.
@@ -114,8 +113,7 @@ export async function PATCH({ request }) {
   if (!attuale) return json({ error: "Prestazione non trovata" }, 404);
 
   // SPEGNERE una prestazione deve riuscire sempre, senza passare dal listino: se nel
-  // frattempo la voce è stata ritirata o il minimo è salito sopra il prezzo del
-  // professionista, il controllo qui sotto rifiuterebbe anche la semplice disattivazione
+  // frattempo la voce è stata ritirata, il controllo qui sotto rifiuterebbe anche la semplice disattivazione
   // ("non è più nel listino" / "il prezzo minimo è…") e la prestazione resterebbe accesa.
   const soloSpegne = body.active === false
     && body.price_cents === undefined && body.duration_min === undefined && body.price_notte_cents === undefined;

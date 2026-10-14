@@ -2,11 +2,17 @@ export const prerender = false;
 
 import QRCode from "qrcode";
 import { sql } from "../../../lib/db.js";
-import { sessionFromRequest, verifyPassword } from "../../../lib/auth.js";
+import { sessionFromRequest, verifyPassword, createSession, sessionCookie } from "../../../lib/auth.js";
 import { generaSegreto, verificaCodice, urlOtpauth } from "../../../lib/totp.js";
 
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
+const json = (data, status = 200, headers = {}) =>
+  new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...headers } });
+
+// Sessione rifatta dopo aver acceso o spento la 2FA, con il ruolo VERO preso dal database
+const sessioneNuova = async (uid, tfa) => {
+  const [u] = await sql`SELECT id, name, role, professional_id FROM professional_users WHERE id = ${uid}`;
+  return sessionCookie(createSession({ uid: u.id, pid: u.professional_id, role: u.role, name: u.name, tfa }));
+};
 
 // GET /api/panel/2fa — stato 2FA dell'utente loggato
 export async function GET({ request }) {
@@ -48,7 +54,9 @@ export async function POST({ request }) {
       UPDATE professional_users
       SET totp_secret = totp_pending, totp_enabled = TRUE, totp_pending = ''
       WHERE id = ${session.uid}`;
-    return json({ ok: true, enabled: true });
+    // ha appena dimostrato il codice: la sessione diventa «con 2FA» (un admin entra subito
+    // nell'amministrazione senza rifare l'accesso)
+    return json({ ok: true, enabled: true }, 200, { "Set-Cookie": await sessioneNuova(session.uid, true) });
   }
 
   if (action === "disable") {
@@ -63,7 +71,8 @@ export async function POST({ request }) {
       UPDATE professional_users
       SET totp_secret = '', totp_enabled = FALSE, totp_pending = ''
       WHERE id = ${session.uid}`;
-    return json({ ok: true, enabled: false });
+    // senza 2FA un admin perde subito l'accesso all'amministrazione
+    return json({ ok: true, enabled: false }, 200, { "Set-Cookie": await sessioneNuova(session.uid, false) });
   }
 
   return json({ error: "Azione sconosciuta" }, 400);

@@ -52,7 +52,7 @@ const [primo] = await ordinaOggi(await sql`
                 </div>
                 <div class="pf-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
                 {r.text && <p>{r.text}</p>}
-                <p class="pf-note" style="margin: 8px 0 0;">per <a href={`/p/${r.slug}`} style="color: var(--iw-primary-deep); font-weight: 700;">{r.professional_name}</a></p>
+                <p class="pf-note" style="margin: 8px 0 0;">per <a href={`/p/${r.slug}`} style="color: var(--iw-primary-deep); font-weight: 700;">{r.professional_name}</a> · <a href={`/segnala?tipo=recensione&url=${encodeURIComponent(`infermieriweb.it/p/${r.slug} — recensione di ${r.author_name || "Paziente"} del ${dataIt(r.created_at)}`)}`} rel="nofollow">Segnala</a></p>
               </div>
             </div>
           ))}
@@ -88,7 +88,7 @@ const [primo] = await ordinaOggi(await sql`
       <div class="pf-panel" style="margin-top: 18px;">
         <h2 style="margin-top: 0;">Come verifichiamo le recensioni</h2>
         <ul class="pf-lista">
-          <li>Può lasciare una recensione <strong>solo chi ha completato una prenotazione</strong> tramite InfermieriWeb: dopo la prestazione riceve via email un <strong>link personale e monouso</strong>.</li>
+          <li>Può lasciare una recensione <strong>solo chi ha prenotato tramite InfermieriWeb</strong>. Il <strong>link personale e monouso</strong> arriva via email al paziente solo dopo che l'infermiere ha confermato che la prestazione è stata fatta.</li>
           <li>Non pubblichiamo recensioni anonime né provenienti da altri canali.</li>
           <li>Le recensioni sono del professionista, non della piattaforma: le trovi nella sua scheda.</li>
           <li>Le eventuali valutazioni <strong>«Google»</strong> mostrate su alcune schede provengono da Google e <strong>non sono verificate</strong> con questo metodo: sono segnalate come tali.</li>

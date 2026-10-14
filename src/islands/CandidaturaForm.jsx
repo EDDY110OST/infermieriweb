@@ -71,7 +71,8 @@ export default function CandidaturaForm() {
     setPasso(2);
   };
 
-  // Le prestazioni spuntate, controllate: almeno una, prezzo numerico e mai sotto il minimo
+  // Le prestazioni spuntate, controllate: almeno una e un prezzo valido. Il prezzo lo decide
+  // l'infermiere: dal 14/10/26 niente minimo bloccante (il consigliato è solo un riferimento)
   const controllaPrestazioni = () => {
     const spuntate = (listino || []).filter((v) => scelte[v.key]?.on);
     if (!spuntate.length) return { error: "Scegli almeno una prestazione: è quella che fa comparire la tua scheda nelle ricerche dei pazienti." };
@@ -79,7 +80,7 @@ export default function CandidaturaForm() {
     for (const v of spuntate) {
       const cents = inCents(scelte[v.key].prezzo);
       if (!Number.isFinite(cents)) return { error: `Scrivi un prezzo per «${v.nome}» (consigliato ${euro(v.sugg_cents)}).` };
-      if (cents < v.min_cents) return { error: `Per «${v.nome}» il prezzo minimo è ${euro(v.min_cents)}: alza il prezzo o togli la spunta.` };
+      if (cents < 100) return { error: `Scrivi un prezzo valido per «${v.nome}» (almeno 1 €).` };
       prestazioni.push({ key: v.key, price_cents: cents });
     }
     return { prestazioni };
@@ -303,8 +304,8 @@ export default function CandidaturaForm() {
     <form className="pf-book" onSubmit={invia} noValidate>
       {progresso}
       <p style={{ color: "var(--iw-slate)", marginTop: 0 }}>
-        Spunta le prestazioni che fai a domicilio. Il prezzo è quello consigliato: puoi
-        cambiarlo, ma non sotto il minimo. Con queste la tua scheda compare subito nelle
+        Spunta le prestazioni che fai a domicilio. Il prezzo proposto è quello consigliato:
+        è solo un riferimento, puoi cambiarlo come vuoi. Con queste la tua scheda compare subito nelle
         ricerche della tua zona, appena approvata.
       </p>
 
@@ -318,12 +319,11 @@ export default function CandidaturaForm() {
         {(listino || []).map((v) => {
           const s = scelte[v.key] || { on: false, prezzo: campoEuro(v.sugg_cents) };
           const cents = inCents(s.prezzo);
-          const sotto = s.on && Number.isFinite(cents) && cents < v.min_cents;
           return (
-            <div key={v.key} className={`cf-prestazione${s.on ? " sel" : ""}${sotto ? " sotto" : ""}`}>
+            <div key={v.key} className={`cf-prestazione${s.on ? " sel" : ""}`}>
               <label className="cf-prestazione-nome">
                 <input type="checkbox" checked={s.on} onChange={(e) => { setErrore(""); setScelte({ ...scelte, [v.key]: { ...s, on: e.target.checked } }); }} />
-                <span><strong>{v.nome}</strong><small>{v.durata_min} min · consigliato {euro(v.sugg_cents)} · minimo {euro(v.min_cents)}</small></span>
+                <span><strong>{v.nome}</strong><small>{v.durata_min} min · consigliato {euro(v.sugg_cents)}</small></span>
               </label>
               <label className="cf-prestazione-prezzo">
                 <input
@@ -333,7 +333,6 @@ export default function CandidaturaForm() {
                 />
                 <span aria-hidden="true">€</span>
               </label>
-              {sotto && <div className="cf-prestazione-errore">Minimo {euro(v.min_cents)}: alza il prezzo o togli la spunta</div>}
             </div>
           );
         })}

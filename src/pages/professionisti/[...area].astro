@@ -145,6 +145,7 @@ const stelleGoogle = (g) => {
       <h2 style="color: var(--iw-navy); margin-bottom: 26px; font-size: 26px;">
         {livello === "citta" ? "Scegli il professionista" : "Scegli la zona"}
       </h2>
+      {livello === "citta" && <p class="pf-note" style="margin: -16px 0 22px;">Prima chi può venire prima, poi a turno: nessuno paga per stare in alto. <a href="/come-ordiniamo">Come ordiniamo</a></p>}
 
       {livello !== "citta" && voci.length > 0 && (
         <div class="pf-cats">

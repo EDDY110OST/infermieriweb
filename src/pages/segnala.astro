@@ -1,0 +1,40 @@
+---
+export const prerender = false;
+import Platform from "../layouts/Platform.astro";
+import SegnalaForm from "../islands/SegnalaForm.jsx";
+
+// Segnalazione di contenuti (14/10/26, audit L13 — DSA art. 16): chiunque può segnalare una
+// recensione, una scheda o un articolo che ritiene illecito, falso o offensivo. Arriva una
+// email all'assistenza; chi segnala riceve la ricevuta e poi la nostra decisione motivata.
+const tipo = String(Astro.url.searchParams.get("tipo") || "").slice(0, 20);
+const url = String(Astro.url.searchParams.get("url") || "").slice(0, 300);
+---
+
+<Platform
+  title="Segnala un contenuto | InfermieriWeb"
+  description="Segnala una recensione, una scheda o un articolo di InfermieriWeb che ritieni falso, offensivo o illegale."
+  path="/segnala"
+  robots="noindex, follow"
+>
+  <section class="pf-hero pf-hero-centro" style="padding-bottom: 40px;">
+    <span class="pf-hero-occhiello">Segnalazioni</span>
+    <h1>Segnala un contenuto</h1>
+    <p class="sottotitolo" style="max-width: 640px; margin: 0 auto;">
+      Hai visto una recensione, una scheda o un articolo falso, offensivo o illegale? Dicci quale e perché.
+    </p>
+  </section>
+  <section class="pf-section" style="padding-top: 36px;">
+    <div class="pf-container" style="max-width: 640px; display: grid; gap: 18px;">
+      <SegnalaForm client:load tipoIniziale={tipo} urlIniziale={url} />
+      <div class="pf-panel">
+        <h2 style="margin-top: 0;">Cosa succede dopo</h2>
+        <ul class="pf-lista">
+          <li>Ti mandiamo subito una email di ricevuta.</li>
+          <li>Esaminiamo la segnalazione e, se serve, togliamo o correggiamo il contenuto.</li>
+          <li>Ti scriviamo cosa abbiamo deciso e perché. Lo diciamo anche a chi ha scritto il contenuto, se lo togliamo.</li>
+        </ul>
+        <p class="pf-note" style="margin-bottom: 0;">Per un'emergenza sanitaria chiama il 112: questa pagina non è un servizio di emergenza. Per altre domande scrivi a info@infermieriweb.it.</p>
+      </div>
+    </div>
+  </section>
+</Platform>

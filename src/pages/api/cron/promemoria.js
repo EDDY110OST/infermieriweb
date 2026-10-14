@@ -14,9 +14,8 @@ export async function GET({ request, url }) {
 // Funzione schedulata: gira ogni ora e avvisa i pazienti con appuntamento
 // tra 24 e 25 ore, una sola volta (guardia reminded_at).
 import { neon } from "@neondatabase/serverless";
-import { tokenRecensione } from "../../../lib/recensioni.js";
-import { inviaEmailCambio, DAL_GIORNO_ACCETTA } from "../../../lib/cambio.js";
-import { sendEmail, emailRichiestaRecensione, emailCompletaProfilo, ASSISTENZA_EMAIL } from "../../../lib/mailer.js";
+import { inviaEmailCambio, DAL_GIORNO_ACCETTA, linkEsito } from "../../../lib/cambio.js";
+import { sendEmail, emailCompletaProfilo, emailEsitoProfessionista, ASSISTENZA_EMAIL } from "../../../lib/mailer.js";
 import { prenotabilitaTutti } from "../../../lib/prenotabilita.js";
 
 const SITE = "https://infermieriweb.it";
@@ -38,31 +37,38 @@ async function esegui() {
     await sql`UPDATE bookings SET status = 'expired' WHERE status = 'pending' AND created_at < now() - interval '60 minutes'`;
   } catch { /* la pulizia riprova alla prossima ora */ }
 
-  // Auto-completamento: un appuntamento attivo finito da oltre 3 ore diventa "completato"
-  // e al paziente parte l'invito alla recensione verificata. Il no-show lo segna il
-  // professionista prima di questa finestra. Così le recensioni non dipendono da un click manuale.
+  // Esito dell'appuntamento (14/10/26, audit L10 e F4): fino a oggi un appuntamento attivo
+  // finito da 3 ore diventava «completato» DA SOLO e al paziente partiva l'invito alla
+  // recensione «verificata», anche se la visita non c'era stata. Ora all'infermiere arriva
+  // UNA email «Com'è andata?» (guardia esito_chiesto_at) e lo stato lo decide lui: dalla
+  // pagina /esito o dall'agenda. Solo allora parte l'invito alla recensione. Massimo 30 a giro;
+  // niente email per appuntamenti di oltre 30 giorni fa.
   try {
-    const daCompletare = await sql`
-      SELECT b.id, b.customer_name, b.customer_email,
-             s.name AS service_name, p.name AS professional_name, p.email AS professional_email
+    const daChiedere = await sql`
+      SELECT b.id, b.start_dt, b.customer_name, s.name AS service_name,
+             p.name AS professional_name, p.full_name AS professional_full_name, p.email AS professional_email
       FROM bookings b
       JOIN services s ON s.id = b.service_id
       JOIN professionals p ON p.id = b.professional_id
-      WHERE b.status = 'active' AND b.end_dt < now() - interval '3 hours'`;
-    for (const b of daCompletare) {
-      await sql`UPDATE bookings SET status = 'done' WHERE id = ${b.id}`;
-      if (b.customer_email) {
-        const invito = emailRichiestaRecensione({
-          booking: { name: b.customer_name },
-          professional: { name: b.professional_name },
-          service: { name: b.service_name },
-          reviewUrl: `${SITE}/recensione?token=${tokenRecensione(b.id)}`,
-        });
-        await sendEmail({ to: b.customer_email, toName: b.customer_name, replyTo: b.professional_email || undefined, ...invito });
-      }
+      WHERE b.status = 'active' AND b.esito_chiesto_at IS NULL AND p.email <> ''
+        AND b.end_dt < now() - interval '3 hours'
+        AND b.end_dt > now() - interval '30 days'
+      ORDER BY b.end_dt
+      LIMIT 30`;
+    let chieste = 0;
+    for (const b of daChiedere) {
+      const mail = emailEsitoProfessionista({
+        booking: { name: b.customer_name, start: b.start_dt },
+        service: { name: b.service_name },
+        link: linkEsito(b.id),
+      });
+      const ok = await sendEmail({ to: b.professional_email, toName: b.professional_full_name || b.professional_name, replyTo: ASSISTENZA_EMAIL, ...mail });
+      if (!ok) continue;
+      await sql`UPDATE bookings SET esito_chiesto_at = now() WHERE id = ${b.id}`;
+      chieste++;
     }
-    if (daCompletare.length) console.log(`[auto-completa] ${daCompletare.length} appuntamenti completati + invito recensione.`);
-  } catch (e) { console.log("[auto-completa] errore:", e?.message || e); }
+    if (daChiedere.length) console.log(`[esito] ${chieste}/${daChiedere.length} richieste «com'è andata?» inviate agli infermieri.`);
+  } catch (e) { console.log("[esito] errore:", e?.message || e); }
 
   // Cambio infermiere per mancata risposta (7/10/26): prenotazione online convalidata da
   // più di 24 ore (2 ore se l'appuntamento era a meno di 24 ore dalla richiesta) e

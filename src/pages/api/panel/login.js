@@ -63,11 +63,15 @@ export async function POST({ request }) {
     pid: user.professional_id,
     role: user.role,
     name: user.name,
+    tfa: !!user.totp_enabled, // qui il codice è già stato verificato (vedi sopra)
   });
   await registraAccesso({ evento: "accesso", ...chi });
 
   return json(
-    { ok: true, name: user.name, professional: user.professional_name, role: user.role },
+    { ok: true, name: user.name, professional: user.professional_name, role: user.role,
+      // amministratore senza doppia autenticazione: entra solo come professionista finché
+      // non la attiva (Profilo → Sicurezza); poi può aprire l'amministrazione
+      serve_2fa: user.role === "admin" && !user.totp_enabled },
     200,
     { "Set-Cookie": sessionCookie(token) }
   );

@@ -7,8 +7,9 @@
 // i pezzi qui sotto: eConsulenza(), TIPI_ATTIVITA, le fasce orarie e la notte.
 //
 // Listino ufficiale delle prestazioni (deciso dai soci, 17/7/26).
-// Il professionista sceglie da QUESTA lista: min = prezzo minimo invalicabile
-// (anti-concorrenza sleale), consigliato = riferimento (sopra è libero).
+// Il professionista sceglie da QUESTA lista: consigliato = solo un riferimento, il prezzo
+// lo decide lui. «min» resta come dato storico ma dal 14/10/26 NON blocca più niente:
+// imporre un minimo a professionisti indipendenti era una fissazione dei prezzi (audit L1).
 // Prezzi in euro; durata_default in minuti.
 // Nomi allineati alla tabella ufficiale dei soci (18/7/26): stessa dicitura su
 // /domicilio, nelle schede e nel pannello. Le `key` NON cambiano mai (sono il

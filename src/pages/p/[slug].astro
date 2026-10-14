@@ -166,6 +166,7 @@ try {
         <div class="pf-panel">
           <h2>Chi è {pro.name}</h2>
           <p style="color: var(--iw-slate); margin: 0;">{soloConsulente && pro.bio_consulenza ? pro.bio_consulenza : pro.bio}</p>
+            <p class="pf-note" style="margin: 12px 0 0; font-size: 13px;"><a href={`/segnala?tipo=scheda&url=${encodeURIComponent(`infermieriweb.it/p/${pro.slug}`)}`} rel="nofollow">Segnala questa scheda</a></p>
         </div>
 
         {articoli.length > 0 && (
@@ -266,6 +267,7 @@ try {
                 </div>
                 <div class="pf-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
                 {r.text && <p>{r.text}</p>}
+                <a class="pf-note" style="font-size: 13px;" href={`/segnala?tipo=recensione&url=${encodeURIComponent(`infermieriweb.it/p/${pro.slug} — recensione di ${r.author_name || "Paziente"} del ${dataIt(r.created_at)}`)}`} rel="nofollow">Segnala</a>
               </div>
             ))
           )}

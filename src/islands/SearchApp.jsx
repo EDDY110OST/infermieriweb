@@ -237,7 +237,7 @@ export default function SearchApp() {
                 </option>
               ))}
             </select>
-            {ordinaValido === "consigliati" && <p className="pf-ordina-nota">{SPIEGAZIONE_ORDINE}</p>}
+            {ordinaValido === "consigliati" && <p className="pf-ordina-nota">{SPIEGAZIONE_ORDINE} <a href="/come-ordiniamo">Come ordiniamo →</a></p>}
           </div>
         )}
 

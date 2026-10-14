@@ -7,8 +7,10 @@
 // Qui ci sono le due metà del flusso: il controllo delle scelte (api/candidatura.js)
 // e la creazione delle righe `services` (api/admin/candidature.js). La logica è la
 // stessa del pannello (api/panel/servizi.js): nome e durata li detta il listino
-// (catalog_services, voci globali attive di categoria domicilio), prezzo mai sotto il
-// minimo, niente prezzo notturno (lo aggiunge lui dal pannello se vuole).
+// (catalog_services, voci globali attive di categoria domicilio), il PREZZO LO DECIDE
+// L'INFERMIERE (dal 14/10/26 niente più minimo bloccante: era una fissazione dei prezzi
+// fra professionisti indipendenti, vedi audit L1), niente prezzo notturno (lo aggiunge
+// lui dal pannello se vuole).
 import { sql } from "./db.js";
 
 export const MAX_PRESTAZIONI_CANDIDATURA = 40;
@@ -44,9 +46,8 @@ export async function validaPrestazioniCandidatura(grezze) {
     viste.add(key);
     const price = Math.round(Number(p?.price_cents));
     if (!Number.isFinite(price) || price > PREZZO_MAX_CENTS) return { error: `Prezzo non valido per «${voce.nome}»` };
-    if (price < voce.min_cents) {
-      return { error: `Per «${voce.nome}» il prezzo minimo è ${euroTesto(voce.min_cents)} (consigliato ${euroTesto(voce.sugg_cents)})` };
-    }
+    // solo un controllo di buon senso (niente prezzi a zero), non un prezzo minimo di mercato
+    if (price < 100) return { error: `Scrivi un prezzo valido per «${voce.nome}» (almeno 1 €)` };
     prestazioni.push({ key, nome: voce.nome, price_cents: price });
   }
   return { prestazioni };
@@ -54,8 +55,8 @@ export async function validaPrestazioniCandidatura(grezze) {
 
 // All'approvazione: crea le righe `services` del nuovo professionista a partire dalle
 // prestazioni scelte in candidatura. Rilegge il listino DI OGGI: una voce ritirata nel
-// frattempo si salta (e si segnala), un prezzo finito sotto il nuovo minimo si alza al
-// minimo (e si segnala). Vale anche per chi è `network` (senza P.IVA): le righe sono
+// frattempo si salta (e si segnala); il prezzo resta quello scelto dall'infermiere
+// (`alzate` resta sempre vuoto: dal 14/10/26 non si alza più al minimo). Vale anche per chi è `network` (senza P.IVA): le righe sono
 // pronte per quando aprirà la partita IVA. Ritorna { create, saltate, alzate }.
 export async function creaServiziDaCandidatura(pid, prestazioni) {
   const esito = { create: [], saltate: [], alzate: [] };
@@ -68,12 +69,8 @@ export async function creaServiziDaCandidatura(pid, prestazioni) {
     viste.add(key);
     const voce = listino.get(key);
     if (!voce) { esito.saltate.push({ key, nome: p?.nome || key, motivo: "non è più nel listino" }); continue; }
-    let price = Math.round(Number(p?.price_cents));
-    if (!Number.isFinite(price) || price > PREZZO_MAX_CENTS) { esito.saltate.push({ key, nome: voce.nome, motivo: "prezzo non valido" }); continue; }
-    if (price < voce.min_cents) {
-      esito.alzate.push({ key, nome: voce.nome, da_cents: price, a_cents: voce.min_cents });
-      price = voce.min_cents;
-    }
+    const price = Math.round(Number(p?.price_cents));
+    if (!Number.isFinite(price) || price < 100 || price > PREZZO_MAX_CENTS) { esito.saltate.push({ key, nome: voce.nome, motivo: "prezzo non valido" }); continue; }
     // doppione di sicurezza: se la riga esiste già (ri-approvazione manuale) non si duplica
     const [gia] = await sql`SELECT id FROM services WHERE professional_id = ${pid} AND catalog_key = ${key} AND deleted_at IS NULL`;
     if (gia) { esito.saltate.push({ key, nome: voce.nome, motivo: "già presente nella scheda" }); continue; }

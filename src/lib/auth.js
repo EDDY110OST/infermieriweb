@@ -53,7 +53,14 @@ export function linkReimpostaPassword({ email, passHash, secondi }) {
 export function sessionFromRequest(request) {
   const cookies = request.headers.get("cookie") || "";
   const match = cookies.match(/(?:^|;\s*)iw_session=([^;]+)/);
-  return match ? readSession(decodeURIComponent(match[1])) : null;
+  const s = match ? readSession(decodeURIComponent(match[1])) : null;
+  // Doppia autenticazione OBBLIGATORIA per gli amministratori (14/10/26, audit P7): vedono
+  // i pazienti di tutti. Una sessione admin vale come admin solo se è nata con il codice
+  // dell'app (tfa); altrimenti è una sessione da professionista normale, così TUTTI i
+  // controlli «role === 'admin'» del sito la respingono senza toccarli uno per uno.
+  // Le sessioni admin aperte prima di oggi non hanno tfa: basta rientrare col codice.
+  if (s && s.role === "admin" && !s.tfa) return { ...s, role: "professional", admin_senza_2fa: true };
+  return s;
 }
 
 // Un admin può operare su un professionista scelto (pid passato nel body/query);

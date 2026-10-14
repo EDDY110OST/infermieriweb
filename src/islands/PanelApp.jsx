@@ -876,7 +876,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
           {s._mod && <button className="pf-btn compatto" onClick={() => salva(s)} type="button">Salva</button>}
           <ConfermaInline className="pf-elimina" etichetta="🗑" title={`Elimina ${s.name}`} domanda={`Elimino «${s.name}»?`} conferma="Sì, elimina" onConferma={() => elimina(s)} />
         </div>
-        {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>minimo {euroDaCent(voce.min_cents)} € · consigliato {euroDaCent(voce.sugg_cents)} €{consulenza ? " all'ora" : ""}{voce.su_misura ? " · prestazione riservata a te" : ""}</p>}
+        {voce && <p className="pf-note" style={{ margin: "2px 0 0", fontSize: 14 }}>consigliato {euroDaCent(voce.sugg_cents)} €{consulenza ? " all'ora" : ""}{voce.su_misura ? " · prestazione riservata a te" : ""}</p>}
       </div>
     );
   };
@@ -900,7 +900,7 @@ function TabServizi({ tipo, onCambiaTipo }) {
         </select>
         {nuovoEQui && voceSel && (
           <p className="pf-note" style={{ marginTop: -4 }}>
-            Prezzo minimo <strong>{euroDaCent(voceSel.min_cents)} €</strong> · consigliato <strong>{euroDaCent(voceSel.sugg_cents)} €</strong>{consulenza ? " all'ora" : ""} — sopra il consigliato sei libero.
+            Prezzo consigliato <strong>{euroDaCent(voceSel.sugg_cents)} €</strong>{consulenza ? " all'ora" : ""}: è solo un riferimento, il prezzo lo decidi tu.
           </p>
         )}
         {consulenza ? (
@@ -942,8 +942,8 @@ function TabServizi({ tipo, onCambiaTipo }) {
     <div>
       <p className="pf-note" style={{ marginTop: 0 }}>
         Scegli dal listino <strong>solo le prestazioni che vuoi offrire</strong> e imposta il tuo
-        prezzo: non puoi scendere sotto il minimo indicato (per evitare concorrenza sleale),
-        sopra il consigliato sei libero. Il compenso resta interamente tuo: zero commissioni.
+        prezzo: il consigliato è solo un riferimento, il prezzo lo decidi tu. Il compenso resta
+        interamente tuo: zero commissioni.
         <br />Togli la spunta <strong>"attiva"</strong> per sospendere una prestazione (sparisce
         dalla scheda ma resta qui), oppure premi <strong>🗑</strong> per eliminarla dalla tua scheda. Il campo <strong>🌙 notte</strong> è la tua maggiorazione per le prenotazioni tra le 22:00 e le 07:00 (vuoto = di notte non la fai).
       </p>
@@ -1824,6 +1824,8 @@ export default function PanelApp() {
     }
     setServeTotp(false);
     setUtente(d);
+    // amministratore senza doppia autenticazione: la attiva in Profilo → Sicurezza
+    if (d.serve_2fa) setTab("profilo");
   };
 
   const esci = async () => {
@@ -1924,6 +1926,12 @@ export default function PanelApp() {
         <button className="pf-tab esci" onClick={esci}>Esci</button>
       </div>
 
+      {utente?.serve_2fa && (
+        <div className="pf-panel" style={{ marginBottom: 18, borderLeft: "5px solid var(--iw-primary)" }}>
+          <strong>Sei amministratore: attiva la doppia autenticazione.</strong>
+          <p className="pf-note" style={{ margin: "6px 0 0" }}>Dal 14 ottobre per entrare nell'amministrazione serve anche il codice dell'app sul telefono. Attivala qui sotto, nella sezione «Sicurezza» del Profilo: appena fatto puoi aprire <a href="/admin">l'amministrazione</a>.</p>
+        </div>
+      )}
       {condizioni ? <AccettaCondizioni piva={condizioni.piva} onFatto={() => setCondizioni(false)} /> : <>
       {tipo === "" && <SceltaTipo onScelto={(t) => { setTipo(t); if (t !== "domicilio") setTab("servizi"); }} />}
 

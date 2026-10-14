@@ -33,7 +33,7 @@ const quando = (iso) => {
   });
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
-const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expired" ? "Non convalidata" : r.status === "pending" ? "Da convalidare (vedi email)" : new Date(r.start_dt) <= new Date() ? "Completata" : "Confermata");
+const stato = (r) => (r.status === "cancelled" ? "Disdetta" : r.status === "expired" ? "Non convalidata" : r.status === "pending" ? "Da convalidare (vedi email)" : r.status === "done" ? "Completata" : r.status === "noshow" ? "Non avvenuta" : new Date(r.start_dt) <= new Date() ? "Passata" : "Confermata");
 ---
 
 <Platform

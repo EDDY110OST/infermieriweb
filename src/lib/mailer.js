@@ -394,6 +394,29 @@ export function emailRecuperoPasswordProfessionista({ name, resetLink }) {
   };
 }
 
+// All'infermiere, qualche ora dopo l'appuntamento (14/10/26): dice lui com'è andata.
+// Finché non risponde la prestazione resta «da segnare» e al paziente non parte l'invito
+// alla recensione. Il link apre una pagina con due tasti (nessun clic automatico conta).
+export function emailEsitoProfessionista({ booking, service, link }) {
+  return {
+    subject: `Com'è andata? ${service.name} con ${booking.name} — ${dataEstesa(booking.start)}`,
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Com'è andato l'appuntamento? 📝</h2>
+      <table style="width: 100%; font-size: 15px; margin: 14px 0;">
+        <tr><td style="padding: 5px 0; color: #7b909b;">Prestazione</td><td style="font-weight: bold;">${service.name}</td></tr>
+        <tr><td style="padding: 5px 0; color: #7b909b;">Quando</td><td style="font-weight: bold; text-transform: capitalize;">${dataEstesa(booking.start)}</td></tr>
+        <tr><td style="padding: 5px 0; color: #7b909b;">Paziente</td><td style="font-weight: bold;">${booking.name}</td></tr>
+      </table>
+      <p>Dicci se la prestazione è stata fatta: ci vogliono due secondi. Solo dopo la tua conferma
+      il paziente riceve l'invito a lasciarti una recensione.</p>
+      <p style="text-align: center; margin: 22px 0;">
+        <a href="${link}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 15px 32px; border-radius: 999px; font-weight: bold; font-size: 16px;">Segna com'è andata</a>
+      </p>
+      <p style="color: #7b909b; font-size: 13px;">Puoi farlo anche dalla tua agenda, nella sezione Agenda del pannello.</p>
+    `),
+  };
+}
+
 export function emailRichiestaRecensione({ booking, professional, service, reviewUrl }) {
   return {
     subject: `Com'è andata con ${professional.name}? Lascia una recensione`,

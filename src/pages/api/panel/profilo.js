@@ -27,7 +27,7 @@ export async function GET({ request }) {
   const [accesso] = await sql`SELECT email FROM professional_users WHERE professional_id = ${pid} LIMIT 1`;
   // Condizioni d'uso (14/10/26): chi è entrato prima delle spunte in candidatura le accetta
   // al primo accesso. Non si chiede agli admin (che possono anche guardare schede altrui).
-  const deveAccettare = !profilo.condizioni_accettate_at && session?.role !== "admin" && session?.pid === pid;
+  const deveAccettare = !profilo.condizioni_accettate_at && session?.role !== "admin" && !session?.admin_senza_2fa && session?.pid === pid;
   return json({ profilo: { ...profilo, email_accesso: accesso?.email || "" }, deve_accettare_condizioni: deveAccettare });
 }
 

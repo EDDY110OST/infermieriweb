@@ -18,6 +18,10 @@ export const tokenCambio = (bid) => createSession({ scope: "cambio", bid }, 60 *
 export const tokenAccetta = (bid) => createSession({ scope: "accetta", bid }, 60 * 60 * 24 * 30);
 export const linkCambio = (bid) => `${SITE}/cambia-infermiere?token=${encodeURIComponent(tokenCambio(bid))}`;
 export const linkAccetta = (bid) => `${SITE}/accetta?token=${encodeURIComponent(tokenAccetta(bid))}`;
+// «Com'è andata?» all'infermiere dopo l'appuntamento (14/10/26): la prestazione diventa
+// «completata» SOLO quando lo dice lui, non più da sola dopo 3 ore.
+export const tokenEsito = (bid) => createSession({ scope: "esito", bid }, 60 * 60 * 24 * 30);
+export const linkEsito = (bid) => `${SITE}/esito?token=${encodeURIComponent(tokenEsito(bid))}`;
 
 export function leggiToken(token, scope) {
   const s = readSession(String(token || ""));
