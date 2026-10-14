@@ -50,7 +50,7 @@ export const servicesData = {
     fullDescription: "Il prelievo del sangue si fa comodamente a casa: l'infermiere arriva con tutto il necessario sterile e consegna i campioni al laboratorio indicato nella richiesta del medico.",
     details: [
       "Prelievi venosi per esami di laboratorio",
-      "Personale qualificato e esperto",
+      "Infermieri iscritti all'albo",
       "Materiale sterile monouso",
       "Trasporto campioni in contenitori idonei",
       "Consegna dei campioni al laboratorio indicato dal medico",
@@ -228,7 +228,7 @@ export const servicesData = {
     icon: "MdMedication",
     title: "Terapia orale",
     shortDescription: "Somministrazione di terapie orali a domicilio",
-    fullDescription: "Somministrazione delle terapie orali con controllo di posologia, stato del paziente e possibili interazioni: utile quando in casa serve un occhio esperto.",
+    fullDescription: "Somministrazione delle terapie orali con controllo di posologia, stato del paziente e possibili interazioni: utile quando in casa serve l'occhio di un professionista.",
     details: [
       "Assunzione controllata dei farmaci",
       "Gestione di scadenze e dosaggi",
@@ -247,7 +247,7 @@ export const servicesData = {
     icon: "MdShowChart",
     title: "Parametri vitali",
     shortDescription: "Rilevamento dei parametri vitali a domicilio",
-    fullDescription: "Controllo di pressione, frequenza cardiaca, saturazione, temperatura e altri parametri vitali direttamente a casa tua, con occhio esperto.",
+    fullDescription: "Controllo di pressione, frequenza cardiaca, saturazione, temperatura e altri parametri vitali direttamente a casa tua.",
     details: [
       "Misurazione della pressione arteriosa",
       "Rilevamento della saturazione ossigeno",

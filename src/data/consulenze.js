@@ -108,6 +108,6 @@ export const FAQ_CONSULENZE = [
   { question: "Come si svolge la consulenza?", answer: "Online (videochiamata) o per telefono, all'orario che prenoti dall'agenda del consulente. Dopo la conferma ricevi il suo recapito: vi accordate voi sul canale (Meet, WhatsApp, telefono)." },
   { question: "Quanto dura e quanto costa?", answer: "Ogni consulenza è di un'ora. Il prezzo lo decide il consulente ed è indicato nella sua scheda, accanto alla consulenza. Si paga direttamente a lui, non online." },
   { question: "Devo essere già libero professionista?", answer: "No: le consulenze servono proprio anche a chi sta valutando se iniziare. Basta essere infermiere (o studente all'ultimo anno)." },
-  { question: "Chi sono i consulenti?", answer: "Infermieri iscritti all'albo, con esperienza reale di libera professione, verificati come tutti i professionisti di InfermieriWeb. Non sono commercialisti né avvocati: per gli aspetti fiscali o legali di dettaglio ti indicheranno quando serve un professionista specifico." },
+  { question: "Chi sono i consulenti?", answer: "Infermieri iscritti all'albo che lavorano in libera professione. Non sono commercialisti né avvocati: per gli aspetti fiscali o legali di dettaglio ti indicheranno quando serve un professionista specifico." },
   { question: "Posso disdire?", answer: "Sì, online e gratis, dal link che ricevi nell'email di conferma, entro il preavviso indicato dal consulente." },
 ];

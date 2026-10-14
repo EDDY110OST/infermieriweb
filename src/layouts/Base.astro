@@ -78,6 +78,21 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
         ad_personalization: 'denied', analytics_storage: 'denied'
       });
       window.__iwGaLoaded = false;
+      // I link personali (le mie prenotazioni, prenotazione, recensione, accetta, cambio
+      // infermiere, reimposta password…) hanno nell'indirizzo un codice segreto (?token=…,
+      // ?cambio=…) che apre l'area del paziente. A Google mandiamo indirizzo e provenienza
+      // SENZA quei codici: restano solo i parametri delle campagne e la ricerca (14/10/26).
+      var IW_PARAM_OK = /^(utm_[a-z_]+|gclid|gbraid|wbraid|fbclid|msclkid|q)$/i;
+      function iwPulisci(u) {
+        try {
+          var x = new URL(u, location.href);
+          if (x.origin !== location.origin) return x.origin + x.pathname;
+          var tieni = new URLSearchParams();
+          x.searchParams.forEach(function (v, k) { if (IW_PARAM_OK.test(k)) tieni.append(k, v); });
+          var q = tieni.toString();
+          return x.origin + x.pathname + (q ? '?' + q : '');
+        } catch (e) { return location.origin + location.pathname; }
+      }
       window.iwLoadGA = function () {
         if (window.__iwGaLoaded) return;
         window.__iwGaLoaded = true;
@@ -86,7 +101,10 @@ const canonicalUrl = path === "/" ? new URL("/", Astro.site).href : new URL(path
         s.async = true;
         s.src = 'https://www.googletagmanager.com/gtag/js?id=G-7M0H77LRX2';
         document.head.appendChild(s);
-        gtag('config', 'G-7M0H77LRX2', { anonymize_ip: true });
+        var pagina = { page_location: iwPulisci(location.href) };
+        if (document.referrer) pagina.page_referrer = iwPulisci(document.referrer);
+        gtag('set', pagina);
+        gtag('config', 'G-7M0H77LRX2', Object.assign({ anonymize_ip: true }, pagina));
       };
       try {
         var iwc = JSON.parse(localStorage.getItem('iw_cookie_consent') || 'null');
