@@ -67,7 +67,7 @@ export async function POST({ request }) {
   }
   if (!body.condizioni) return json({ error: "Per iscriverti devi accettare le Condizioni d'uso" }, 400);
   if (!body.rc) return json({ error: "Serve la dichiarazione sull'assicurazione professionale" }, 400);
-  if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
+  if (!body.privacy) return json({ error: "Conferma di aver letto l'informativa privacy" }, 400);
 
   // Prestazioni a domicilio scelte nel modulo (13/10/26): il modulo nuovo manda sempre
   // l'elenco `prestazioni` (anche vuoto, e allora si blocca: senza almeno una prestazione

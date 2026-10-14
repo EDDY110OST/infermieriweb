@@ -90,7 +90,9 @@ export default function CandidaturaForm() {
     setErrore("");
     if (!dati.condizioni) return setErrore("Per iscriverti devi accettare le Condizioni d'uso: spunta la casella.");
     if (!dati.rc) return setErrore("Serve la dichiarazione sull'assicurazione professionale: spunta la casella.");
-    if (!dati.privacy) return setErrore("Serve il consenso al trattamento dei dati: spunta la casella.");
+    // Non è un consenso: per la candidatura la base è la richiesta dell'interessato
+    // (misure precontrattuali, come dice l'informativa). Si conferma di averla letta.
+    if (!dati.privacy) return setErrore("Conferma di aver letto l'informativa privacy: spunta la casella.");
     let prestazioni = [];
     if (aDomicilio) {
       const c = controllaPrestazioni();
@@ -160,7 +162,7 @@ export default function CandidaturaForm() {
       <div className="pf-check">
         <input id="cf-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => { setErrore(""); setDati({ ...dati, privacy: e.target.checked }); }} />
         <label htmlFor="cf-privacy" style={{ margin: 0, fontWeight: 400 }}>
-          Acconsento al trattamento dei miei dati per la gestione della candidatura (<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>). *
+          Ho letto l'<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>: i miei dati servono a valutare la candidatura. *
         </label>
       </div>
 
