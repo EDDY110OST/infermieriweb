@@ -70,6 +70,44 @@ async function esegui() {
     if (daChiedere.length) console.log(`[esito] ${chieste}/${daChiedere.length} richieste «com'è andata?» inviate agli infermieri.`);
   } catch (e) { console.log("[esito] errore:", e?.message || e); }
 
+  // Secondo e ultimo promemoria (14/10/26, scelta «A» di Bruno): se 3 giorni dopo la prima
+  // email l'infermiere non ha ancora segnato com'è andata, gli arriva un solo promemoria
+  // (guardia esito_sollecito_at), di giorno (9-18 ora italiana) come gli altri promemoria.
+  // Le soglie si calcolano in JS (non con now() in SQL), così l'ambiente di prova può
+  // spostare il giorno. Massimo 30 a giro.
+  try {
+    const adesso = new Date();
+    const oraRoma = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Rome", hour: "2-digit", hour12: false }).format(adesso));
+    const tre_giorni_fa = new Date(adesso.getTime() - 3 * 86400000).toISOString();
+    const trenta_giorni_fa = new Date(adesso.getTime() - 30 * 86400000).toISOString();
+    const daSollecitare = (oraRoma >= 9 && oraRoma < 18) ? await sql`
+      SELECT b.id, b.start_dt, b.customer_name, s.name AS service_name,
+             p.name AS professional_name, p.full_name AS professional_full_name, p.email AS professional_email
+      FROM bookings b
+      JOIN services s ON s.id = b.service_id
+      JOIN professionals p ON p.id = b.professional_id
+      WHERE b.status = 'active' AND p.email <> ''
+        AND b.esito_chiesto_at IS NOT NULL AND b.esito_chiesto_at <= ${tre_giorni_fa}::timestamptz
+        AND b.esito_sollecito_at IS NULL
+        AND b.end_dt > ${trenta_giorni_fa}::timestamptz
+      ORDER BY b.end_dt
+      LIMIT 30` : [];
+    let sollecitate = 0;
+    for (const b of daSollecitare) {
+      const mail = emailEsitoProfessionista({
+        booking: { name: b.customer_name, start: b.start_dt },
+        service: { name: b.service_name },
+        link: linkEsito(b.id),
+        promemoria: true,
+      });
+      const ok = await sendEmail({ to: b.professional_email, toName: b.professional_full_name || b.professional_name, replyTo: ASSISTENZA_EMAIL, ...mail });
+      if (!ok) continue;
+      await sql`UPDATE bookings SET esito_sollecito_at = now() WHERE id = ${b.id}`;
+      sollecitate++;
+    }
+    if (daSollecitare.length) console.log(`[esito] ${sollecitate}/${daSollecitare.length} promemoria «com'è andata?» inviati.`);
+  } catch (e) { console.log("[esito-promemoria] errore:", e?.message || e); }
+
   // Cambio infermiere per mancata risposta (7/10/26): prenotazione online convalidata da
   // più di 24 ore (2 ore se l'appuntamento era a meno di 24 ore dalla richiesta) e
   // l'infermiere non ha premuto «Confermo che ci sarò» → al paziente la proposta di

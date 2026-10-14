@@ -397,11 +397,13 @@ export function emailRecuperoPasswordProfessionista({ name, resetLink }) {
 // All'infermiere, qualche ora dopo l'appuntamento (14/10/26): dice lui com'è andata.
 // Finché non risponde la prestazione resta «da segnare» e al paziente non parte l'invito
 // alla recensione. Il link apre una pagina con due tasti (nessun clic automatico conta).
-export function emailEsitoProfessionista({ booking, service, link }) {
+// Con promemoria = true è il secondo e ultimo avviso, 3 giorni dopo il primo.
+export function emailEsitoProfessionista({ booking, service, link, promemoria = false }) {
   return {
-    subject: `Com'è andata? ${service.name} con ${booking.name} — ${dataEstesa(booking.start)}`,
+    subject: `${promemoria ? "Promemoria: " : ""}Com'è andata? ${service.name} con ${booking.name} — ${dataEstesa(booking.start)}`,
     html: layout(`
-      <h2 style="color: #0b3954; margin-top: 0;">Com'è andato l'appuntamento? 📝</h2>
+      <h2 style="color: #0b3954; margin-top: 0;">${promemoria ? "Ti manca solo un tocco 📝" : "Com'è andato l'appuntamento? 📝"}</h2>
+      ${promemoria ? `<p>Qualche giorno fa ti abbiamo chiesto com'è andato questo appuntamento, ma non risulta ancora segnato. È l'ultimo promemoria che ti mandiamo.</p>` : ""}
       <table style="width: 100%; font-size: 15px; margin: 14px 0;">
         <tr><td style="padding: 5px 0; color: #7b909b;">Prestazione</td><td style="font-weight: bold;">${service.name}</td></tr>
         <tr><td style="padding: 5px 0; color: #7b909b;">Quando</td><td style="font-weight: bold; text-transform: capitalize;">${dataEstesa(booking.start)}</td></tr>

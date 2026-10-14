@@ -120,6 +120,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   -- 14/10/26: quando all'infermiere è partita l'email «Com'è andata?» (una sola volta).
   -- La prestazione diventa «completata» solo quando la segna lui, mai più da sola.
   esito_chiesto_at timestamp with time zone,
+  -- 14/10/26: il secondo e ultimo promemoria, 3 giorni dopo, se non ha ancora risposto
+  esito_sollecito_at timestamp with time zone,
   CONSTRAINT bookings_pkey PRIMARY KEY (id)
 );
 CREATE INDEX ix_bookings_prof_start ON bookings USING btree (professional_id, start_dt);
