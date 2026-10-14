@@ -20,12 +20,15 @@ export async function GET({ request }) {
   const [profilo] = await sql`
     SELECT slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, vat_number,
            bio, bio_consulenza, phone, email, address, city, province, region, photo_url, lat, lng, status,
-           edited_by, edited_at, tipo
+           edited_by, edited_at, tipo, condizioni_accettate_at
     FROM professionals WHERE id = ${pid}`;
   if (!profilo) return json({ error: "Profilo non trovato" }, 404);
   // l'email con cui si entra (deve essere uguale a quella della scheda: se no si vede)
   const [accesso] = await sql`SELECT email FROM professional_users WHERE professional_id = ${pid} LIMIT 1`;
-  return json({ profilo: { ...profilo, email_accesso: accesso?.email || "" } });
+  // Condizioni d'uso (14/10/26): chi è entrato prima delle spunte in candidatura le accetta
+  // al primo accesso. Non si chiede agli admin (che possono anche guardare schede altrui).
+  const deveAccettare = !profilo.condizioni_accettate_at && session?.role !== "admin" && session?.pid === pid;
+  return json({ profilo: { ...profilo, email_accesso: accesso?.email || "" }, deve_accettare_condizioni: deveAccettare });
 }
 
 // PATCH /api/panel/profilo — il professionista aggiorna i suoi dati;

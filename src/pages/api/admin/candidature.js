@@ -99,7 +99,7 @@ export async function POST({ request }) {
   const passwordTemporanea = passwordScelta ? null : `IW-${randomBytes(5).toString("hex")}`;
 
   const [prof] = await sql`
-    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by, tipo)
+    INSERT INTO professionals (slug, name, full_name, gender, profession, albo_name, albo_number, albo_date, bio, photo_url, region, province, city, address, phone, email, lat, lng, status, vat_number, verified_piva_at, verified_albo_at, verified_by, tipo, condizioni_accettate_at, rc_dichiarata_at)
     VALUES (
       ${slug}, ${nomePubblico}, ${cand.name}, ${cand.gender || ''}, ${cand.profession}, ${cand.albo_name || ''}, ${cand.albo_number || ''}, ${cand.albo_date || ''},
       ${cand.message ? cand.message.slice(0, 1200) : ""},
@@ -108,7 +108,7 @@ export async function POST({ request }) {
       ${cand.phone}, ${cand.email},
       ${geo ? geo.lat : null}, ${geo ? geo.lng : null},
       ${cand.vat_number ? "active" : "network"}, ${cand.vat_number || ""}, now(), now(), ${verificatoDa},
-      ${cand.tipo || "domicilio"}
+      ${cand.tipo || "domicilio"}, ${cand.condizioni_accettate_at || null}, ${cand.rc_dichiarata_at || null}
     ) RETURNING id`;
 
   await sql`

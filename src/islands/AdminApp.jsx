@@ -990,6 +990,9 @@ function Professionisti({ filtroStato }) {
             🪪 {p.albo_name} n. {p.albo_number} (dal {p.albo_date || "—"}) · P.IVA {p.vat_number || "—"} · 📞 {p.phone} · ✉️ <span style={{ overflowWrap: "anywhere" }}>{p.email || "—"}</span>
             {/* la mappa prende i segnaposti dalle zone coperte: manca davvero solo se non c'è né l'una né l'altra cosa */}
             {!p.lat && !p.zone?.length && <> · ⚠️ senza segnaposto mappa</>}
+            <br />{p.condizioni_accettate_at
+              ? <>📝 Condizioni d'uso e assicurazione RC accettate il {dataIt(p.condizioni_accettate_at)}</>
+              : <>⚠️ Condizioni d'uso non ancora accettate (gliele chiediamo al prossimo accesso al pannello)</>}
           </div>
           {p.email_accesso && p.email_accesso.toLowerCase() !== String(p.email || "").toLowerCase() && (
             <div style={{ ...BOX_AVVISO, fontSize: 15, overflowWrap: "anywhere" }}>⚠️ Per entrare usa ancora <strong>{p.email_accesso}</strong>, diversa dall'email della scheda. Allineale con «Correggi email e rimanda il benvenuto».</div>

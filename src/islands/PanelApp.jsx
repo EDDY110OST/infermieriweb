@@ -1735,6 +1735,8 @@ export default function PanelApp() {
   // Tipo di attività (domicilio / consulenza / entrambi): null = non ancora caricato,
   // "" = il professionista non ha ancora scelto → glielo chiediamo al primo accesso.
   const [tipo, setTipo] = useState(null);
+  // Condizioni d'uso da accettare (14/10/26): finché non le accetta, il pannello mostra solo quelle
+  const [condizioni, setCondizioni] = useState(null); // null = non so ancora · { piva } = da accettare · false = a posto
 
   // Notifiche push (modello Prenotazioni Sbarba): stato del dispositivo
   useEffect(() => {
@@ -1791,7 +1793,10 @@ export default function PanelApp() {
     if (!utente) return;
     let attivo = true;
     panelFetch("/api/panel/profilo").then((r) => r.ok ? r.json() : null).then((d) => {
-      if (attivo && d && d.profilo) setTipo(d.profilo.tipo || "");
+      if (attivo && d && d.profilo) {
+        setTipo(d.profilo.tipo || "");
+        setCondizioni(d.deve_accettare_condizioni ? { piva: !!d.profilo.vat_number } : false);
+      }
     }).catch(() => {});
     return () => { attivo = false; };
   }, [utente]);
@@ -1825,6 +1830,7 @@ export default function PanelApp() {
     await fetch("/api/panel/logout", { method: "POST", headers: { "Content-Type": "application/json" } });
     setUtente(null);
     setTipo(null);
+    setCondizioni(null);
     setTab("agenda");
   };
 
@@ -1910,7 +1916,7 @@ export default function PanelApp() {
   return (
     <div>
       <div className="pf-tabs" role="tablist">
-        {TABS.map((t) => (
+        {!condizioni && TABS.map((t) => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} className={`pf-tab${tab === t.id ? " sel" : ""}`} onClick={() => setTab(t.id)}>
             {t.label}
           </button>
@@ -1918,6 +1924,7 @@ export default function PanelApp() {
         <button className="pf-tab esci" onClick={esci}>Esci</button>
       </div>
 
+      {condizioni ? <AccettaCondizioni piva={condizioni.piva} onFatto={() => setCondizioni(false)} /> : <>
       {tipo === "" && <SceltaTipo onScelto={(t) => { setTipo(t); if (t !== "domicilio") setTab("servizi"); }} />}
 
       <AvvisoPrenotabilita tab={tab} vai={vai} />
@@ -1929,6 +1936,62 @@ export default function PanelApp() {
       {tab === "stats" && <TabStatistiche />}
       {tab === "profilo" && <TabProfilo tipo={tipo || ""} setTipo={setTipo} />}
       {tab === "articoli" && <ArticoliPannello />}
+      </>}
+    </div>
+  );
+}
+
+// Primo accesso dopo le spunte in candidatura (14/10/26): chi è entrato prima non aveva mai
+// accettato le Condizioni d'uso né dichiarato l'assicurazione RC. Finché non lo fa, il pannello
+// mostra solo questo riquadro (resta il tasto Esci). Restano data e ora come prova.
+function AccettaCondizioni({ piva, onFatto }) {
+  const [spunte, setSpunte] = useState({ condizioni: false, rc: false });
+  const [salvo, setSalvo] = useState(false);
+  const [errore, setErrore] = useState("");
+
+  const conferma = async () => {
+    setErrore("");
+    if (!spunte.condizioni) return setErrore("Per continuare devi accettare le Condizioni d'uso: spunta la casella.");
+    if (!spunte.rc) return setErrore("Serve la dichiarazione sull'assicurazione professionale: spunta la casella.");
+    setSalvo(true);
+    try {
+      const r = await panelFetch("/api/panel/condizioni", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(spunte),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Errore di salvataggio");
+      onFatto();
+    } catch (e) {
+      setErrore(e.message);
+    } finally {
+      setSalvo(false);
+    }
+  };
+
+  return (
+    <div className="pf-panel" style={{ marginBottom: 18, borderLeft: "5px solid var(--iw-primary)" }}>
+      <h2 style={{ marginTop: 0 }}>Prima di continuare: due conferme</h2>
+      <p className="pf-note" style={{ marginTop: 0 }}>
+        Abbiamo aggiunto due conferme all'iscrizione. Chi è entrato prima le fa una volta sola, qui.
+        Ci vogliono pochi secondi, poi il pannello torna come prima.
+      </p>
+      <div className="pf-check">
+        <input id="ac-condizioni" type="checkbox" checked={spunte.condizioni} onChange={(e) => { setErrore(""); setSpunte({ ...spunte, condizioni: e.target.checked }); }} />
+        <label htmlFor="ac-condizioni" style={{ margin: 0, fontWeight: 400 }}>
+          Ho letto e accetto le <a href="/condizioni" target="_blank" rel="noopener">Condizioni d'uso</a>, in particolare il punto 9 per i professionisti.
+        </label>
+      </div>
+      <div className="pf-check">
+        <input id="ac-rc" type="checkbox" checked={spunte.rc} onChange={(e) => { setErrore(""); setSpunte({ ...spunte, rc: e.target.checked }); }} />
+        <label htmlFor="ac-rc" style={{ margin: 0, fontWeight: 400 }}>
+          {piva
+            ? "Ho un'assicurazione di responsabilità civile professionale valida e la terrò attiva finché ricevo prenotazioni da InfermieriWeb."
+            : "Prima di ricevere prenotazioni da InfermieriWeb avrò un'assicurazione di responsabilità civile professionale valida."}
+        </label>
+      </div>
+      {errore && <div className="pf-errore" role="alert">{errore}</div>}
+      <button type="button" className="pf-btn" onClick={conferma} disabled={salvo}>{salvo ? "Salvo…" : "Confermo e continuo"}</button>
     </div>
   );
 }

@@ -55,7 +55,7 @@ export async function GET({ request, url }) {
   const professionisti = await sql`
     SELECT p.id, p.slug, p.name, p.profession, p.city, p.province, p.status,
            p.albo_name, p.albo_number, p.albo_date, p.vat_number, p.phone, p.email,
-           p.photo_url, p.lat, p.lng, p.created_at,
+           p.photo_url, p.lat, p.lng, p.created_at, p.condizioni_accettate_at,
            (SELECT email FROM professional_users WHERE professional_id = p.id LIMIT 1) AS email_accesso,
            COALESCE(s.n, 0) AS servizi,
            COALESCE(b.n, 0) AS prenotazioni_totali,

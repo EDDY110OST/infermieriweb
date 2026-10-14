@@ -208,6 +208,10 @@ CREATE TABLE IF NOT EXISTS professionals (
   -- è ancora senza prestazioni o senza orari; ognuno parte UNA volta sola
   promemoria_profilo_3_at timestamp with time zone,
   promemoria_profilo_10_at timestamp with time zone,
+  -- 14/10/26: «accetto le Condizioni d'uso» e dichiarazione RC professionale (data e ora).
+  -- Arrivano dalla candidatura; chi è entrato prima le spunta al primo accesso al pannello.
+  condizioni_accettate_at timestamp with time zone,
+  rc_dichiarata_at timestamp with time zone,
   -- 7/10/26: "lapide anonima". status='deleted' + dati personali svuotati; la riga resta
   -- perché le prenotazioni passate (e i conteggi) non spariscano con la cascata.
   deleted_at timestamp with time zone,
