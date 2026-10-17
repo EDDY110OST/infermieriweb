@@ -18,7 +18,7 @@ export async function GET({ request, url }) {
     ? await sql`
         SELECT b.id, b.start_dt, b.end_dt, b.status, b.source, b.customer_name, b.customer_phone,
                b.customer_email, b.address, b.city, b.created_at,
-               s.name AS service_name, s.price_cents, p.name AS professional_name, p.slug
+               s.name AS service_name, p.name AS professional_name, p.slug
         FROM bookings b
         JOIN services s ON s.id = b.service_id
         JOIN professionals p ON p.id = b.professional_id
@@ -27,7 +27,7 @@ export async function GET({ request, url }) {
     : await sql`
         SELECT b.id, b.start_dt, b.end_dt, b.status, b.source, b.customer_name, b.customer_phone,
                b.customer_email, b.address, b.city, b.created_at,
-               s.name AS service_name, s.price_cents, p.name AS professional_name, p.slug
+               s.name AS service_name, p.name AS professional_name, p.slug
         FROM bookings b
         JOIN services s ON s.id = b.service_id
         JOIN professionals p ON p.id = b.professional_id

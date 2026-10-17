@@ -125,8 +125,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
         window.gtag("event", "prenotazione_completata", {
           professionista: professionalId,
           prestazione: servizioSel?.name,
-          valore_da: servizioSel ? prezzoSlot(servizioSel, slot) / 100 : undefined,
-          currency: "EUR",
+          // 17/10/26 (DAC7): nessun importo a Google, nemmeno quello del listino
         });
       }
       setFatto(d);

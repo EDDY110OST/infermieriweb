@@ -1261,7 +1261,7 @@ function Prenotazioni({ stato, titolo, futureSolo }) {
       <div style={{ flex: 1, minWidth: 220 }}>
         {b.customer_name} · <a href={`tel:${b.customer_phone}`}>{b.customer_phone}</a>
         <div className="pf-note" style={{ margin: 0 }}>
-          {b.service_name} ({euro(b.price_cents)}) con {b.professional_name}
+          {b.service_name} con {b.professional_name}
           {b.address ? ` · ${b.address}${b.city ? ", " + b.city : ""}` : ""} · {b.source === "manual" ? "telefonica" : "online"}
         </div>
       </div>
@@ -1949,7 +1949,7 @@ function Analytics() {
         <strong>Google Analytics 4</strong>
         <p style={{ color: "var(--iw-slate)", margin: "6px 0 10px" }}>
           Il sito traccia già visite e <strong>prenotazioni completate</strong> (evento <code>prenotazione_completata</code>,
-          con prestazione e valore). Lì trovi traffico, provenienza e conversioni.
+          con la prestazione, senza importi). Lì trovi traffico, provenienza e conversioni.
         </p>
         <a className="pf-btn secondario" href="https://analytics.google.com" target="_blank" rel="noreferrer">Apri Google Analytics</a>
       </div>

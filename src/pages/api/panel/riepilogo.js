@@ -14,7 +14,7 @@ export async function GET({ request, url }) {
 
   const righe = await sql`
     SELECT b.start_dt, b.customer_name, b.customer_phone, b.address, b.city,
-           b.status, b.source, s.name AS service_name, s.price_cents
+           b.status, b.source, s.name AS service_name
     FROM bookings b JOIN services s ON s.id = b.service_id
     WHERE b.professional_id = ${session.pid}
       AND b.start_dt >= (${mese} || '-01')::date
@@ -29,25 +29,21 @@ export async function GET({ request, url }) {
   const csvSafe = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
   const STATI = { done: "Completata", active: "Da svolgere" };
-  const intestazione = ["Data", "Ora", "Prestazione", "Paziente", "Telefono", "Indirizzo", "Città", "Importo indicativo €", "Stato", "Origine"];
+  // 17/10/26 (DAC7, decisione di Bruno): nessun importo legato alle prenotazioni, né riga per
+  // riga né come totale. Il sito non sa quanto incassa l'infermiere e non deve sembrare che lo
+  // sappia. Il «report dei guadagni» tornerà solo con la SRL e gli abbonamenti.
+  const intestazione = ["Data", "Ora", "Prestazione", "Paziente", "Telefono", "Indirizzo", "Città", "Stato", "Origine"];
 
   const corpo = righe.map((r) => [
     dataIt(r.start_dt), oraIt(r.start_dt), r.service_name, r.customer_name, r.customer_phone,
-    r.address, r.city, (r.price_cents / 100).toFixed(2).replace(".", ","),
-    STATI[r.status] || r.status, r.source === "manual" ? "Telefonica" : "Online",
+    r.address, r.city, STATI[r.status] || r.status, r.source === "manual" ? "Telefonica" : "Online",
   ].map(csvSafe).join(";"));
-
-  const totale = righe
-    .filter((r) => r.status === "done")
-    .reduce((somma, r) => somma + r.price_cents, 0);
 
   const csv = [
     intestazione.map(csvSafe).join(";"),
     ...corpo,
     "",
-    [csvSafe("TOTALE prestazioni completate"), csvSafe(""), csvSafe(""), csvSafe(""), csvSafe(""), csvSafe(""), csvSafe(""), csvSafe((totale / 100).toFixed(2).replace(".", ",")), csvSafe(""), csvSafe("")].join(";"),
-    "",
-    csvSafe("Importi indicativi 'a partire da' della piattaforma: il compenso effettivo è quello concordato con il paziente. Documento di supporto, non un documento fiscale."),
+    csvSafe("Elenco delle prenotazioni. Il compenso lo concordi e lo ricevi direttamente dal paziente: la piattaforma non lo conosce. Documento di supporto, non un documento fiscale."),
   ].join("\n");
 
   // BOM: così Excel apre gli accenti correttamente
