@@ -307,12 +307,14 @@ export default function BookingWidget({ professionalId, services, servizioInizia
 
           {servizioSel && slot && (
             <div style={{ background: "var(--iw-primary-soft)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 16 }}>
-              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · {consulenza ? `${euro(servizioSel.price_cents)}/ora` : euro(prezzoSlot(servizioSel, slot))}{!consulenza && tariffaNotturna(servizioSel, slot) && " 🌙 (tariffa notturna)"}
+              <strong>{servizioSel.name}</strong> · {new Date(slot.start).toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long" })} alle <strong>{slot.label}</strong> · prezzo indicativo {consulenza ? `${euro(servizioSel.price_cents)}/ora` : euro(prezzoSlot(servizioSel, slot))}{!consulenza && tariffaNotturna(servizioSel, slot) && " 🌙 (tariffa notturna)"}
             </div>
           )}
 
+          {/* 17/10/26 (DAC7): niente importo sul tasto, così la conferma non diventa un
+              accordo sul prezzo; il prezzo resta solo come indicativo nel riquadro sopra */}
           <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
-            {invio ? "Invio…" : `Conferma prenotazione${servizioSel ? (consulenza ? ` · ${euro(servizioSel.price_cents)}/ora` : ` · ${euro(prezzoSlot(servizioSel, slot))}`) : ""}`}
+            {invio ? "Invio…" : "Conferma prenotazione"}
           </button>
           <p className="pf-note" style={{ marginTop: 10, textAlign: "center" }}>
             Se cambi idea, la disdetta online è <strong>gratuita e senza penali</strong>.
