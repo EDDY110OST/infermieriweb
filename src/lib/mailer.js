@@ -354,6 +354,23 @@ export function emailBenvenutoProfessionista({ name, email, passwordTemporanea, 
 // Promemoria «completa la scheda» (13/10/26): a chi, 3 o 10 giorni dopo l'approvazione,
 // è ancora senza prestazioni e/o senza orari, quindi non prenotabile. Dice esattamente
 // cosa manca e quanto ci vuole; un solo tasto; le risposte arrivano all'assistenza.
+// All'infermiere «in rete» che ha aggiunto la P.IVA, quando l'admin l'ha verificata e ha
+// attivato la scheda (21/10/26): da ora è pubblica e prenotabile.
+export function emailSchedaAttivata({ name, slug }) {
+  return {
+    subject: "La tua scheda su InfermieriWeb è pubblica 🎉",
+    html: layout(`
+      <h2 style="color: #0b3954; margin-top: 0;">Ci sei, ${name}!</h2>
+      <p>Abbiamo verificato la tua partita IVA: da ora la tua scheda è <strong>pubblica</strong> e i pazienti della tua zona possono <strong>prenotarti online</strong>.</p>
+      <p style="text-align: center; margin: 22px 0;">
+        <a href="${SITE}/p/${slug}" style="display: inline-block; background: #00897b; color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 999px; font-weight: bold;">Guarda la tua scheda</a>
+      </p>
+      <p>Controlla che prestazioni, prezzi, orari e zone siano giusti dal tuo pannello: <a href="${SITE}/area-professionisti" style="color: #00897b;">${SITE}/area-professionisti</a>.</p>
+      <p style="color: #7b909b; font-size: 13px;">Ti ricordiamo che per lavorare in libera professione serve un'assicurazione di responsabilità civile professionale valida, come hai dichiarato iscrivendoti.</p>
+    `),
+  };
+}
+
 export function emailCompletaProfilo({ name, mancaPrestazioni = false, mancaOrari = false, soglia = 3 }) {
   const nome = String(name || "").trim().split(" ")[0] || "";
   const minuti = (mancaPrestazioni ? 3 : 0) + (mancaOrari ? 5 : 0);

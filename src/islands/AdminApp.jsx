@@ -611,6 +611,44 @@ function ModificaScheda({ pid, nome, onIndietro }) {
 // pagina, niente window.confirm: scrivi → controlla e conferma → esito.
 const BOX_AVVISO = { background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412", borderRadius: 10, padding: "8px 12px", marginBottom: 10 };
 
+// Infermiere «in rete» che ha aggiunto la P.IVA dal pannello (21/10/26): l'admin la verifica
+// sull'Agenzia delle Entrate e attiva la scheda, che diventa pubblica e prenotabile.
+function AttivaConPiva({ p, onFatto }) {
+  const [verificata, setVerificata] = useState(false);
+  const [invio, setInvio] = useState(false);
+  const [errore, setErrore] = useState("");
+  const attiva = async () => {
+    setInvio(true); setErrore("");
+    try {
+      const r = await fetch("/api/admin/professionisti", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: p.id, status: "active", verificaPiva: true }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Non sono riuscito ad attivare la scheda: riprova");
+      onFatto(d);
+    } catch (e) {
+      setErrore(e.message);
+    } finally {
+      setInvio(false);
+    }
+  };
+  return (
+    <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+      <strong>🆕 Ha aggiunto la partita IVA {p.vat_number}: verificala e attiva la scheda</strong>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "8px 0" }}>
+        <a className="pf-btn secondario compatto" href="https://telemanagrafici.agenziaentrate.gov.it/VerificaPIVA/Scegli.do" target="_blank" rel="noreferrer">Verifica P.IVA {p.vat_number} ↗</a>
+      </div>
+      <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontWeight: 400, margin: "0 0 8px" }}>
+        <input type="checkbox" checked={verificata} onChange={(e) => setVerificata(e.target.checked)} />
+        <span>Ho verificato la <strong>partita IVA {p.vat_number}</strong> su Agenzia delle Entrate (risulta attiva)</span>
+      </label>
+      {errore && <div className="pf-errore" style={{ marginBottom: 8 }}>{errore}</div>}
+      <button className="pf-btn compatto" disabled={!verificata || invio} onClick={attiva}>{invio ? "Attivo…" : "✅ Attiva la scheda: pubblica e prenotabile"}</button>
+    </div>
+  );
+}
+
 function CorreggiEmail({ p, onFatto }) {
   const [fase, setFase] = useState("chiuso"); // chiuso | scrivi | conferma | fatto
   const [email, setEmail] = useState("");
@@ -1002,6 +1040,12 @@ function Professionisti({ filtroStato }) {
             <div style={{ ...BOX_AVVISO, fontSize: 15 }}>
               ⚠️ <strong>Nessun orario prenotabile nei prossimi {p.prenotabilita.giorni} giorni.</strong> Perché: {p.prenotabilita.motivi.map((m) => m.testo).join(" · ")}. Da contattare.
             </div>
+          )}
+          {p.status === "network" && /^\d{11}$/.test(p.vat_number || "") && (
+            <AttivaConPiva p={p} onFatto={(d) => {
+              avvisa("ok", `${p.name} attivato ✅ La scheda è pubblica e prenotabile.${d.emailInviata ? " Gli abbiamo mandato l'email di avviso." : " ⚠️ L'email di avviso non è partita: avvisalo tu."}`);
+              carica();
+            }} />
           )}
           {/* «È mai entrato nel pannello?» (registro accessi, 13/10/26) */}
           <RigaAccessi p={p} />

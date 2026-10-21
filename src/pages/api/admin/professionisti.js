@@ -2,7 +2,7 @@ export const prerender = false;
 
 import { sql } from "../../../lib/db.js";
 import { sessionFromRequest } from "../../../lib/auth.js";
-import { sendEmail, emailDisdettaPaziente } from "../../../lib/mailer.js";
+import { sendEmail, emailDisdettaPaziente, emailSchedaAttivata } from "../../../lib/mailer.js";
 import { linkCambio } from "../../../lib/cambio.js";
 import { avvisoEmail, normalizzaEmail } from "../../../lib/email.js";
 import { prenotabilitaTutti, GIORNI_FINESTRA } from "../../../lib/prenotabilita.js";
@@ -99,14 +99,38 @@ export async function GET({ request, url }) {
 }
 
 // PATCH /api/admin/professionisti {id, status} — attiva / sospende
+// {id, status: "active", verificaPiva: true} — attiva chi era «in rete» e ha aggiunto la P.IVA
 export async function PATCH({ request }) {
-  if (!soloAdmin(request)) return json({ error: "Riservato agli amministratori" }, 403);
+  const admin = soloAdmin(request);
+  if (!admin) return json({ error: "Riservato agli amministratori" }, 403);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: "Richiesta non valida" }, 400); }
   const id = Number(body.id);
   let status = String(body.status || "");
   if (!id || !["active", "suspended", "pending", "network"].includes(status)) return json({ error: "Dati non validi" }, 400);
+
+  // Da «in rete» (senza P.IVA) ad «attivo» (21/10/26): l'infermiere ha aggiunto la P.IVA dal
+  // pannello e l'admin l'ha verificata sull'Agenzia delle Entrate. Stessa regola dell'approvazione
+  // delle candidature: senza la conferma della verifica non si attiva. Restano registrati chi ha
+  // verificato e quando; l'infermiere riceve l'email «la tua scheda è pubblica».
+  const [attuale] = await sql`SELECT status, vat_number, name, full_name, email, slug FROM professionals WHERE id = ${id}`;
+  if (!attuale) return json({ error: "Professionista non trovato" }, 404);
+  if (status === "active" && attuale.status === "network") {
+    if (!/^\d{11}$/.test(attuale.vat_number || "")) return json({ error: "Manca una partita IVA valida (11 cifre): finché non c'è, la scheda resta «in rete»" }, 400);
+    if (body.verificaPiva !== true) return json({ error: "Prima di attivare conferma di aver verificato la partita IVA sull'Agenzia delle Entrate" }, 400);
+    const verificatoDa = admin.email || admin.name || "admin";
+    await sql`
+      UPDATE professionals SET status = 'active', verified_piva_at = now(), verified_by = ${verificatoDa}
+      WHERE id = ${id} AND status = 'network'`;
+    let emailInviata = false;
+    if (attuale.email) {
+      try {
+        emailInviata = await sendEmail({ to: attuale.email, toName: attuale.full_name || attuale.name, ...emailSchedaAttivata({ name: attuale.full_name || attuale.name, slug: attuale.slug }) });
+      } catch { /* l'attivazione resta valida */ }
+    }
+    return json({ ok: true, status: "active", emailInviata: !!emailInviata });
+  }
 
   // Riattivare un professionista SENZA P.IVA non deve renderlo pubblicamente prenotabile:
   // torna a "network" (non attivo) invece che ad "active".
