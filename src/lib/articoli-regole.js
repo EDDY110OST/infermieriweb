@@ -85,11 +85,26 @@ export function mancanzePerInvio({ titolo, descrizione, testo, fonti }) {
 
 // «OPI Lucca n. 4572» dai dati dell'albo così come sono scritti nella scheda
 // («Opi Lucca», «Cremona», «OPI CREMONA», «TERAMO»…)
+// La sola provincia dell'albo, scritta per bene (21/10/26): gli infermieri scrivono «OPI Lucca»,
+// «Bergamo», «milano», «Opi foggia», «Fnopi roma», «OPI CREMONA», «Forlì-cesena»… Qui si toglie
+// il prefisso (OPI / FNOPI / IPASVI / Ordine … di) e si mettono le maiuscole giuste, così la
+// scheda e la firma degli articoli dicono sempre «OPI Bergamo» e mai «all' Bergamo».
+const PICCOLE = new Set(["di", "del", "della", "e", "d'"]);
+export function provinciaAlbo(alboNome) {
+  const nome = String(alboNome || "").trim()
+    .replace(/^(collegio\s+)?(f\.?\s*n\.?\s*)?(o\.?\s*p\.?\s*i\.?|ipasvi)\b\.?\s*(di\s+)?/i, "")
+    .replace(/^ordine(\s+delle\s+professioni\s+infermieristiche)?(\s*\(opi\))?\s+(di\s+)?/i, "")
+    .trim();
+  const parola = (p, primo) => {
+    if (!primo && PICCOLE.has(p.toLowerCase())) return p.toLowerCase();
+    if (p !== p.toUpperCase() && p !== p.toLowerCase()) return p; // già scritta a mano (es. «McQueen»)
+    return p.split("-").map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()).join("-");
+  };
+  return nome.split(/\s+/).filter(Boolean).map((p, i) => parola(p, i === 0)).join(" ");
+}
+
 export function etichettaAlbo(alboNome, alboNumero) {
-  let nome = String(alboNome || "").trim().replace(/^o\.?\s*p\.?\s*i\.?\s+/i, "");
-  nome = nome.split(/\s+/).filter(Boolean)
-    .map((p) => (p === p.toUpperCase() || p === p.toLowerCase()) ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p)
-    .join(" ");
+  const nome = provinciaAlbo(alboNome);
   const parti = [];
   parti.push(nome ? `OPI ${nome}` : "OPI");
   if (String(alboNumero || "").trim()) parti.push(`n. ${String(alboNumero).trim()}`);
