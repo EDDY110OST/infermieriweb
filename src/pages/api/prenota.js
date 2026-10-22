@@ -6,6 +6,7 @@ import { createSession } from "../../lib/auth.js";
 import { sendEmail, emailConvalidaPrenotazione } from "../../lib/mailer.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
 import { leggiToken } from "../../lib/cambio.js";
+import { avvisoEmail } from "../../lib/email.js";
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -112,6 +113,11 @@ export async function POST({ request }) {
     ok: true,
     pending: true, // in attesa di convalida via email entro 60 minuti
     booking_id: inserted[0].id,
+    // «Ti abbiamo scritto a …: è giusta?» (22/10/26): il paziente vede l'indirizzo e può
+    // correggerlo e farsi rimandare la convalida (api/prenota-email.js) per 60 minuti.
+    email,
+    avviso_email: avvisoEmail(email),
+    correggi: createSession({ scope: "correggi", bid: inserted[0].id }, 60 * 60),
     cambio: !!replaces,
     emailed: emailedPaziente,
     professional: service.professional_name,

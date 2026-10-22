@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { stessoComune } from "../lib/ricerca.js";
 import { euro, notteDaMostrare } from "../lib/prezzi.js";
 
@@ -47,6 +47,12 @@ export default function BookingWidget({ professionalId, services, servizioInizia
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
   const [fatto, setFatto] = useState(null);
+  // «Ti abbiamo scritto a …: è giusta?» (22/10/26): correzione dell'email e nuovo invio
+  const [correggo, setCorreggo] = useState(null); // null | { email, invio, errore, rimandata }
+  // Dopo l'invio il modulo si accorcia: sul telefono la pagina restava in fondo e il paziente
+  // non vedeva «Ti abbiamo scritto a…». Portiamo in vista il riquadro (22/10/26).
+  const fattoRef = useRef(null);
+  useEffect(() => { if (fatto) fattoRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [fatto]);
 
   useEffect(() => {
     if (!servizio || !giorno) return;
@@ -144,12 +150,47 @@ export default function BookingWidget({ professionalId, services, servizioInizia
       timeZone: "Europe/Rome", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
     });
     return (
-      <div className="pf-successo">
+      <div className="pf-successo" ref={fattoRef} style={{ scrollMarginTop: 96 }}>
         <strong>Quasi fatto! Ti abbiamo riservato l'orario ⏳</strong>
         <p style={{ margin: "8px 0" }}>
           {fatto.service} con {fatto.professional}<br />
           <strong>{quando}</strong>
         </p>
+        <div style={{ background: "#fff", border: "2px solid #0e7c6b", borderRadius: 12, padding: "12px 14px", margin: "12px 0", color: "#10222e" }}>
+          <div style={{ fontSize: 15 }}>{correggo?.rimandata ? "Ti abbiamo riscritto a:" : "Ti abbiamo scritto a:"}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, overflowWrap: "anywhere", margin: "2px 0 6px" }} id="bw-email-scritta">{fatto.email}</div>
+          {fatto.avviso_email && <div style={{ color: "#9a3412", fontSize: 15, margin: "0 0 6px" }}>⚠️ {fatto.avviso_email.replace("Controlla con la persona prima di confermare.", "Controlla bene.")}</div>}
+          {!correggo ? (
+            <>
+              <div style={{ fontSize: 16 }}><strong>È giusta?</strong> Se c'è un errore la mail non ti arriva e la prenotazione non parte.</div>
+              <button type="button" className="pf-btn secondario compatto" style={{ marginTop: 8 }} id="bw-correggi" onClick={() => setCorreggo({ email: fatto.email, invio: false, errore: "" })}>✏️ Correggi e rimanda</button>
+            </>
+          ) : correggo.rimandata ? (
+            <div style={{ fontSize: 16 }}>✅ Mail rimandata. <button type="button" className="pf-link" style={{ background: "none", border: 0, padding: 0, color: "#0e7c6b", textDecoration: "underline", cursor: "pointer", font: "inherit" }} onClick={() => setCorreggo({ email: fatto.email, invio: false, errore: "" })}>Correggi ancora</button></div>
+          ) : (
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setCorreggo({ ...correggo, invio: true, errore: "" });
+              try {
+                const r = await fetch("/api/prenota-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: fatto.correggi, email: correggo.email }) });
+                const d = await r.json();
+                if (!r.ok) throw new Error(d.error || "Errore imprevisto");
+                setFatto({ ...fatto, email: d.email, avviso_email: d.avviso_email });
+                setCorreggo({ email: d.email, invio: false, errore: "", rimandata: true });
+              } catch (err) {
+                setCorreggo((c) => ({ ...c, invio: false, errore: err.message }));
+              }
+            }}>
+              <label htmlFor="bw-email-nuova" style={{ fontSize: 15 }}>La tua email giusta</label>
+              <input id="bw-email-nuova" type="email" required autoComplete="email" value={correggo.email} onChange={(e) => setCorreggo({ ...correggo, email: e.target.value, errore: "" })} />
+              {correggo.errore && <div className="pf-errore" style={{ margin: "6px 0" }}>{correggo.errore}</div>}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                <button className="pf-btn compatto" disabled={correggo.invio} id="bw-rimanda">{correggo.invio ? "Invio…" : "Rimanda la mail"}</button>
+                <button type="button" className="pf-btn secondario compatto" onClick={() => setCorreggo(null)}>Annulla</button>
+              </div>
+            </form>
+          )}
+        </div>
         <p style={{ margin: "8px 0", fontSize: 17 }}>
           Ora apri l'email che ti abbiamo appena inviato e premi
           {" "}<strong>"Convalida la prenotazione" entro 60 minuti</strong> (controlla anche lo spam):
