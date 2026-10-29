@@ -13,7 +13,7 @@ export async function GET({ request, url }) {
 // Promemoria 24 ore prima dell'appuntamento (stile Prenotazioni Sbarba).
 // Funzione schedulata: gira ogni ora e avvisa i pazienti con appuntamento
 // tra 24 e 25 ore, una sola volta (guardia reminded_at).
-import { neon } from "@neondatabase/serverless";
+import { creaSql } from "../../../lib/pg-sql.js";
 import { inviaEmailCambio, DAL_GIORNO_ACCETTA, linkEsito } from "../../../lib/cambio.js";
 import { sendEmail, emailCompletaProfilo, emailEsitoProfessionista, ASSISTENZA_EMAIL } from "../../../lib/mailer.js";
 import { prenotabilitaTutti } from "../../../lib/prenotabilita.js";
@@ -30,7 +30,7 @@ const dataEstesa = (iso) =>
   });
 
 async function esegui() {
-  const sql = neon((process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL));
+  const sql = creaSql((process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL));
 
   // Le prenotazioni mai convalidate scadono da sole (double opt-in, finestra 60')
   try {
