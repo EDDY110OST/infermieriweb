@@ -465,6 +465,38 @@ CREATE TABLE IF NOT EXISTS access_log (
 CREATE INDEX ix_access_log_prof ON access_log USING btree (professional_id, created_at DESC);
 CREATE INDEX ix_access_log_created ON access_log USING btree (created_at DESC);
 
+-- REGISTRI PRIVACY (12/11/2026): registro dei trattamenti (art. 30 GDPR) e registro delle
+-- violazioni (art. 33.5), tenuti da Admin → Documenti. Una riga = un trattamento o un
+-- incidente; voci = [{voce, contenuto}]. Niente si cancella: stato 'archiviato' per i
+-- trattamenti non più in uso. Le tabelle si creano da sole al primo uso (lib/registri-privacy.js).
+CREATE TABLE IF NOT EXISTS privacy_voci (
+  id SERIAL,
+  registro text NOT NULL,              -- trattamenti | violazioni
+  ordine integer NOT NULL DEFAULT 0,
+  titolo text NOT NULL,
+  voci jsonb NOT NULL DEFAULT '[]'::jsonb,
+  stato text NOT NULL DEFAULT 'attivo'::text, -- attivo | archiviato
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  created_by text NOT NULL DEFAULT ''::text,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_by text NOT NULL DEFAULT ''::text,
+  CONSTRAINT privacy_voci_pkey PRIMARY KEY (id)
+);
+
+-- Storico delle modifiche ai registri: chi, quando, prima e dopo. Solo aggiunte.
+CREATE TABLE IF NOT EXISTS privacy_storico (
+  id BIGSERIAL,
+  at timestamp with time zone NOT NULL DEFAULT now(),
+  admin text NOT NULL DEFAULT ''::text,
+  registro text NOT NULL,
+  voce_id integer,
+  titolo text NOT NULL DEFAULT ''::text,
+  azione text NOT NULL,                -- avviato | creata | modificata | archiviata | rimessa in uso
+  prima jsonb,
+  dopo jsonb,
+  CONSTRAINT privacy_storico_pkey PRIMARY KEY (id)
+);
+
 -- Chiavi esterne (in fondo per non dipendere dall'ordine delle tabelle)
 ALTER TABLE articles ADD CONSTRAINT articles_author_professional_id_fkey FOREIGN KEY (author_professional_id) REFERENCES professionals(id);
 ALTER TABLE articles ADD CONSTRAINT articles_replaced_by_id_fkey FOREIGN KEY (replaced_by_id) REFERENCES articles(id) ON DELETE SET NULL;

@@ -9,6 +9,8 @@ const TABELLE = [
   "articles", "profile_views", "push_subscriptions",
   // aggiunte 19/7: disponibilità per giorno, lista d'attesa, lead e consensi newsletter
   "day_overrides", "waitlist", "info_requests", "newsletter_subscribers",
+  // aggiunte 12/11/26: i registri privacy tenuti nel pannello (trattamenti, violazioni, storico)
+  "privacy_voci", "privacy_storico",
 ];
 
 // Casella aziendale del dominio (Aruba), non una casella personale:

@@ -5,6 +5,7 @@ import ConfermaInline from "./ConfermaInline.jsx";
 import CampoFonti from "./CampoFonti.jsx";
 import ArticoliDaApprovare from "./AdminArticoliRevisione.jsx";
 import RegistroAccessi, { RigaAccessi } from "./AdminRegistroAccessi.jsx";
+import RegistriPrivacy from "./AdminRegistriPrivacy.jsx";
 
 // L'editor visuale degli articoli (TipTap) si carica solo quando serve: pesa ~120 KB
 const EditorArticolo = React.lazy(() => import("./EditorArticolo.jsx"));
@@ -91,7 +92,13 @@ const MENU = [
     ],
   },
   { icona: "❓", titolo: "FAQ", voci: [{ k: "faq", label: "Domande e categorie", todo: true }] },
-  { icona: "📂", titolo: "Documenti", voci: [{ k: "doc", label: "Contratti · Informative · Privacy", todo: true }] },
+  {
+    icona: "📂", titolo: "Documenti", voci: [
+      { k: "doc-trattamenti", label: "Registro dei trattamenti" },
+      { k: "doc-violazioni", label: "Registro delle violazioni" },
+      { k: "doc", label: "Contratti · Informative", todo: true },
+    ],
+  },
   {
     icona: "💬", titolo: "Contatti", voci: [
       { k: "con-richieste", label: "Richieste dal sito" },
@@ -3192,6 +3199,8 @@ export default function AdminApp() {
     "inf-specializzazioni": <Specializzazioni />,
     "inf-disponibilita": <Disponibilita />,
     "inf-accessi": <RegistroAccessi />,
+    "doc-trattamenti": <RegistriPrivacy quale="trattamenti" />,
+    "doc-violazioni": <RegistriPrivacy quale="violazioni" />,
     "inf-zone": <Copertura />,
     "inf-recensioni": <RecensioniPubblicate />,
     "paz-anagrafica": <Pazienti />,
