@@ -128,11 +128,10 @@ export default function BookingWidget({ professionalId, services, servizioInizia
       if (!r.ok) throw new Error(d.error || "Errore imprevisto");
       // Conversione: la misura che conta (GA4)
       if (typeof window !== "undefined" && typeof window.gtag === "function") {
-        window.gtag("event", "prenotazione_completata", {
-          professionista: professionalId,
-          prestazione: servizioSel?.name,
-          // 17/10/26 (DAC7): nessun importo a Google, nemmeno quello del listino
-        });
+        // 12/11/26 (privacy): a Google va SOLO il fatto che una prenotazione è avvenuta.
+        // Niente nome della prestazione (rivela un'esigenza di salute, art. 9 GDPR) e
+        // niente infermiere. 17/10/26 (DAC7): nessun importo, nemmeno quello del listino.
+        window.gtag("event", "prenotazione_completata");
       }
       setFatto(d);
     } catch (err) {

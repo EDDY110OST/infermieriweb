@@ -1993,7 +1993,7 @@ function Analytics() {
         <strong>Google Analytics 4</strong>
         <p style={{ color: "var(--iw-slate)", margin: "6px 0 10px" }}>
           Il sito traccia già visite e <strong>prenotazioni completate</strong> (evento <code>prenotazione_completata</code>,
-          con la prestazione, senza importi). Lì trovi traffico, provenienza e conversioni.
+          senza prestazione, senza infermiere e senza importi: a Google non va niente che riveli la salute). Lì trovi traffico, provenienza e conversioni.
         </p>
         <a className="pf-btn secondario" href="https://analytics.google.com" target="_blank" rel="noreferrer">Apri Google Analytics</a>
       </div>
