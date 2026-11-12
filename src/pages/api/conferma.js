@@ -97,7 +97,8 @@ export async function POST({ request }) {
         });
         await pushToProfessional(vecchia.professional_id, {
           title: "❌ Il paziente ha scelto un altro infermiere",
-          body: `${vecchia.service_name} · ${quandoVecchia} — ${vecchia.customer_name}. L'orario è tornato libero.`,
+          // 12/11/26 (privacy): niente nome del paziente né prestazione, la notifica si legge a telefono bloccato
+          body: `${quandoVecchia}. L'orario è tornato libero: i dettagli sono in agenda.`,
           tag: `booking-${vecchia.id}`,
         });
       }
@@ -108,7 +109,8 @@ export async function POST({ request }) {
   });
   await pushToProfessional(b.professional_id, {
     title: "📅 Nuova prenotazione",
-    body: `${b.service_name} · ${quando} — ${b.customer_name}`,
+    // 12/11/26 (privacy): niente nome del paziente né prestazione, la notifica si legge a telefono bloccato
+    body: `${quando}. Apri l'agenda per vedere chi è e cosa serve.`,
     tag: `booking-${b.id}`,
   });
 

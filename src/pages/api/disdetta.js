@@ -65,7 +65,7 @@ export async function POST({ request }) {
   });
   await pushToProfessional(
     (await sql`SELECT professional_id FROM bookings WHERE cancel_token = ${token}`)[0].professional_id,
-    { title: "❌ Disdetta paziente", body: `${b.service_name} · ${quando} — ${b.customer_name}. Lo slot è tornato libero.` }
+    { title: "❌ Disdetta paziente", body: `${quando}. L'orario è tornato libero: i dettagli sono in agenda.` } // 12/11/26 (privacy): senza nome né prestazione
   );
   if (b.professional_email) {
     const avviso = emailDisdettaProfessionista({
