@@ -1,7 +1,7 @@
 import { gzipSync } from "node:zlib";
 import { randomBytes, scryptSync, createCipheriv } from "node:crypto";
 import { sql } from "./db.js";
-import { eseguiPulizia, MESI_PRENOTAZIONI, MESI_CANDIDATURE, MESI_REGISTRO_ACCESSI } from "./pulizia.js";
+import { eseguiPulizia, MESI_PRENOTAZIONI, MESI_CANDIDATURE, MESI_REGISTRO_ACCESSI, GIORNI_NON_CONFERMATE } from "./pulizia.js";
 
 const TABELLE = [
   "professionals", "professional_users", "services", "coverage_areas",
@@ -71,6 +71,7 @@ export async function eseguiBackup() {
     : `<p style="font-size:13px;color:#4a6572;">
          Pulizia dati ${pulizia.simulazione ? `<strong>in pausa</strong> — ${pulizia.motivo}: sotto solo il conteggio, nessuna modifica` : "eseguita"}:
          ${pulizia.prenotazioni} prenotazioni oltre ${MESI_PRENOTAZIONI} mesi da anonimizzare,
+         ${pulizia.nonConfermate} prenotazioni mai confermate oltre ${GIORNI_NON_CONFERMATE} giorni,
          ${pulizia.candidature} candidature non accettate oltre ${MESI_CANDIDATURE} mesi,
          ${pulizia.richieste} richieste informazioni scadute,
          ${pulizia.recensioniRespinte} recensioni respinte scadute,
@@ -80,7 +81,8 @@ export async function eseguiBackup() {
   const avviso = contenuto
     ? `<p>In allegato la copia completa: <strong>compressa e cifrata</strong> (AES-256).
          Per rileggerla serve la passphrase BACKUP_KEY: <code>node scripts/ripristina-backup.mjs &lt;file&gt;</code>.
-         Conservane sempre almeno le ultime due.</p>`
+         Conservane sempre almeno le ultime due e <strong>cancella da questa casella quelle più vecchie di 90 giorni</strong>
+         (è il tempo scritto nell'informativa privacy).</p>`
     : `<p style="color:#b91c1c;"><strong>⚠️ Backup NON allegato:</strong> manca la variabile d'ambiente
          <code>BACKUP_KEY</code>. Il dump contiene dati personali di pazienti e professionisti e non viene
          spedito in chiaro. Imposta BACKUP_KEY su Render e il backup riparte da stanotte.</p>`;

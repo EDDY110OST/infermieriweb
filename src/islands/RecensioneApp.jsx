@@ -93,6 +93,13 @@ export default function RecensioneApp() {
       <label htmlFor="rc-nome">Il tuo nome (come apparirà)</label>
       <input id="rc-nome" maxLength={80} value={autore} onChange={(e) => setAutore(e.target.value)} placeholder="es. Maria R." />
 
+      <p className="pf-note" style={{ marginTop: 2 }}>
+        Inviando la recensione <strong>acconsenti a pubblicarla</strong> sulla scheda del professionista, con le
+        stelle e il nome che hai scritto qui sopra (bastano le iniziali). Non scrivere dettagli sulla tua salute.
+        Puoi farla togliere quando vuoi scrivendo a info@infermieriweb.it
+        (<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>).
+      </p>
+
       {errore && <div className="pf-errore">{errore}</div>}
       <button className="pf-btn" style={{ width: "100%" }} disabled={invio}>
         {invio ? "Invio…" : "Invia la recensione"}

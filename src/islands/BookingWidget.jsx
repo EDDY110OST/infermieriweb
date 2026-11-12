@@ -41,7 +41,7 @@ export default function BookingWidget({ professionalId, services, servizioInizia
   const [slots, setSlots] = useState([]);
   const [slot, setSlot] = useState(null);
   const [caricamento, setCaricamento] = useState(false);
-  const [dati, setDati] = useState({ name: "", phone: "", email: "", address: "", city: "", privacy: false });
+  const [dati, setDati] = useState({ name: "", phone: "", email: "", address: "", city: "", privacy: false, salute: false });
   const [perAltri, setPerAltri] = useState(false);
   const [paziente, setPaziente] = useState("");
   const [invio, setInvio] = useState(false);
@@ -98,18 +98,27 @@ export default function BookingWidget({ professionalId, services, servizioInizia
   const servizioSel = services.find((s) => s.id === Number(servizio));
   const consulenza = eConsulenza(servizioSel);
 
-  // Testo della spunta di consenso: viene mandato al server e conservato con la
-  // prenotazione come prova di COSA ha accettato il paziente (art. 7.1 GDPR).
-  // ⚠️ Se cambi il testo della label qui sotto, cambia anche queste due righe.
-  const testoConsenso = consulenza
-    ? "Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al consulente scelto. Ho letto l'informativa privacy."
-    : "Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al professionista scelto. Poiché la prestazione scelta può indicare un'esigenza di salute, presto anche il consenso esplicito a questo trattamento. Ho letto l'informativa privacy.";
+  // Testi delle spunte: vengono mandati al server e conservati con la prenotazione come
+  // prova di COSA ha accettato il paziente (art. 7.1 GDPR). Le label qui sotto usano
+  // queste stesse costanti, così il testo salvato è sempre quello mostrato.
+  // 12/11/26: DUE spunte separate. La prima è la presa visione dell'informativa (i dati
+  // di contatto si trattano per eseguire il servizio, art. 6.1.b: non serve un consenso).
+  // La seconda è il consenso ESPLICITO sul dato che rivela la salute (art. 9.2.a), che
+  // deve essere specifico e distinto. Chi prenota per un familiare dichiara di poterlo fare.
+  const TESTO_INFORMATIVA = consulenza
+    ? "Ho letto l'informativa privacy: i miei dati servono a gestire l'appuntamento e vengono trasmessi al consulente scelto."
+    : "Ho letto l'informativa privacy: i dati servono a gestire l'appuntamento e vengono trasmessi al professionista scelto.";
+  const TESTO_SALUTE = perAltri
+    ? "La prestazione scelta può rivelare un'esigenza di salute del paziente: do il consenso esplicito a trattare questo dato per organizzare l'appuntamento. Dichiaro di prenotare per suo conto, con il suo accordo o come suo rappresentante legale, e di avergli fatto conoscere l'informativa privacy."
+    : "La prestazione scelta può rivelare una mia esigenza di salute: do il consenso esplicito a trattare questo dato per organizzare l'appuntamento.";
+  const testoConsenso = consulenza ? TESTO_INFORMATIVA : `${TESTO_INFORMATIVA} — ${TESTO_SALUTE}`;
 
   const prenota = async (e) => {
     e.preventDefault();
     setErrore("");
     if (!slot) return setErrore("Scegli un orario");
-    if (!dati.privacy) return setErrore("Serve il consenso al trattamento dei dati");
+    if (!dati.privacy) return setErrore("Conferma di aver letto l'informativa privacy: spunta la casella.");
+    if (!consulenza && !dati.salute) return setErrore("Serve il tuo consenso esplicito sul dato di salute: spunta la seconda casella.");
     setInvio(true);
     try {
       const r = await fetch("/api/prenota", {
@@ -273,8 +282,8 @@ export default function BookingWidget({ professionalId, services, servizioInizia
             <>
               <label>Per chi è la prestazione?</label>
               <div className="pf-scelta">
-                <button type="button" className={`pf-scelta-btn${!perAltri ? " sel" : ""}`} onClick={() => setPerAltri(false)}>Per me</button>
-                <button type="button" className={`pf-scelta-btn${perAltri ? " sel" : ""}`} onClick={() => setPerAltri(true)}>Per un familiare</button>
+                <button type="button" className={`pf-scelta-btn${!perAltri ? " sel" : ""}`} onClick={() => { if (perAltri) setDati((d) => ({ ...d, salute: false })); setPerAltri(false); }}>Per me</button>
+                <button type="button" className={`pf-scelta-btn${perAltri ? " sel" : ""}`} onClick={() => { if (!perAltri) setDati((d) => ({ ...d, salute: false })); setPerAltri(true); }}>Per un familiare</button>
               </div>
 
               {perAltri && (
@@ -326,21 +335,19 @@ export default function BookingWidget({ professionalId, services, servizioInizia
             </>
           )}
 
-          {/* ⚠️ Testo allineato a `testoConsenso` (viene salvato come prova del consenso) */}
+          {/* I testi sono le costanti TESTO_INFORMATIVA / TESTO_SALUTE (salvate come prova) */}
           <div className="pf-check">
             <input id="bw-privacy" type="checkbox" checked={dati.privacy} onChange={(e) => setDati({ ...dati, privacy: e.target.checked })} />
             <label htmlFor="bw-privacy" style={{ margin: 0, fontWeight: 400 }}>
-              {consulenza ? (
-                <>Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al
-                consulente scelto. Ho letto l'<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>. *</>
-              ) : (
-                <>Acconsento al trattamento dei dati necessari a gestire l'appuntamento e a trasmetterli al
-                professionista scelto. Poiché la prestazione scelta può indicare un'esigenza di salute, presto
-                anche il <strong>consenso esplicito</strong> a questo trattamento. Ho letto l'
-                <a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>. *</>
-              )}
+              {TESTO_INFORMATIVA} (<a href="/privacy" target="_blank" rel="noopener">leggi l'informativa</a>) *
             </label>
           </div>
+          {!consulenza && (
+            <div className="pf-check">
+              <input id="bw-salute" type="checkbox" checked={dati.salute} onChange={(e) => setDati({ ...dati, salute: e.target.checked })} />
+              <label htmlFor="bw-salute" style={{ margin: 0, fontWeight: 400 }}>{TESTO_SALUTE} *</label>
+            </div>
+          )}
 
           {errore && <div className="pf-errore">{errore}</div>}
 

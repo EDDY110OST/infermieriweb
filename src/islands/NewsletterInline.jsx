@@ -49,7 +49,8 @@ export default function NewsletterInline({ source = "newsletter", placeholder = 
       <button className="pf-btn" disabled={invio}>{invio ? "Invio…" : cta}</button>
       {errore && <div className="pf-errore" style={{ width: "100%", marginTop: 8 }}>{errore}</div>}
       <p className="pf-note" style={{ width: "100%", marginTop: 8 }}>
-        Iscrivendoti accetti l'<a href="/privacy" target="_blank" rel="noopener">informativa sulla privacy</a>.
+        Iscrivendoti accetti di ricevere le nostre comunicazioni via email. Ti cancelli quando vuoi scrivendo a
+        info@infermieriweb.it (<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>).
       </p>
     </form>
   );

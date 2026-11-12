@@ -12,6 +12,8 @@ import { sql } from "./db.js";
  * Finestre (le stesse scritte nell'informativa privacy):
  *  - prenotazioni: anonimizzate 24 mesi dopo l'appuntamento (la riga resta, senza
  *    più nome, telefono, email e indirizzo: servono solo i conteggi)
+ *  - prenotazioni MAI confermate (stato «expired»: chi le ha fatte non ha cliccato il
+ *    link di convalida entro 60 minuti): stessi dati cancellati già dopo 30 giorni
  *  - candidature non accettate: eliminate dopo 12 mesi
  *  - richieste di informazioni: eliminate dopo 24 mesi
  *  - recensioni respinte: eliminate dopo 12 mesi
@@ -20,6 +22,7 @@ import { sql } from "./db.js";
  */
 
 export const MESI_PRENOTAZIONI = 24;
+export const GIORNI_NON_CONFERMATE = 30;
 export const MESI_CANDIDATURE = 12;
 export const MESI_RICHIESTE = 24;
 export const MESI_RECENSIONI_RESPINTE = 12;
@@ -47,6 +50,21 @@ export async function eseguiPulizia({ backupPossibile = false } = {}) {
         SET customer_name = 'anonimizzato', customer_phone = '', customer_email = '',
             address = '', cancel_token = '', consent_text = ''
         WHERE start_dt < now() - (${MESI_PRENOTAZIONI} || ' months')::interval
+          AND customer_name <> 'anonimizzato'`;
+    }
+
+    // 1b. Prenotazioni mai confermate: nessun appuntamento è nato, i dati non servono più
+    const nonConfermate = await sql`
+      SELECT COUNT(*) AS n FROM bookings
+      WHERE status = 'expired' AND created_at < now() - (${GIORNI_NON_CONFERMATE} || ' days')::interval
+        AND customer_name <> 'anonimizzato'`;
+    esito.nonConfermate = Number(nonConfermate[0].n);
+    if (!simulazione && esito.nonConfermate > 0) {
+      await sql`
+        UPDATE bookings
+        SET customer_name = 'anonimizzato', customer_phone = '', customer_email = '',
+            address = '', cancel_token = '', consent_text = ''
+        WHERE status = 'expired' AND created_at < now() - (${GIORNI_NON_CONFERMATE} || ' days')::interval
           AND customer_name <> 'anonimizzato'`;
     }
 

@@ -3,7 +3,7 @@ export const prerender = false;
 import { sql } from "../../lib/db.js";
 import { APPELLATIVO } from "../../lib/appellativo.js";
 import { consenti, ipDa } from "../../lib/ratelimit.js";
-import { sendEmail, EMAIL_AVVISI_ADMIN } from "../../lib/mailer.js";
+import { sendEmail, EMAIL_AVVISI_ADMIN, ASSISTENZA_EMAIL } from "../../lib/mailer.js";
 import { hashPassword } from "../../lib/auth.js";
 import { trovaComune } from "../../data/comuni.js";
 import { TIPI_ATTIVITA, offreDomicilio } from "../../data/listino.js";
@@ -106,9 +106,29 @@ export async function POST({ request }) {
 
   // Avviso immediato agli admin: una candidatura che aspetta giorni è un
   // professionista perso. L'invio non deve mai bloccare la risposta al candidato.
-  for (const to of EMAIL_AVVISI_ADMIN) try {
+  // 12/11/26 (privacy): i DATI del candidato vanno solo alla casella del dominio
+  // (info@, Aruba, dichiarata nell'informativa). Alle caselle personali degli avvisi
+  // arriva soltanto «c'è una candidatura nuova», senza nome né contatti.
+  for (const to of EMAIL_AVVISI_ADMIN) {
+    if (to === ASSISTENZA_EMAIL) continue;
+    try {
+      await sendEmail({
+        to,
+        subject: "Nuova candidatura da verificare 🩺",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
+          <h2 style="color: #0b3954;">C'è una candidatura nuova 🩺</h2>
+          <p>Un professionista ha appena inviato la candidatura. I dati li trovi nel pannello (e nella casella ${ASSISTENZA_EMAIL}): qui non li scriviamo, per riservatezza.</p>
+          <p style="margin: 20px 0;">
+            <a href="https://infermieriweb.it/admin" style="background: #00897b; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-weight: bold;">Verifica e approva in admin</a>
+          </p>
+          <p style="color: #7b909b; font-size: 13px;">Prima di approvare: controlla l'iscrizione all'albo sul portale FNOPI e la P.IVA.</p>
+        </div>`,
+      });
+    } catch { /* la candidatura è salvata comunque: si vede in /admin */ }
+  }
+  try {
     await sendEmail({
-      to,
+      to: ASSISTENZA_EMAIL,
       subject: `Nuova candidatura: ${esc(name)} (${esc(profession)}, ${esc(city)})`,
       html: `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #10222e;">
         <h2 style="color: #0b3954;">Nuova candidatura da verificare 🩺</h2>

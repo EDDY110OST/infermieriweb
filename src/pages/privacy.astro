@@ -25,7 +25,8 @@ import { organizationSchema } from "../data/schema.js";
           <strong>Eduard Gabriel Duduc</strong> e <strong>Bruno Ieppariello</strong>, persone fisiche in
           contitolarità ai sensi dell'art. 26 GDPR. Per qualsiasi richiesta relativa ai tuoi dati puoi
           scrivere a <a href="mailto:info@infermieriweb.it" style="color: var(--iw-primary-deep); font-weight: 700;">info@infermieriweb.it</a>:
-          rispondiamo entro 30 giorni, come previsto dal GDPR.
+          rispondiamo entro 30 giorni, come previsto dal GDPR. Puoi far valere i tuoi diritti nei confronti
+          di ciascuno dei due titolari: quell'indirizzo arriva a entrambi.
         </p>
         <p style="color: var(--iw-slate); margin: 0; font-size: 15px;">
           Non è nominato un Responsabile della protezione dei dati (DPO): la sua necessità è in corso di
@@ -53,7 +54,8 @@ import { organizationSchema } from "../data/schema.js";
       <div class="pf-panel" style="margin-bottom: 18px;">
         <h2 style="margin-top: 0;">Quali dati raccogliamo e perché</h2>
         <ul class="pf-lista">
-          <li><strong>Prenotazione a domicilio</strong> — nome, telefono, email, indirizzo della visita, prestazione scelta. Servono a fissare l'appuntamento, avvisare il professionista e mandarti conferma, promemoria e link di gestione. Conserviamo anche <strong>data, ora e testo del consenso</strong> che hai spuntato, per poter dimostrare che ce l'hai dato. Basi giuridiche: esecuzione del servizio richiesto (art. 6.1.b GDPR) e, poiché la prestazione può indicare un'esigenza di salute, il tuo <strong>consenso esplicito</strong> (art. 9.2.a GDPR).</li>
+          <li><strong>Prenotazione a domicilio</strong> — nome, telefono, email, indirizzo della visita, prestazione scelta. Servono a fissare l'appuntamento, avvisare il professionista e mandarti conferma, promemoria e link di gestione. Conserviamo anche <strong>data, ora e testo delle caselle</strong> che hai spuntato, per poter dimostrare cosa hai accettato. Basi giuridiche: esecuzione del servizio richiesto (art. 6.1.b GDPR) e, poiché la prestazione può indicare un'esigenza di salute, il tuo <strong>consenso esplicito</strong> (art. 9.2.a GDPR), che ti chiediamo con una casella a parte. Senza questi dati e senza quel consenso non possiamo fissare l'appuntamento.</li>
+          <li><strong>Prenotazione per un familiare</strong> — se prenoti per un'altra persona ci dai tu il suo nome e l'indirizzo della visita, insieme ai tuoi contatti. Ti chiediamo di dichiarare che lo fai con il suo accordo (o come suo rappresentante legale) e di fargli conoscere questa informativa: i suoi diritti sono gli stessi descritti qui sotto.</li>
           <li><strong>Prenotazione di una consulenza tra colleghi</strong> — nome, telefono ed email dell'infermiere che prenota l'ora di consulenza. Qui non sono in gioco dati di salute: la base giuridica è la sola esecuzione del servizio.</li>
           <li><strong>Area "Le mie prenotazioni"</strong> — la tua email, usata per mostrarti le tue prenotazioni tramite un link personale. Base giuridica: esecuzione del servizio.</li>
           <li><strong>Recensioni</strong> — nome (o iniziali) e testo della recensione, pubblicati sulla scheda del professionista solo dopo una prenotazione completata. Base giuridica: consenso.</li>
@@ -83,7 +85,8 @@ import { organizationSchema } from "../data/schema.js";
           <li>Ai <strong>fornitori tecnici</strong> che fanno funzionare la piattaforma, come responsabili del trattamento: <strong>Render</strong> (hosting applicativo e database, con server nell'Unione Europea — Francoforte), <strong>Brevo</strong> (invio email, Francia/UE), <strong>Aruba</strong> (la casella di posta del dominio, in Italia).</li>
           <li>Per la <strong>copia di sicurezza</strong>: ogni notte una copia del database viene <strong>compressa, cifrata</strong> e spedita alla casella aziendale del dominio, così che un guasto del fornitore non cancelli tutto. Il file è illeggibile senza la chiave, custodita dai titolari.</li>
           <li>A <strong>OpenStreetMap</strong>: gli indirizzi degli studi dei professionisti vengono inviati ai loro server per ricavarne le coordinate e disegnare il segnaposto sulla mappa. Gli indirizzi dei pazienti non vengono mai inviati.</li>
-          <li>A <strong>Google</strong>, per il servizio <strong>Google Analytics</strong>, <strong>solo se acconsenti</strong> ai cookie statistici dal banner: in tal caso alcuni dati (con IP anonimizzato) possono essere trasferiti negli Stati Uniti, coperti dalla decisione di adeguatezza UE-USA (Data Privacy Framework) e da clausole contrattuali standard. Se rifiuti, Google Analytics non viene caricato.</li>
+          <li>A <strong>Google</strong>, per il servizio <strong>Google Analytics</strong>, <strong>solo se acconsenti</strong> ai cookie statistici dal banner: in tal caso alcuni dati (con IP anonimizzato) possono essere trasferiti negli Stati Uniti, coperti dalla decisione di adeguatezza UE-USA (Data Privacy Framework) e da clausole contrattuali standard. Se rifiuti, Google Analytics non viene caricato. In ogni caso <strong>a Google non comunichiamo quale prestazione hai prenotato né con quale professionista</strong>: gli arriva solo il fatto che una prenotazione è stata completata.</li>
+          <li>Ai <strong>servizi di notifica del browser</strong> (Apple, Google, Mozilla), solo per i professionisti che attivano le notifiche push: da lì passa l'avviso di una nuova prenotazione. Il contenuto dell'avviso viaggia <strong>cifrato</strong> fino al dispositivo del professionista: quei servizi lo consegnano ma non possono leggerlo.</li>
           <li>Per l'assistenza <strong>non usiamo WhatsApp</strong>: ci si scrive a info@infermieriweb.it. Le consulenze prenotate si svolgono <strong>fuori dalla piattaforma</strong> (videochiamata, telefono o chat, secondo l'accordo con il consulente): quello che vi dite lì non passa da noi e segue le condizioni del canale che scegliete.</li>
           <li>All'<strong>autorità giudiziaria o alle autorità competenti</strong>, se la legge ce lo impone.</li>
           <li>A <strong>nessun altro</strong>: non vendiamo dati e non facciamo profilazione pubblicitaria.</li>
@@ -94,6 +97,7 @@ import { organizationSchema } from "../data/schema.js";
         <h2 style="margin-top: 0;">Per quanto li conserviamo</h2>
         <ul class="pf-lista">
           <li><strong>Prenotazioni</strong>: 24 mesi dalla data dell'appuntamento. Poi nome, telefono, email e indirizzo vengono <strong>cancellati automaticamente</strong> e resta solo la riga senza dati personali, per i conteggi.</li>
+          <li><strong>Prenotazioni mai confermate</strong> (non hai cliccato il link di convalida entro 60 minuti): nome, telefono, email e indirizzo vengono cancellati automaticamente dopo 30 giorni.</li>
           <li><strong>Candidature non accettate</strong>: 12 mesi, poi eliminate automaticamente.</li>
           <li><strong>Richieste di informazioni e contatti</strong>: 24 mesi, poi eliminate automaticamente.</li>
           <li><strong>Recensioni pubblicate</strong>: finché resta online la scheda del professionista. Quelle non pubblicate vengono eliminate dopo 12 mesi.</li>
@@ -101,7 +105,7 @@ import { organizationSchema } from "../data/schema.js";
           <li><strong>Account e scheda del professionista</strong>: finché il profilo è in rete; alla chiusura vengono rimossi, salvo quanto va conservato per obblighi di legge (per esempio fiscali).</li>
           <li><strong>Registro degli accessi all'area riservata</strong>: 12 mesi, poi le righe vengono eliminate automaticamente; alla chiusura del profilo vengono eliminate subito.</li>
           <li><strong>Registro anti-abuso (indirizzi IP)</strong>: 24 ore.</li>
-          <li><strong>Copie di sicurezza cifrate</strong>: le più recenti, per poter ripristinare il servizio; ruotano e vengono sostituite dalle successive.</li>
+          <li><strong>Copie di sicurezza cifrate</strong>: conserviamo quelle degli ultimi 90 giorni, per poter ripristinare il servizio; le più vecchie vengono eliminate.</li>
         </ul>
       </div>
 
@@ -158,12 +162,12 @@ import { organizationSchema } from "../data/schema.js";
           tuo dispositivo.
         </p>
         <p style="color: var(--iw-slate); margin: 0;">
-          La mappa della pagina di ricerca usa OpenStreetMap per mostrare le tessere geografiche:
+          Le mappe della pagina iniziale e della pagina di ricerca usano OpenStreetMap per mostrare le tessere geografiche:
           il tuo browser scarica le immagini della mappa dai loro server, senza cookie di profilazione.
         </p>
       </div>
 
-      <p class="pf-note">Ultimo aggiornamento: 13 ottobre 2026. Eventuali modifiche a questa informativa saranno pubblicate su questa pagina.</p>
+      <p class="pf-note">Ultimo aggiornamento: 12 novembre 2026. Eventuali modifiche a questa informativa saranno pubblicate su questa pagina.</p>
     </div>
   </section>
 </Platform>

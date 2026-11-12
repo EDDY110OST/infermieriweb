@@ -38,7 +38,7 @@ export async function POST({ request }) {
   if (!professionalId || !serviceId || isNaN(start.getTime())) return json({ error: "Dati prenotazione incompleti" }, 400);
   if (name.length < 2 || phone.length < 6) return json({ error: "Nome e telefono sono obbligatori" }, 400);
   if (!email.includes("@") || email.length < 6) return json({ error: "Serve una email valida: riceverai lì la conferma e il link per disdire" }, 400);
-  if (!body.privacy) return json({ error: "Serve il consenso al trattamento dei dati" }, 400);
+  if (!body.privacy) return json({ error: "Conferma di aver letto l'informativa privacy: spunta la casella" }, 400);
 
   if (!(await consenti(`prenota:${ipDa(request)}`, 10, 60))) {
     return json({ error: "Troppe prenotazioni ravvicinate: riprova più tardi o chiama il professionista" }, 429);
@@ -69,6 +69,11 @@ export async function POST({ request }) {
   // Le consulenze tra colleghi non riguardano la salute di chi prenota: in quel
   // caso si registra solo il consenso privacy, non quello esplicito dell'art. 9.
   const consulenza = String(service.catalog_key || "").startsWith("consulenza-");
+  // 12/11/26: il consenso esplicito è una spunta a parte (body.salute). Senza, niente
+  // prenotazione a domicilio: la data si registra solo se la spunta c'è davvero.
+  if (!consulenza && body.salute !== true) {
+    return json({ error: "Serve il tuo consenso esplicito sul dato di salute: spunta la seconda casella (se non la vedi, aggiorna la pagina)" }, 400);
+  }
   const consensoSalute = consulenza ? null : new Date().toISOString();
 
   // Inserimento atomico: fallisce se lo slot è stato preso nel frattempo

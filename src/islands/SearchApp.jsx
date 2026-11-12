@@ -79,6 +79,11 @@ function ListaAttesa({ zona }) {
       />
       <button className="pf-btn">Avvisatemi</button>
       {errore && <div className="pf-errore" style={{ width: "100%" }}>{errore}</div>}
+      <p className="pf-note" style={{ width: "100%", margin: 0 }}>
+        Lasciando l'email accetti che la usiamo solo per avvisarti quando un professionista copre questa zona.
+        Ti cancelli quando vuoi scrivendo a info@infermieriweb.it
+        (<a href="/privacy" target="_blank" rel="noopener">informativa privacy</a>).
+      </p>
     </form>
   );
 }
